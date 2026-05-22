@@ -38,6 +38,27 @@ const hasPermission = (staffAccess: any, permission: string) => {
   return staffAccess[permission] === true
 }
 
+const roleLabel = (role?: string | null) => {
+  const labels: Record<string, string> = {
+    reception: 'Recepcja',
+    doctor: 'Lekarz',
+    coordinator: 'Koordynator pacjenta',
+    manager: 'Manager kliniki',
+    entry: 'Recepcja',
+    kitchen: 'Punkt obsługi',
+    gadgets: 'Punkt obsługi',
+    transport: 'Koordynator'
+  }
+
+  return labels[String(role || '')] || role || '-'
+}
+
+const canViewMedicalHistory = (staffAccess: any) =>
+  ['doctor', 'manager'].includes(String(staffAccess?.role || ''))
+
+const canViewAppointments = (staffAccess: any) =>
+  ['reception', 'doctor', 'coordinator', 'manager', 'entry'].includes(String(staffAccess?.role || ''))
+
 export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const { accessToken } = use(params)
   const supabase = createClient()
@@ -85,7 +106,9 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const canTransport = hasPermission(staffAccess, 'can_transport_checkin')
   const canBandIssue = hasPermission(staffAccess, 'can_wristband_issue')
   const canBandReturn = hasPermission(staffAccess, 'can_wristband_return')
-  const canSessions = staffAccess?.role === 'manager' || [canEntry, canMeal, canGadget, canTransport, canBandIssue, canBandReturn].filter(Boolean).length > 1
+  const canMedicalHistory = canViewMedicalHistory(staffAccess)
+  const canAppointments = canViewAppointments(staffAccess)
+  const canSessions = canAppointments || staffAccess?.role === 'manager' || [canEntry, canMeal, canGadget, canTransport, canBandIssue, canBandReturn].filter(Boolean).length > 1
 
   const mealById = useMemo(() => new Map(meals.map((meal: any) => [meal.id, meal])), [meals])
   const gadgetById = useMemo(() => new Map(gadgets.map((gadget: any) => [gadget.id, gadget])), [gadgets])
@@ -781,13 +804,16 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
                 <ShieldCheck size={16} />
                 Dostęp aktywny
               </div>
-              <h1 className="text-2xl md:text-4xl font-black">{event?.title || 'Event Pass'}</h1>
+              <h1 className="text-2xl md:text-4xl font-black">{event?.title || 'QR Patient Access'}</h1>
               <p className="text-sm text-white/50 mt-2">{event?.location || ''}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4 min-w-[220px]">
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-black">Obsługa</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/40 font-black">Rola skanująca</p>
               <p className="font-black text-lg">{staffAccess?.name}</p>
-              <p className="text-xs text-[#e8ce7a] uppercase font-black">{staffAccess?.role}</p>
+              <p className="text-xs text-[#e8ce7a] uppercase font-black">{roleLabel(staffAccess?.role)}</p>
+              <p className="mt-2 text-[10px] font-bold text-white/45">
+                {canMedicalHistory ? 'Dostęp do danych klinicznych' : 'Widok bez historii medycznej'}
+              </p>
             </div>
           </div>
         </header>
@@ -908,7 +934,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
             <div className="lg:col-span-1 rounded-[32px] border border-white/10 bg-white/[0.06] p-5 md:p-6 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-black">Uczestnik</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-black">Pacjent</p>
                   <h2 className="text-2xl font-black mt-1">{attendeeUnit.display_name}</h2>
                 </div>
                 <BadgeCheck className="text-[#e8ce7a] shrink-0" />
@@ -921,12 +947,10 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <InfoBox label="Dostęp" value={attendeeUnit.access_status || '-'} />
+                <InfoBox label="Status" value={attendeeUnit.access_status || '-'} />
                 <InfoBox label="QR" value={shortToken(attendeeUnit.qr_token)} />
-                <InfoBox label="Check-in" value={attendeeUnit.checked_in ? 'Tak' : 'Nie'} />
-                <InfoBox label="Opaska" value={attendeeUnit.wristband_issued ? (attendeeUnit.wristband_code || 'Wydana') : 'Nie'} />
-                <InfoBox label="Zwrot" value={attendeeUnit.wristband_returned ? 'Tak' : 'Nie'} />
-                <InfoBox label="Bilet" value={attendeeUnit.ticket_type || '-'} />
+                <InfoBox label="Wizyta" value={attendeeUnit.checked_in ? 'Potwierdzona' : 'Oczekuje'} />
+                <InfoBox label="Typ" value={attendeeUnit.ticket_type || attendeeUnit.unit_type || '-'} />
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -948,9 +972,17 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm space-y-2">
-                <p><span className="text-white/40">Dieta:</span> {fallbackDiet || 'brak'}</p>
-                <p><span className="text-white/40">Alergie:</span> {fallbackAllergies || 'brak'}</p>
-                <p><span className="text-white/40">Firma:</span> {application?.company_name || 'brak'}</p>
+                {canMedicalHistory ? (
+                  <>
+                    <p><span className="text-white/40">Ryzyka / alergie:</span> {fallbackAllergies || 'brak'}</p>
+                    <p><span className="text-white/40">Uwagi medyczne:</span> {application?.extra_notes || attendeeUnit?.notes || 'brak'}</p>
+                  </>
+                ) : (
+                  <p className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-3 text-xs font-bold text-cyan-50">
+                    Historia medyczna ukryta dla tej roli.
+                  </p>
+                )}
+                <p><span className="text-white/40">Placówka/firma:</span> {application?.company_name || 'brak'}</p>
                 <p><span className="text-white/40">Email:</span> {application?.email || 'brak'}</p>
                 <p><span className="text-white/40">Telefon:</span> {application?.phone || 'brak'}</p>
               </div>
@@ -1118,9 +1150,9 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               )}
 
               {canSessions && (
-                <PassSection icon={<Clock size={18} />} title="Warsztaty / sesje">
+                <PassSection icon={<Clock size={18} />} title="Wizyty / procedury">
                   {sessionSignups.length === 0 ? (
-                    <EmptyState text="Brak zapisów na warsztaty lub sesje." />
+                    <EmptyState text="Brak zaplanowanych wizyt lub procedur." />
                   ) : sessionSignups.map(choice => {
                     const session = sessionById.get(choice.session_id)
                     const normalizedStatus = String(choice.status || '').toLowerCase()
@@ -1128,17 +1160,31 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
                     return (
                       <ItemRow
                         key={choice.id || choice.session_id}
-                        title={session?.title || 'Sesja'}
+                        title={session?.title || 'Wizyta / procedura'}
                         subtitle={[session?.location, session?.session_type, session?.start_time ? formatDateTime(session.start_time) : ''].filter(Boolean).join(' | ') || '-'}
-                        status={isSessionCheckedIn ? 'Obecność potwierdzona' : (choice.status || 'Zapisany')}
+                        status={isSessionCheckedIn ? 'Wizyta potwierdzona' : (choice.status || 'Zaplanowana')}
                         action={!isSessionCheckedIn ? (
                           <SmallButton onClick={() => handleSessionCheckIn(choice)} disabled={actionLoading === `session_checkin-${choice.session_id}`}>
-                            Potwierdź obecność
+                            Potwierdź wizytę
                           </SmallButton>
                         ) : null}
                       />
                     )
                   })}
+                </PassSection>
+              )}
+
+              {canMedicalHistory && (
+                <PassSection icon={<ShieldCheck size={18} />} title="Historia medyczna i bezpieczeństwo">
+                  <ItemRow
+                    title="Dane kliniczne widoczne dla lekarza"
+                    subtitle={[
+                      fallbackAllergies ? `Alergie/ryzyka: ${fallbackAllergies}` : '',
+                      application?.extra_notes ? `Uwagi: ${application.extra_notes}` : '',
+                      currentDiet ? `Preferencje/zalecenia: ${currentDiet}` : ''
+                    ].filter(Boolean).join(' | ') || 'Brak dodatkowych danych w prototypie'}
+                    status="Dostęp zgodny z rolą"
+                  />
                 </PassSection>
               )}
             </div>
