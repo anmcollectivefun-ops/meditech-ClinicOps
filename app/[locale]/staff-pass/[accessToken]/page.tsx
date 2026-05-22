@@ -42,12 +42,12 @@ const roleLabel = (role?: string | null) => {
   const labels: Record<string, string> = {
     reception: 'Recepcja',
     doctor: 'Lekarz',
-    coordinator: 'Koordynator pacjenta',
+    coordinator: 'Opiekun pacjenta',
     manager: 'Manager kliniki',
     entry: 'Recepcja',
     kitchen: 'Punkt obsługi',
     gadgets: 'Punkt obsługi',
-    transport: 'Koordynator'
+    transport: 'Opiekun pacjenta'
   }
 
   return labels[String(role || '')] || role || '-'

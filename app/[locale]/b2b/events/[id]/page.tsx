@@ -1211,7 +1211,7 @@ const AiTextAssistButton = ({
     const data = {
       event_id: id,
       name: staffAccessForm.name,
-      role: staffAccessForm.role || 'entry',
+      role: staffAccessForm.role || 'reception',
       access_token: crypto.randomUUID(),
       can_entry_checkin: !!staffAccessForm.can_entry_checkin,
       can_meal_redemption: !!staffAccessForm.can_meal_redemption,
@@ -1239,6 +1239,17 @@ const AiTextAssistButton = ({
     return `${window.location.origin}/staff-pass/${accessToken}`
   }
 
+  const getClinicStaffRoleLabel = (role?: string) => ({
+    reception: 'Recepcja',
+    doctor: 'Lekarz',
+    coordinator: 'Opiekun pacjenta',
+    manager: 'Manager',
+    entry: 'Recepcja',
+    kitchen: 'Recepcja',
+    gadgets: 'Opiekun pacjenta',
+    transport: 'Opiekun pacjenta'
+  } as Record<string, string>)[String(role || '')] || 'Personel'
+
   const toggleApplicationExpanded = (applicationId: string) => {
     setExpandedApplicationIds(prev => ({
       ...prev,
@@ -1247,17 +1258,17 @@ const AiTextAssistButton = ({
   }
 
   const publicSectionConfigs = [
-    { key: 'menu', label: 'Menu', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz wybór menu dla uczestników', imageFileKey: 'menuSectionImg', placeholderTitle: 'Menu wydarzenia', placeholderDescription: 'Tutaj możesz opisać menu lub zapowiedzieć, kiedy zostanie udostępnione.' },
-    { key: 'gadgets', label: 'Gadżety', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'Włącz wybór gadżetów dla uczestników', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Gadżety pro eco', placeholderDescription: 'Opisz gadżety i zasady wyboru dla uczestników.' },
-    { key: 'transport', label: 'Transport', icon: Bus, operational: true, actionField: 'transport_selection_enabled', actionLabel: 'Włącz potwierdzanie transportu przez uczestników', imageFileKey: 'transportSectionImg', placeholderTitle: 'Transport i dojazd', placeholderDescription: 'Opisz dojazd, trasy autobusów, carpooling lub miejsca zbiórki.' },
-    { key: 'workshops', label: 'Warsztaty / sesje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na warsztaty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Warsztaty i sesje', placeholderDescription: 'Opisz dostępne warsztaty i zasady zapisów.' },
-    { key: 'eventpass', label: 'Event Pass / QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR uczestnika', placeholderTitle: 'Event Pass', placeholderDescription: 'Opisz dostęp uczestnika, QR i zasady obsługi na miejscu.' },
-    { key: 'theme', label: 'Motyw przewodni', icon: Palette, placeholderTitle: 'Motyw wydarzenia', placeholderDescription: 'Opisz klimat, kolory, scenografię i doświadczenie gościa.' },
-    { key: 'dresscode', label: 'Dress code', icon: Shirt, placeholderTitle: 'Dress code', placeholderDescription: 'Opisz, jak uczestnicy powinni się ubrać.' },
-    { key: 'agenda', label: 'Harmonogram / agenda', icon: ClipboardList, placeholderTitle: 'Agenda wydarzenia', placeholderDescription: 'Opisz przebieg dnia i najważniejsze punkty programu.' },
-    { key: 'speakers', label: 'Prelegenci', icon: Mic, placeholderTitle: 'Prelegenci', placeholderDescription: 'Przedstaw ekspertów, prowadzących i gości specjalnych.' },
-    { key: 'sponsors', label: 'Sponsorzy / partnerzy', icon: Briefcase, placeholderTitle: 'Partnerzy wydarzenia', placeholderDescription: 'Opisz sponsorów i partnerów wydarzenia.' },
-    { key: 'materials', label: 'Materiały do pobrania', icon: FileIcon, placeholderTitle: 'Materiały do pobrania', placeholderDescription: 'Dodaj regulaminy, prezentacje, ankiety lub ważne pliki.' },
+    { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietę, leki albo przygotowanie do wizyty.' },
+    { key: 'gadgets', label: 'Pakiety pacjenta', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'Włącz wybór pakietu pacjenta', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Pakiet pacjenta', placeholderDescription: 'Opisz pakiety, materiały lub dodatki przekazywane pacjentowi.' },
+    { key: 'transport', label: 'Dojazd i opieka', icon: Bus, operational: true, actionField: 'transport_selection_enabled', actionLabel: 'Włącz potwierdzanie dojazdu/opieki', imageFileKey: 'transportSectionImg', placeholderTitle: 'Dojazd do kliniki', placeholderDescription: 'Opisz dojazd, parking, opiekuna po zabiegu lub odbiór pacjenta.' },
+    { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostępne wizyty, konsultacje i procedury.' },
+    { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz użycie kodu QR do check-inu wizyty i dostępu personelu.' },
+    { key: 'theme', label: 'Standard placówki', icon: Palette, placeholderTitle: 'Standard obsługi', placeholderDescription: 'Opisz standard wizyty, komfort i doświadczenie pacjenta.' },
+    { key: 'dresscode', label: 'Przygotowanie pacjenta', icon: Shirt, placeholderTitle: 'Przygotowanie do wizyty', placeholderDescription: 'Opisz, jak pacjent powinien przygotować się do konsultacji lub zabiegu.' },
+    { key: 'agenda', label: 'Ścieżka wizyty', icon: ClipboardList, placeholderTitle: 'Ścieżka pacjenta', placeholderDescription: 'Opisz kolejne kroki od rejestracji po follow-up.' },
+    { key: 'speakers', label: 'Lekarze / specjaliści', icon: Mic, placeholderTitle: 'Zespół medyczny', placeholderDescription: 'Przedstaw lekarzy, specjalistów i opiekunów pacjenta.' },
+    { key: 'sponsors', label: 'Partnerzy medyczni', icon: Briefcase, placeholderTitle: 'Partnerzy kliniki', placeholderDescription: 'Opisz partnerów, laboratoria lub współpracujące podmioty.' },
+    { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub ważne pliki.' },
     { key: 'announcements', label: 'Ogłoszenia / aktualności', icon: MessageSquare, placeholderTitle: 'Ogłoszenia', placeholderDescription: 'Dodaj ważne komunikaty dla uczestników.' },
     { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe działania promocyjne.' },
     { key: 'live', label: 'Transmisje live', icon: Video, imageFileKey: 'liveSectionImg', placeholderTitle: 'Transmisje live', placeholderDescription: 'Dodaj informacje o transmisjach na żywo.' },
@@ -1795,6 +1806,7 @@ const handleDeleteTransportStop = async (stopId: string) => {
         for (const row of rows) {
           await supabase.from('b2b_applications').insert([{
             event_id: id,
+            patient_id: crypto.randomUUID(),
             first_name: row['Imię'] || row['first_name'],
             last_name: row['Nazwisko'] || row['last_name'],
             email: row['Email'] || row['email'],
@@ -4729,39 +4741,39 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       title: 'Strona wydarzenia',
       desc: 'Treści widoczne dla gości',
       items: [
-        { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Strona uczestnika' },
+        { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'edycja' as TabModule, icon: Settings, label: 'Edycja strony' },
-        { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Materiały', count: materials.length },
-        { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Harmonogram', count: sessions.length },
-        { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Prelegenci', count: partners.filter(p => p.type === 'speaker').length },
-        { tabId: 'dresscode' as TabModule, icon: Palette, label: 'Motyw eventu' },
-        { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Gadżety', count: gadgets.length },
-        { tabId: 'streaming' as TabModule, icon: Video, label: 'Studio Live' }
+        { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: materials.length },
+        { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
+        { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Lekarze / specjaliści', count: partners.filter(p => p.type === 'speaker').length },
+        { tabId: 'dresscode' as TabModule, icon: Palette, label: 'Standard placówki' },
+        { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Pakiety pacjenta', count: gadgets.length },
+        { tabId: 'streaming' as TabModule, icon: Video, label: 'Telekonsultacje' }
       ]
     },
     {
       title: 'Budżet i operacje',
       desc: 'Koszty, dostawy i logistyka',
       items: [
-        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Zgłoszenia', count: pendingApps.length, urgent: true },
-        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Budżet LIVE' },
-        { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Podwykonawcy' },
+        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
+        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
+        { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' },
         { tabId: 'transport' as TabModule, icon: Truck, label: 'Transport' },
         { tabId: 'catering_meals' as TabModule, icon: UtensilsCrossed, label: 'Catering', count: meals.length },
-        { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Checklista' },
-        { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja & Bilety', count: tiers.length }
+        { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
+        { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja wizyt', count: tiers.length }
       ]
     },
     {
       title: 'Organizacja',
       desc: 'Zaplecze i komunikacja',
       items: [
-        { tabId: 'minutowka' as TabModule, icon: ClipboardList, label: 'Organizer' },
-        { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Event Pass / QR', count: attendeeUnits.length },
-        { tabId: 'eko' as TabModule, icon: Recycle, label: 'GOZ / Eko' },
-        { tabId: 'stoly' as TabModule, icon: LayoutGrid, label: 'Stoły' },
-        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'Mailing' },
-        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Logistyka', count: approvedApps.length }
+        { tabId: 'minutowka' as TabModule, icon: ClipboardList, label: 'Plan dnia kliniki' },
+        { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Check-in QR', count: attendeeUnits.length },
+        { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
+        { tabId: 'stoly' as TabModule, icon: LayoutGrid, label: 'Układ gabinetów' },
+        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
+        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
     }
   ]
@@ -5619,10 +5631,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Globe size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-          Strona uczestnika (Guest Page)
+          Portal pacjenta i rejestracja online
         </h3>
         <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Ustaw, które sekcje mają pojawić się na publicznej stronie wydarzenia. Dane sekcji mogą istnieć w systemie, ale bez przełącznika "Widoczna" nie zostaną opublikowane.
+          Ustaw, które sekcje mają pojawić się na publicznej stronie pacjenta. To tutaj pacjent zostawia pierwszy kontakt, dane do rejestracji i wybiera dodatkowe opcje wizyty.
         </p>
       </div>
       
@@ -6173,10 +6185,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <FileIcon size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Materiały & Stopka strony
+          Zgody, zalecenia i dokumenty
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Dodawaj dokumenty, PDF-y, linki i zdecyduj, które mają pojawić się w stopce strony wydarzenia.
+          Dodawaj zgody, zalecenia pozabiegowe, dokumenty PDF i linki widoczne w portalu pacjenta.
         </p>
       </div>
 
@@ -6195,7 +6207,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
       >
         <Plus size={14} />
-        Dodaj materiał
+        Dodaj dokument
       </button>
     </div>
 
@@ -6590,7 +6602,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between">
         <div className="min-w-0 flex-1">
           <h2 className={`text-lg md:text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Zgłoszenia Aktywne 
+            Leady pacjentów / pierwszy kontakt
             <span className={`text-[10px] px-2.5 py-1 rounded-lg border uppercase tracking-widest font-black ${isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200/70'}`}>
               Beta
             </span>
@@ -6600,7 +6612,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className={`mt-4 flex items-start gap-3 p-4 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-gradient-to-r from-[#253a2a]/40 to-[#0f172a] border-[#e8ce7a]/20' : 'bg-gradient-to-r from-amber-50 to-white border-amber-200/60'}`}>
             <Sparkles size={18} className={`shrink-0 mt-0.5 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-amber-500'}`} />
             <p className={`text-xs font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-300' : 'text-amber-900'}`}>
-              <strong className={`font-black ${isDarkMode ? 'text-[#e8ce7a]' : ''}`}>Smart Hint:</strong> Tutaj trafiają osoby, które wypełniły formularz. Zweryfikuj ich status płatności przed akceptacją. System wkrótce będzie automatycznie oznaczał gości na podstawie integracji z bankiem.
+              <strong className={`font-black ${isDarkMode ? 'text-[#e8ce7a]' : ''}`}>Smart Hint:</strong> Tutaj trafiają pacjenci, którzy wypełnili formularz pierwszego kontaktu. Zweryfikuj dane, pilność sprawy i gotowość do umówienia wizyty.
             </p>
           </div>
         </div>
@@ -6640,7 +6652,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* 3. LISTA GOŚCI Z MASOWYMI AKCJAMI */}
+    {/* 3. LISTA LEADÓW PACJENTÓW Z MASOWYMI AKCJAMI */}
     <div className={`rounded-[24px] border shadow-sm overflow-hidden relative transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'}`}>
       
       {/* PŁYWAJĄCY PASEK DLA ZAZNACZONYCH */}
@@ -6796,10 +6808,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Clock size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Kreator agendy
+          Wizyty, zabiegi i konsultacje
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj wydarzeniami, przerwami, posiłkami i warsztatami w harmonogramie.
+          Zarządzaj kalendarzem wizyt, procedurami, konsultacjami i blokami pracy zespołu medycznego.
         </p>
       </div>
 
@@ -6812,7 +6824,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Plus size={14} />
-          Dodaj sesję
+          Dodaj wizytę
         </button>
       )}
     </div>
@@ -9015,10 +9027,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Wallet size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-          Centrum Finansowe Eventu
+          Płatności i koszty procedur
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Budżet, zaliczki, VAT, płatności i zrównoważone koszty całego wydarzenia.
+          Płatności pacjentów, zaliczki, VAT, koszty procedur i kontrola rentowności kliniki.
         </p>
       </div>
       
@@ -9053,10 +9065,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         <div>
           <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-            AI Eco-Budget Advisor
+            AI Finance Advisor
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Zrównoważone finanse
+            Finanse kliniki pod kontrolą
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapłaty. 
@@ -11387,10 +11399,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <ClipboardList size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Notatnik operacyjny i zadania
+          Zadania recepcji i opiekuna pacjenta
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Twórz check-listy, przypisuj priorytety i szacuj koszty na ostatniej prostej przed eventem.
+          Twórz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
         </p>
       </div>
 
@@ -11411,7 +11423,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Dodaj listę
+          <Plus size={14} /> Dodaj zadania
         </button>
       </div>
     </div>
@@ -14066,10 +14078,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <QrCode size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-          Event Pass / Centrum QR
+          Identyfikacja pacjenta i check-in QR
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj wejściówkami, kodami QR uczestników oraz uprawnieniami obsługi skanującej.
+          Zarządzaj kodami QR pacjentów, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunów.
         </p>
       </div>
       
@@ -14082,10 +14094,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <RefreshCw size={14} /> Odśwież
         </button>
         <button 
-          onClick={() => { setStaffAccessForm({ role: 'entry', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
+          onClick={() => { setStaffAccessForm({ role: 'reception', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
-          <ShieldCheck size={14} /> Dostęp obsługi
+          <ShieldCheck size={14} /> Role personelu
         </button>
         <button 
           onClick={handleGenerateUnitsForAllApplications} 
@@ -14099,13 +14111,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* METRYKI BAZOWE */}
     <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 md:gap-4">
       {[
-        ['Zgłoszenia', eventPassMetrics.activeApplications, Users],
-        ['Osoby łącznie', eventPassMetrics.units, UserRoundPlus],
+        ['Leady pacjentów', eventPassMetrics.activeApplications, Users],
+        ['Pacjenci łącznie', eventPassMetrics.units, UserRoundPlus],
         ['Wygenerowane QR', eventPassMetrics.qrGenerated, QrCode],
-        ['Skan wejść', eventPassMetrics.checkedIn, ScanLine],
-        ['Wydane opaski', eventPassMetrics.wristbandsIssued, BadgeCheck],
-        ['Zwroty opasek', eventPassMetrics.wristbandsReturned, CheckCircle2],
-        ['Konta obsługi', eventPassMetrics.staffAccess, ShieldCheck],
+        ['Check-in wizyt', eventPassMetrics.checkedIn, ScanLine],
+        ['Karty wydane', eventPassMetrics.wristbandsIssued, BadgeCheck],
+        ['Karty zwrócone', eventPassMetrics.wristbandsReturned, CheckCircle2],
+        ['Role personelu', eventPassMetrics.staffAccess, ShieldCheck],
       ].map(([label, value, Icon]: any) => (
         <div key={label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
@@ -14131,20 +14143,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="mb-6">
         <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <BarChart3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-          Raport Skanowań LIVE
+          Raport check-in LIVE
         </h4>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Realne wejścia, opaski, odebrane posiłki, gadżety i check-in transportowy na bazie Event Passów.
+          Realne skany QR, potwierdzone wizyty, wydane dokumenty i działania personelu na bazie identyfikacji pacjenta.
         </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Wejścia główne', value: eventPassOperationalReport.checkedIn, total: eventPassOperationalReport.totalUnits, color: 'bg-emerald-500' },
-          { label: 'Opaski wydane', value: eventPassOperationalReport.wristbandsIssued, total: eventPassOperationalReport.totalUnits, color: 'bg-blue-500' },
-          { label: 'Opaski zwrócone', value: eventPassOperationalReport.wristbandsReturned, total: eventPassOperationalReport.wristbandsIssued, color: 'bg-slate-500' },
-          { label: 'Posiłki odebrane', value: eventPassOperationalReport.mealsRedeemed, total: eventPassOperationalReport.mealChoices, color: 'bg-amber-500' },
-          { label: 'Gadżety wydane', value: eventPassOperationalReport.gadgetsRedeemed, total: eventPassOperationalReport.gadgetChoices, color: 'bg-purple-500' }
+          { label: 'Check-in wizyt', value: eventPassOperationalReport.checkedIn, total: eventPassOperationalReport.totalUnits, color: 'bg-emerald-500' },
+          { label: 'Identyfikatory wydane', value: eventPassOperationalReport.wristbandsIssued, total: eventPassOperationalReport.totalUnits, color: 'bg-blue-500' },
+          { label: 'Wizyty zamknięte', value: eventPassOperationalReport.wristbandsReturned, total: eventPassOperationalReport.wristbandsIssued, color: 'bg-slate-500' },
+          { label: 'Dokumenty wydane', value: eventPassOperationalReport.mealsRedeemed, total: eventPassOperationalReport.mealChoices, color: 'bg-amber-500' },
+          { label: 'Pakiety pacjenta', value: eventPassOperationalReport.gadgetsRedeemed, total: eventPassOperationalReport.gadgetChoices, color: 'bg-purple-500' }
         ].map(({ label, value, total, color }: any) => {
           const percent = Number(total || 0) > 0 ? Math.min(Math.round((Number(value || 0) / Number(total || 1)) * 100), 100) : 0
           return (
@@ -14163,9 +14175,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       
       {/* Dodatkowe staty tekstowe (Transport) */}
       <div className={`mt-5 pt-5 border-t flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
-        <p>Wszystkich osób: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.totalUnits}</span></p>
-        <p>Deklaracje transportowe: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportChoices}</span></p>
-        <p>Wejścia do autokarów: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportCheckins}</span></p>
+        <p>Pacjentów w QR: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.totalUnits}</span></p>
+        <p>Potrzeby opieki/dojazdu: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportChoices}</span></p>
+        <p>Koordynacje ścieżki: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportCheckins}</span></p>
       </div>
     </div>
 
@@ -14188,18 +14200,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           value={eventPassFilterStatus}
           onChange={e => setEventPassFilterStatus(e.target.value)}
         >
-          <option value="all">Filtruj: Wszystkie Pakiety</option>
-          <option value="active">Pakiety Aktywne</option>
+          <option value="all">Filtruj: wszyscy pacjenci</option>
+          <option value="active">Aktywne karty pacjenta</option>
           <option value="no_units">Oczekuje na generację QR</option>
-          <option value="checked_in">Zeskanowano wejście</option>
-          <option value="wristband_issued">Wydano opaskę</option>
+          <option value="checked_in">Zeskanowano check-in</option>
+          <option value="wristband_issued">Wydano identyfikator</option>
         </select>
       </div>
 
       <div className="space-y-4 p-4 md:p-5">
         {eventPassApplications.length === 0 ? (
           <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            Brak zgłoszeń pasujących do filtrów wyszukiwania.
+            Brak leadów pacjentów pasujących do filtrów wyszukiwania.
           </div>
         ) : eventPassApplications.map((app: any) => {
           const units = attendeeUnitsByApplication[app.id] || []
@@ -14240,9 +14252,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   {[
                     ['Wymagane', plannedUnits, isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'],
                     ['Kody QR', `${qrCount}/${plannedUnits}`, isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'],
-                    ['Wejścia', `${checkedInUnits}/${plannedUnits}`, isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700'],
-                    ['Opaski', `${wristbandIssuedUnits}/${plannedUnits}`, isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700'],
-                    ['Zwroty', `${wristbandReturnedUnits}/${wristbandIssuedUnits || 0}`, isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'],
+                    ['Check-in', `${checkedInUnits}/${plannedUnits}`, isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700'],
+                    ['Identyfikatory', `${wristbandIssuedUnits}/${plannedUnits}`, isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700'],
+                    ['Zamknięte', `${wristbandReturnedUnits}/${wristbandIssuedUnits || 0}`, isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'],
                   ].map(([lbl, val, cls]: any) => (
                     <div key={lbl} className={`px-3 py-2 rounded-xl border text-center min-w-[70px] ${cls}`}>
                       <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode && !cls.includes('text-') ? 'text-slate-500' : ''} ${!isDarkMode && !cls.includes('text-') ? 'text-slate-500' : ''}`}>{lbl}</p>
@@ -14264,7 +14276,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       onClick={() => toggleApplicationExpanded(app.id)} 
                       className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                     >
-                      Osoby ({units.length}) <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                      Pacjenci ({units.length}) <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
                   )}
                 </div>
@@ -14324,10 +14336,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <Eye size={12}/> Podgląd
                         </button>
                         <button onClick={() => handleCheckInAttendeeUnit(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}>
-                          <ScanLine size={12}/> Wejście
+                          <ScanLine size={12}/> Check-in
                         </button>
                         <button onClick={() => handleIssueWristband(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'}`}>
-                          <BadgeCheck size={12}/> Opaska
+                          <BadgeCheck size={12}/> Identyfikator
                         </button>
                         
                         {/* Wycofanie opcji schowane pod "Więcej" aby nie zagracać widoku */}
@@ -14337,7 +14349,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           </summary>
                           <div className={`absolute right-0 top-9 z-20 w-40 rounded-xl border p-1 shadow-xl flex flex-col gap-1 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                             <button onClick={() => handleReturnWristband(unit)} className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                              Zwrot Opaski
+                              Zamknij wizytę
                             </button>
                             <button onClick={() => handleResetUnitStatus(unit)} className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 ${isDarkMode ? 'text-red-400 hover:bg-slate-700' : 'text-red-600 hover:bg-red-50'}`}>
                               <XCircle size={12}/> Reset QR
@@ -14362,35 +14374,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="min-w-0">
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-            Dostęp dla personelu / obsługi
+            Role personelu i dostęp QR
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Twórz dedykowane, ograniczone linki (np. dla wydawania posiłków) i wyślij je pracownikom na telefony.
+            Twórz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
           </p>
         </div>
         <button 
-          onClick={() => { setStaffAccessForm({ role: 'entry', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
+          onClick={() => { setStaffAccessForm({ role: 'reception', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14}/> Dodaj konto obsługi
+          <Plus size={14}/> Dodaj rolę
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {staffAccessList.length === 0 ? (
           <div className={`col-span-full p-10 text-center font-bold text-sm border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak zdefiniowanych kont dla obsługi (staff-pass).
+            Brak zdefiniowanych ról personelu QR.
           </div>
         ) : staffAccessList.map((staff: any) => {
           const staffPassUrl = staff.access_token ? getStaffPassUrl(staff.access_token) : ''
           const shortLink = staff.access_token ? `/staff-pass/${String(staff.access_token).slice(0, 10)}...` : ''
           const permissions = [
-            staff.can_entry_checkin && 'Wejście',
-            staff.can_meal_redemption && 'Catering',
-            staff.can_gadget_redemption && 'Gadżety',
-            staff.can_transport_checkin && 'Transport',
-            staff.can_wristband_issue && 'Wydawanie opasek',
-            staff.can_wristband_return && 'Zwrot opasek',
+            staff.can_entry_checkin && 'Check-in wizyty',
+            staff.can_meal_redemption && 'Dokumenty',
+            staff.can_gadget_redemption && 'Pakiet pacjenta',
+            staff.can_transport_checkin && 'Ścieżka pacjenta',
+            staff.can_wristband_issue && 'Wydanie identyfikatora',
+            staff.can_wristband_return && 'Zamknięcie wizyty',
           ].filter(Boolean).join(' • ')
 
           return (
@@ -14398,7 +14410,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0">
                   <p className={`font-black text-lg truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{staff.name}</p>
-                  <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{staff.role}</p>
+                  <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{getClinicStaffRoleLabel(staff.role)}</p>
                 </div>
                 <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${staff.is_active !== false ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')}`}>
                   {staff.is_active !== false ? 'Aktywny' : 'Wyłączony'}
@@ -14569,10 +14581,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div>
               <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                Nowy dostęp dla obsługi
+                Nowa rola personelu
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Stwórz limitowany panel skanera QR dla pracownika.
+                Stwórz limitowany panel QR zależny od roli osoby skanującej.
               </p>
             </div>
             <button onClick={() => setIsStaffAccessModalOpen(false)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -14587,12 +14599,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rola systemowa</label>
-              <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={staffAccessForm.role || 'entry'} onChange={e => setStaffAccessForm({ ...staffAccessForm, role: e.target.value })}>
-                <option value="entry">Wejście Główne</option>
-                <option value="kitchen">Kuchnia / Catering</option>
-                <option value="gadgets">Punkt Wydawania Gadżetów</option>
-                <option value="transport">Koordynator Transportu</option>
-                <option value="manager">Manager (Pełny Dostęp)</option>
+              <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={staffAccessForm.role || 'reception'} onChange={e => setStaffAccessForm({ ...staffAccessForm, role: e.target.value })}>
+                <option value="reception">Recepcja</option>
+                <option value="doctor">Lekarz</option>
+                <option value="coordinator">Opiekun pacjenta</option>
+                <option value="manager">Manager (pełny dostęp)</option>
               </select>
             </div>
             
@@ -14600,12 +14611,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Uprawnienia akcji (Skaner QR)</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  ['can_entry_checkin', 'Weryfikacja Wejścia'],
-                  ['can_meal_redemption', 'Wydawanie Posiłków'],
-                  ['can_gadget_redemption', 'Wydawanie Gadżetów'],
-                  ['can_transport_checkin', 'Check-in Transportu'],
-                  ['can_wristband_issue', 'Wydawanie Opasek'],
-                  ['can_wristband_return', 'Zwroty Opasek'],
+                  ['can_entry_checkin', 'Check-in wizyty'],
+                  ['can_meal_redemption', 'Zalecenia / dokumenty'],
+                  ['can_gadget_redemption', 'Pakiet pacjenta'],
+                  ['can_transport_checkin', 'Koordynacja ścieżki'],
+                  ['can_wristband_issue', 'Wydanie identyfikatora'],
+                  ['can_wristband_return', 'Zamknięcie wizyty'],
                 ].map(([key, label]) => (
                   <label key={key} className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                     !!staffAccessForm[key]
@@ -14913,7 +14924,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Brak RSVP (Reminder Needed)</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Brak follow-upu</p>
         <p className="text-xl font-black text-amber-600">{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} os.</p>
         <p className="text-[10px] text-slate-400 font-bold">Wymaga pilnego kontaktu</p>
       </div>
@@ -14931,7 +14942,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <Sparkles size={18} /> AI asystent wiadomości
           </h3>
           <p className="mt-2 text-xs text-white/70 font-medium">
-            W przyszłym kroku wygeneruje treści zaproszeń, przypomnień i follow-upów na podstawie statusów RSVP, biletów i segmentów gości.
+            W przyszłym kroku wygeneruje treści SMS, e-maili, zaleceń i follow-upów na podstawie statusów pacjentów, wizyt i segmentów opieki.
           </p>
         </div>
         <span className="rounded-full bg-white/10 px-3 py-1 text-[9px] font-black uppercase text-[#e8ce7a]">
@@ -14967,7 +14978,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      {/* KANAŁ: AUTOMATYKA RSVP */}
+      {/* KANAŁ: AUTOMATYKA FOLLOW-UP */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-50 border-b border-slate-200 flex items-center gap-3 text-slate-900">
           <div className="p-2 bg-amber-100 rounded-lg text-amber-700"><Zap size={18}/></div>
@@ -14979,10 +14990,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="p-6 flex flex-col justify-between flex-1">
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
             <h4 className="text-xs font-black text-amber-900 mb-2 uppercase flex items-center gap-2">
-              <AlertTriangle size={14}/> Segmentacja: Brak RSVP
+              <AlertTriangle size={14}/> Segmentacja: brak follow-upu
             </h4>
             <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-              System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} gości</strong>, którzy mimo akceptacji nie wypełnili jeszcze formularza logistycznego (noclegi, transport, dieta).
+              System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentów</strong>, którzy wymagają potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
             </p>
           </div>
           
@@ -14998,7 +15009,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="flex items-center justify-between p-3 border border-[#253a2a] rounded-xl bg-[#253a2a]/5 group">
               <div className="flex items-center gap-3">
                 <Mail size={16} className="text-[#253a2a]"/>
-                <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">Email Reminder (RSVP Link)</span>
+                <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">Email follow-up z linkiem pacjenta</span>
               </div>
               <button className="text-[10px] font-black text-white bg-[#253a2a] px-3 py-1 rounded-lg uppercase shadow-sm hover:scale-105 transition-all">
                 Wyślij teraz

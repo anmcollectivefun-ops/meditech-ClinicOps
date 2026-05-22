@@ -25,6 +25,21 @@ import {
 
 const isEnabled = (value: any) => value === true || value === 'true'
 
+const getOrCreatePatientId = (email?: string | null) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+  const storageKey = normalizedEmail ? `clinic_patient_id_${normalizedEmail}` : 'clinic_patient_id'
+  const existing = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null
+
+  if (existing) return existing
+
+  const patientId = crypto.randomUUID()
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(storageKey, patientId)
+  }
+
+  return patientId
+}
+
 const getPreviewUrl = (file: File | null, currentUrl: string | null) => {
   if (file) return URL.createObjectURL(file)
   return currentUrl || null
@@ -1012,6 +1027,7 @@ const handleJoin = async (e: React.FormEvent) => {
     .from('b2b_applications')
     .insert([{
       event_id: event.id,
+      patient_id: getOrCreatePatientId(form.email),
       first_name: form.firstName,
       last_name: form.lastName,
       email: form.email,
