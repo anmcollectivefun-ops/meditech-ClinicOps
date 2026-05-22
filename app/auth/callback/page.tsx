@@ -6,9 +6,9 @@ import { createClient } from '../../lib/supabase'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
     const code = new URLSearchParams(window.location.search).get('code')
 
     if (code) {
