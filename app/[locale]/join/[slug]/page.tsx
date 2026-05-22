@@ -3,60 +3,56 @@
 // ==========================================
 // 1. IMPORTY I KONFIGURACJA
 // ==========================================
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Calendar, MapPin, CheckCircle2, X, Clock, Phone,
-  Info, User, Activity, Stethoscope, FileText, Bell,
-  ChevronRight, Plus, ArrowRight, Download, LogOut,
-  Syringe, ShieldCheck, HeartPulse, ChevronDown
+  Calendar, MapPin, CheckCircle2, X, Clock,
+  User, Activity, Stethoscope, FileText, Bell,
+  Plus, Download, LogOut, HeartPulse, ArrowRight
 } from 'lucide-react'
 
-// Mockujemy Supabase na potrzeby widoku - w realnym środowisku odkomentuj importy
-// import { createClient } from '../../../lib/supabase'
-
 // ==========================================
-// 2. MOCK DATA (Zastąpi zapytania do bazy)
+// 2. MOCK DATA (Odzwierciedla strukturę bazy)
 // ==========================================
 const MOCK_PATIENT = {
   id: 'p-12345',
   first_name: 'Anna',
-  last_name: 'Kowalska',
+  last_name: 'Nowak',
   pesel: '85021212345',
-  email: 'anna.kowalska@example.com',
+  email: 'anna.nowak@example.com',
 }
 
 const MOCK_ANNOUNCEMENTS = [
-  { id: 1, title: 'Dni Otwartych Laseroterapii', date: '2026-06-01', type: 'promo', content: 'Zapisz się na bezpłatną konsultację laserową w dniach 1-5 czerwca.' },
-  { id: 2, title: 'Urlop dr. Nowaka', date: '2026-06-15', type: 'info', content: 'Dr Jan Nowak przebywa na urlopie od 15 do 30 czerwca. W nagłych przypadkach prosimy o kontakt z recepcją.' },
-  { id: 3, title: 'Nowy sprzęt: HIFU', date: '2026-05-20', type: 'news', content: 'Wprowadziliśmy najnowszą technologię liftingu bez skalpela. Zapytaj swojego lekarza prowadzącego.' }
+  { id: 1, title: 'Dni Otwartych Technologii', date: '2026-06-01', type: 'promo', content: 'Zapisz się na bezpłatną konsultację technologiczną w dniach 1-5 czerwca.' },
+  { id: 2, title: 'Aktualizacja harmonogramów', date: '2026-06-15', type: 'info', content: 'Część specjalistów przebywa na urlopach w drugiej połowie miesiąca. Prosimy o wcześniejsze planowanie wizyt.' },
+  { id: 3, title: 'Nowy sprzęt w naszej klinice', date: '2026-05-20', type: 'news', content: 'Wprowadziliśmy najnowszą technologię małoinwazyjną. Zapytaj swojego lekarza prowadzącego o szczegóły.' }
 ]
 
 const MOCK_APPOINTMENTS = [
   { id: 101, date: '2026-05-25T14:30:00', doctor: 'Dr Karolina Wiśniewska', specialty: 'Medycyna Estetyczna', status: 'upcoming', location: 'Gabinet 3, Piętro 1' },
-  { id: 102, date: '2026-04-10T11:00:00', doctor: 'Dr Jan Nowak', specialty: 'Chirurgia', status: 'completed', location: 'Gabinet 1, Parter' }
+  { id: 102, date: '2026-04-10T11:00:00', doctor: 'Dr Jan Kowalski', specialty: 'Chirurgia', status: 'completed', location: 'Gabinet 1, Parter' }
 ]
 
 const MOCK_RECORDS = [
-  { id: 201, date: '2026-04-10', title: 'Zalecenia po zabiegu laserowym', type: 'zalecenia', fileUrl: '#' },
-  { id: 202, date: '2026-03-15', title: 'Wyniki badań krwi', type: 'badania', fileUrl: '#' },
-  { id: 203, date: '2026-02-28', title: 'Zgoda na zabieg botuliny', type: 'zgoda', fileUrl: '#' }
+  { id: 201, date: '2026-04-10', title: 'Zalecenia po zabiegu', type: 'zalecenia', fileUrl: '#' },
+  { id: 202, date: '2026-03-15', title: 'Karta wyników laboratoryjnych', type: 'badania', fileUrl: '#' },
+  { id: 203, date: '2026-02-28', title: 'Dokumentacja medyczna (Zgoda)', type: 'zgoda', fileUrl: '#' }
 ]
 
 const MOCK_DOCTORS = [
   { id: 'd1', name: 'Dr Karolina Wiśniewska', specialty: 'Medycyna Estetyczna', photo: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300&h=400' },
-  { id: 'd2', name: 'Dr Jan Nowak', specialty: 'Chirurgia Plastyczna', photo: 'https://images.unsplash.com/photo-1612349317150-e410f624c427?auto=format&fit=crop&q=80&w=300&h=400' }
+  { id: 'd2', name: 'Dr Jan Kowalski', specialty: 'Chirurgia Plastyczna', photo: 'https://images.unsplash.com/photo-1612349317150-e410f624c427?auto=format&fit=crop&q=80&w=300&h=400' }
 ]
 
 // ==========================================
-// 3. GŁÓWNY KOMPONENT PORTALU PACJENTA
+// 3. GŁÓWNY KOMPONENT PORTALU
 // ==========================================
 export default function PatientPortal() {
   // --- STANY AUTORYZACJI ---
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginPesel, setLoginPesel] = useState('')
   const [loginError, setLoginError] = useState('')
-
+  
   // --- STANY DANYCH ---
   const [patient, setPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -66,27 +62,19 @@ export default function PatientPortal() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [bookingForm, setBookingForm] = useState({ doctorId: '', date: '' })
 
-  // --- STYLISTYKA GUNARYS (Wzorowana na Twoim kodzie) ---
-  const primColor = '#253a2a' // Ciemna, butelkowa zieleń
-  const secColor = '#e8ce7a'  // Złoto Premium
-  const bgColor = '#0f172a'   // Ciemny grafit (Tło)
-  const cardBg = '#1e293b'    // Karty
-  const headColor = '#ffffff'
-  const txtColor = '#94a3b8'
-
   // --- HANDLERY ---
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setLoginError('')
     
-    // Symulacja logowania
+    // Symulacja API
     setTimeout(() => {
       if (loginPesel.length >= 4) {
         setPatient(MOCK_PATIENT)
         setIsLoggedIn(true)
       } else {
-        setLoginError('Nieprawidłowe dane logowania. Wpisz poprawny PESEL.')
+        setLoginError('Nieprawidłowe dane logowania. Wpisz poprawny numer identyfikacyjny.')
       }
       setLoading(false)
     }, 800)
@@ -100,46 +88,42 @@ export default function PatientPortal() {
 
   const handleBookVisit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Tutaj normalnie wysyłamy do Supabase tabeli `appointments`
     alert('Zgłoszenie rezerwacji zostało wysłane. Oczekuj na potwierdzenie z recepcji.')
     setIsBookingModalOpen(false)
   }
 
   // ==========================================
-  // WIDOK LOGOWANIA (Gdy pacjent nie jest zalogowany)
+  // WIDOK LOGOWANIA (Brak autoryzacji)
   // ==========================================
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ backgroundColor: bgColor }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#071016] text-white">
         {/* Tło i blury */}
-        <div className="absolute top-1/4 left-1/4 w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20 pointer-events-none" style={{ backgroundColor: primColor }} />
-        <div className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] rounded-full blur-[100px] opacity-10 pointer-events-none" style={{ backgroundColor: secColor }} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.15),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.12),transparent_30%)] pointer-events-none" />
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full max-w-md p-8 rounded-[40px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
-          style={{ backgroundColor: `${cardBg}E6` }}
+          className="relative z-10 w-full max-w-md p-8 rounded-[40px] border border-white/10 bg-[#101a22]/80 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
         >
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-inner border border-white/5" style={{ backgroundColor: `${secColor}15` }}>
-              <HeartPulse size={32} style={{ color: secColor }} />
+            <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-inner border border-cyan-300/20 bg-cyan-300/10">
+              <HeartPulse size={32} className="text-cyan-200" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight" style={{ color: headColor }}>Portal Pacjenta</h1>
-            <p className="text-sm mt-2" style={{ color: txtColor }}>Centrum Medyczne Gunarys</p>
+            <h1 className="text-3xl font-black tracking-tight text-white">Portal Pacjenta</h1>
+            <p className="text-sm mt-2 text-slate-400">Zintegrowany System Medyczny</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest mb-2 block" style={{ color: txtColor }}>Weryfikacja tożsamości (PESEL)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest mb-2 block text-slate-400">Weryfikacja tożsamości</label>
               <input 
                 type="password" 
                 required
-                placeholder="Wpisz PESEL lub numer pacjenta"
+                placeholder="Wpisz PESEL lub ID Pacjenta"
                 value={loginPesel}
                 onChange={e => setLoginPesel(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl outline-none text-white font-bold transition-all border border-white/10 focus:border-white/30"
-                style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+                className="w-full px-5 py-4 rounded-2xl outline-none text-white font-bold transition-all border border-white/10 bg-white/[0.03] focus:border-cyan-300/50 focus:bg-white/[0.06]"
               />
             </div>
             
@@ -148,15 +132,14 @@ export default function PatientPortal() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-black shadow-lg transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-              style={{ backgroundColor: secColor }}
+              className="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-[#071016] bg-cyan-200 shadow-lg shadow-cyan-300/10 transition-all hover:bg-cyan-100 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
             >
               {loading ? 'Weryfikacja...' : 'Zaloguj się do portalu'}
             </button>
           </form>
           
-          <p className="text-center text-[10px] mt-8 opacity-40 font-medium" style={{ color: headColor }}>
-            Bezpieczne logowanie szyfrowane SSL. Przetwarzanie danych zgodne z RODO i standardami medycznymi.
+          <p className="text-center text-[10px] mt-8 text-slate-500 font-medium leading-relaxed">
+            Bezpieczne logowanie szyfrowane SSL.<br/>Przetwarzanie danych zgodne z RODO i standardami medycznymi.
           </p>
         </motion.div>
       </div>
@@ -169,54 +152,52 @@ export default function PatientPortal() {
   const upcomingAppointment = MOCK_APPOINTMENTS.find(a => a.status === 'upcoming')
 
   return (
-    <div className="min-h-screen relative selection:bg-emerald-500 selection:text-white" style={{ backgroundColor: bgColor, color: txtColor }}>
+    <div className="min-h-screen relative selection:bg-cyan-500/30 selection:text-cyan-100 bg-[#071016] text-slate-300">
       {/* Tła ambiwalentne */}
-      <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-[#253a2a]/20 to-transparent pointer-events-none" />
-      <div className="fixed top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full blur-[140px] opacity-20 pointer-events-none" style={{ backgroundColor: secColor }} />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.08),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.06),transparent_30%)] pointer-events-none z-0" />
 
       {/* HEADER NAWIGACYJNY */}
-      <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-xl" style={{ backgroundColor: `${bgColor}E6` }}>
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#071016]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 shadow-inner" style={{ backgroundColor: primColor }}>
-              <HeartPulse size={20} style={{ color: secColor }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-cyan-300/20 bg-cyan-300/10">
+              <HeartPulse size={20} className="text-cyan-200" />
             </div>
             <div>
-              <h2 className="font-black text-sm uppercase tracking-widest" style={{ color: headColor }}>Gunarys</h2>
-              <p className="text-[9px] font-bold opacity-60">Portal Pacjenta</p>
+              <h2 className="font-black text-sm uppercase tracking-widest text-white">Premium Clinic</h2>
+              <p className="text-[9px] font-bold text-slate-500">Portal Pacjenta</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
           >
             <LogOut size={12} /> Wyloguj
           </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10 md:py-16 space-y-12">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10 md:py-16 space-y-12">
         
         {/* HERO - POWITANIE I NAJBLIŻSZA WIZYTA */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col lg:flex-row gap-8 items-stretch">
           
           <div className="flex-1 flex flex-col justify-center">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-white/10 w-fit" style={{ color: secColor, backgroundColor: `${secColor}10` }}>
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 w-fit">
               Twoja Strefa Zdrowia
             </span>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight" style={{ color: headColor }}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-white">
               Dzień dobry, {patient.first_name}.
             </h1>
-            <p className="mt-4 text-sm md:text-base leading-relaxed max-w-xl">
-              Witamy w zintegrowanym systemie Gunarys. Znajdziesz tu pełną historię swojego leczenia, wyniki badań oraz komunikaty z kliniki.
+            <p className="mt-4 text-sm md:text-base leading-relaxed max-w-xl text-slate-400">
+              Witamy w zintegrowanym systemie medycznym. Znajdziesz tu pełną historię swojego leczenia, wyniki badań oraz najważniejsze komunikaty.
             </p>
           </div>
 
-          <div className="lg:w-[400px] shrink-0 p-6 md:p-8 rounded-[32px] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.3)] relative overflow-hidden" style={{ backgroundColor: primColor }}>
-            {/* Dekoracja na karcie */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="lg:w-[400px] shrink-0 p-6 md:p-8 rounded-[32px] border border-white/10 bg-[#101a22]/80 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-400/5 rounded-full blur-2xl pointer-events-none" />
             
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-4 flex items-center gap-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
               <Calendar size={14} /> Najbliższa Wizyta
             </p>
             
@@ -225,24 +206,23 @@ export default function PatientPortal() {
                 <h3 className="text-2xl font-black text-white mb-1">
                   {new Date(upcomingAppointment.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })}
                 </h3>
-                <p className="text-3xl font-black mb-6" style={{ color: secColor }}>
+                <p className="text-3xl font-black mb-6 text-cyan-300">
                   {new Date(upcomingAppointment.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 <div className="space-y-2 mb-8">
-                  <p className="text-sm font-bold text-white flex items-center gap-2"><User size={14} className="opacity-50"/> {upcomingAppointment.doctor}</p>
-                  <p className="text-xs font-medium text-white/70 flex items-center gap-2"><MapPin size={14} className="opacity-50"/> {upcomingAppointment.location}</p>
+                  <p className="text-sm font-bold text-slate-300 flex items-center gap-2"><User size={14} className="text-slate-500"/> {upcomingAppointment.doctor}</p>
+                  <p className="text-xs font-medium text-slate-400 flex items-center gap-2"><MapPin size={14} className="text-slate-500"/> {upcomingAppointment.location}</p>
                 </div>
-                <button className="w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border border-white/20 bg-white/10 hover:bg-white/20 transition-colors text-white">
-                  Szczegóły przygotowania
+                <button className="w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-white">
+                  Szczegóły wizyty
                 </button>
               </>
             ) : (
               <div className="py-6">
-                <p className="text-white/60 text-sm font-medium mb-6">Brak zaplanowanych wizyt w najbliższym czasie.</p>
+                <p className="text-slate-400 text-sm font-medium mb-6">Brak zaplanowanych wizyt w najbliższym czasie.</p>
                 <button 
                   onClick={() => setIsBookingModalOpen(true)}
-                  className="w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest text-black shadow-lg hover:scale-[1.02] transition-transform"
-                  style={{ backgroundColor: secColor }}
+                  className="w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest text-[#071016] bg-cyan-200 shadow-lg shadow-cyan-300/10 hover:bg-cyan-100 hover:scale-[1.02] transition-all"
                 >
                   Umów nową wizytę
                 </button>
@@ -251,11 +231,11 @@ export default function PatientPortal() {
           </div>
         </motion.div>
 
-        {/* AKTUALNOŚCI - KINOWA KARUZELA (Zamiast Sponsorów) */}
+        {/* AKTUALNOŚCI - KINOWA KARUZELA */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black flex items-center gap-2" style={{ color: headColor }}>
-              <Bell size={20} style={{ color: secColor }} /> Komunikaty Kliniki
+            <h3 className="text-xl font-black flex items-center gap-2 text-white">
+              <Bell size={20} className="text-cyan-300" /> Komunikaty Kliniki
             </h3>
           </div>
           
@@ -263,28 +243,27 @@ export default function PatientPortal() {
             {MOCK_ANNOUNCEMENTS.map((announcement) => (
               <div 
                 key={announcement.id} 
-                className="shrink-0 snap-start w-[280px] md:w-[340px] p-6 rounded-[28px] border border-white/5 transition-all hover:bg-white/[0.04]"
-                style={{ backgroundColor: `${cardBg}80` }}
+                className="shrink-0 snap-start w-[280px] md:w-[340px] p-6 rounded-[28px] border border-white/5 bg-white/[0.02] transition-colors hover:bg-white/[0.04]"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${
-                    announcement.type === 'promo' ? 'bg-amber-500/20 text-amber-400' :
-                    announcement.type === 'info' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
+                    announcement.type === 'promo' ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/20' :
+                    announcement.type === 'info' ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
                   }`}>
                     {announcement.type === 'promo' ? 'Promocja' : announcement.type === 'info' ? 'Ważne' : 'Aktualność'}
                   </span>
-                  <span className="text-[10px] opacity-40 font-bold">{announcement.date}</span>
+                  <span className="text-[10px] text-slate-500 font-bold">{announcement.date}</span>
                 </div>
-                <h4 className="text-base font-black mb-2 leading-tight" style={{ color: headColor }}>{announcement.title}</h4>
-                <p className="text-xs leading-relaxed opacity-70 line-clamp-3">{announcement.content}</p>
+                <h4 className="text-base font-black mb-2 leading-tight text-white">{announcement.title}</h4>
+                <p className="text-xs leading-relaxed text-slate-400 line-clamp-3">{announcement.content}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* NAWIGACJA ZAKŁADEK (Zamiast modułów eventowych) */}
+        {/* NAWIGACJA ZAKŁADEK */}
         <section>
-          <div className="flex gap-2 p-1.5 bg-white/5 border border-white/5 rounded-2xl w-fit mb-8">
+          <div className="flex flex-wrap gap-2 p-1.5 bg-white/[0.02] border border-white/5 rounded-2xl w-fit mb-8">
             {[
               { id: 'wizyty', label: 'Historia Wizyt', icon: Clock },
               { id: 'historia', label: 'Wyniki & Zalecenia', icon: FileText },
@@ -294,7 +273,7 @@ export default function PatientPortal() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all ${
-                  activeTab === tab.id ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                  activeTab === tab.id ? 'bg-white/10 text-white shadow-sm border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <tab.icon size={14} /> {tab.label}
@@ -303,38 +282,38 @@ export default function PatientPortal() {
           </div>
 
           <AnimatePresence mode="wait">
-            {/* ZAKŁADKA 1: WIZYTY (Na bazie Agendy) */}
+            {/* ZAKŁADKA 1: WIZYTY */}
             {activeTab === 'wizyty' && (
               <motion.div key="wizyty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-black" style={{ color: headColor }}>Twoje wizyty</h3>
-                  <button onClick={() => setIsBookingModalOpen(true)} className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-black transition-transform hover:scale-105" style={{ backgroundColor: secColor }}>
-                    <Plus size={12} className="inline mr-1"/> Umów nową
+                  <h3 className="text-2xl font-black text-white">Twoje wizyty</h3>
+                  <button onClick={() => setIsBookingModalOpen(true)} className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-[#071016] bg-cyan-200 transition-transform hover:scale-105 flex items-center gap-2">
+                    <Plus size={12} /> Umów nową
                   </button>
                 </div>
                 
                 <div className="space-y-4">
                   {MOCK_APPOINTMENTS.map((apt) => (
-                    <div key={apt.id} className="p-5 md:p-6 rounded-[24px] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors hover:bg-white/[0.02]" style={{ backgroundColor: cardBg }}>
+                    <div key={apt.id} className="p-5 md:p-6 rounded-[24px] border border-white/5 bg-white/[0.02] flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors hover:bg-white/[0.04]">
                       <div className="flex items-start gap-5">
-                        <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center shrink-0 ${apt.status === 'upcoming' ? 'border-[#e8ce7a] text-[#e8ce7a]' : 'border-emerald-500/30 text-emerald-500'}`}>
+                        <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center shrink-0 ${apt.status === 'upcoming' ? 'border-cyan-300/30 text-cyan-300 bg-cyan-300/10' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'}`}>
                           {apt.status === 'upcoming' ? <Clock size={20} /> : <CheckCircle2 size={20} />}
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
                             {new Date(apt.date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
                           </p>
                           <h4 className="text-lg font-black text-white">{apt.specialty}</h4>
-                          <p className="text-sm opacity-60 mt-1">{apt.doctor}</p>
+                          <p className="text-sm text-slate-400 mt-1">{apt.doctor}</p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${apt.status === 'upcoming' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${apt.status === 'upcoming' ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
                           {apt.status === 'upcoming' ? 'Zaplanowana' : 'Zrealizowana'}
                         </span>
                         {apt.status === 'upcoming' && (
-                          <button className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors text-white/40 border border-white/10" title="Odwołaj">
+                          <button className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors text-slate-500 border border-white/10" title="Odwołaj">
                             <X size={16} />
                           </button>
                         )}
@@ -345,23 +324,23 @@ export default function PatientPortal() {
               </motion.div>
             )}
 
-            {/* ZAKŁADKA 2: DOKUMENTY (Na bazie Materiałów z pobieraniem) */}
+            {/* ZAKŁADKA 2: DOKUMENTY I WYNIKI */}
             {activeTab === 'historia' && (
               <motion.div key="historia" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <h3 className="text-2xl font-black mb-6" style={{ color: headColor }}>Wyniki Badań i Zalecenia</h3>
+                <h3 className="text-2xl font-black mb-6 text-white">Wyniki Badań i Zalecenia</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {MOCK_RECORDS.map((rec) => (
-                    <div key={rec.id} className="p-5 rounded-[24px] border border-white/5 flex items-center justify-between gap-4 group transition-colors hover:bg-white/[0.04]" style={{ backgroundColor: cardBg }}>
+                    <div key={rec.id} className="p-5 rounded-[24px] border border-white/5 bg-white/[0.02] flex items-center justify-between gap-4 group transition-colors hover:bg-white/[0.04]">
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                          {rec.type === 'zalecenia' ? <HeartPulse size={18} className="text-blue-400"/> : rec.type === 'badania' ? <Activity size={18} className="text-emerald-400"/> : <ShieldCheck size={18} className="text-amber-400"/>}
+                          {rec.type === 'zalecenia' ? <HeartPulse size={18} className="text-cyan-300"/> : rec.type === 'badania' ? <Activity size={18} className="text-emerald-400"/> : <ShieldCheck size={18} className="text-blue-400"/>}
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-sm font-black text-white truncate">{rec.title}</h4>
-                          <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold mt-1">Data: {rec.date}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Data: {rec.date}</p>
                         </div>
                       </div>
-                      <a href={rec.fileUrl} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center shrink-0 group-hover:border-[#e8ce7a] group-hover:text-[#e8ce7a] transition-all bg-white/5">
+                      <a href={rec.fileUrl} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center shrink-0 group-hover:border-cyan-300/50 group-hover:text-cyan-300 transition-all bg-white/5 text-slate-400">
                         <Download size={16} />
                       </a>
                     </div>
@@ -370,27 +349,27 @@ export default function PatientPortal() {
               </motion.div>
             )}
 
-            {/* ZAKŁADKA 3: ZESPÓŁ MEDYCZNY (Na bazie Prelegentów ze zdjęciami) */}
+            {/* ZAKŁADKA 3: ZESPÓŁ MEDYCZNY */}
             {activeTab === 'lekarze' && (
               <motion.div key="lekarze" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <h3 className="text-2xl font-black mb-6" style={{ color: headColor }}>Lekarze prowadzący</h3>
+                <h3 className="text-2xl font-black mb-6 text-white">Lekarze prowadzący</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {MOCK_DOCTORS.map((doc) => (
-                    <div key={doc.id} className="rounded-[32px] overflow-hidden border border-white/10 group relative" style={{ backgroundColor: cardBg }}>
+                    <div key={doc.id} className="rounded-[32px] overflow-hidden border border-white/10 group relative bg-[#101a22]">
                       <div className="aspect-[4/5] relative overflow-hidden">
                         <img src={doc.photo} alt={doc.name} className="w-full h-full object-cover filter grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#071016] via-[#071016]/40 to-transparent" />
                         
-                        <div className="absolute bottom-0 left-0 p-6">
-                          <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: secColor }}>{doc.specialty}</p>
+                        <div className="absolute bottom-0 left-0 p-6 w-full">
+                          <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-cyan-300">{doc.specialty}</p>
                           <h4 className="text-xl font-black text-white leading-tight">{doc.name}</h4>
                         </div>
                       </div>
-                      <div className="p-4 flex gap-2 bg-white/5">
-                        <button onClick={() => setIsBookingModalOpen(true)} className="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-black bg-white hover:bg-slate-200 transition-colors">
+                      <div className="p-4 flex gap-2 border-t border-white/5">
+                        <button onClick={() => setIsBookingModalOpen(true)} className="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-[#071016] bg-cyan-200 hover:bg-cyan-100 transition-colors">
                           Umów wizytę
                         </button>
-                        <button className="w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors text-white">
+                        <button className="w-10 h-10 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors text-slate-300">
                           <Info size={16} />
                         </button>
                       </div>
@@ -403,43 +382,48 @@ export default function PatientPortal() {
         </section>
       </main>
 
-      {/* MODAL REZERWACJI (Zastępuje modal RSVP) */}
+      {/* MODAL REZERWACJI WIZYTY */}
       <AnimatePresence>
         {isBookingModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBookingModalOpen(false)} className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBookingModalOpen(false)} className="absolute inset-0 bg-[#071016]/90 backdrop-blur-xl" />
             
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} className="relative z-10 w-full max-w-lg p-8 rounded-[40px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)]" style={{ backgroundColor: `${cardBg}FA` }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 10 }} 
+              className="relative z-10 w-full max-w-lg p-8 rounded-[40px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-[#101a22]"
+            >
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] mb-3 border border-white/10" style={{ color: secColor, backgroundColor: `${secColor}15` }}>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] mb-3 border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
                     <Calendar size={12} /> e-Rezerwacja
                   </span>
                   <h3 className="text-2xl font-black text-white">Umów wizytę</h3>
                 </div>
-                <button onClick={() => setIsBookingModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"><X size={18} /></button>
+                <button onClick={() => setIsBookingModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors text-slate-400 hover:text-white"><X size={18} /></button>
               </div>
 
               <form onSubmit={handleBookVisit} className="space-y-5">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2 block">Specjalista</label>
-                  <select required className="w-full bg-black/30 border border-white/10 p-4 rounded-2xl outline-none focus:border-white/30 text-white font-bold" value={bookingForm.doctorId} onChange={e => setBookingForm({...bookingForm, doctorId: e.target.value})}>
-                    <option value="" className="bg-slate-900">Wybierz lekarza...</option>
-                    {MOCK_DOCTORS.map(doc => <option key={doc.id} value={doc.id} className="bg-slate-900">{doc.name} - {doc.specialty}</option>)}
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Specjalista</label>
+                  <select required className="w-full bg-white/[0.03] border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-300/50 text-white font-bold transition-colors" value={bookingForm.doctorId} onChange={e => setBookingForm({...bookingForm, doctorId: e.target.value})}>
+                    <option value="" className="bg-[#101a22] text-slate-400">Wybierz lekarza...</option>
+                    {MOCK_DOCTORS.map(doc => <option key={doc.id} value={doc.id} className="bg-[#101a22] text-white">{doc.name} - {doc.specialty}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2 block">Preferowany termin</label>
-                  <input required type="datetime-local" className="w-full bg-black/30 border border-white/10 p-4 rounded-2xl outline-none focus:border-white/30 text-white font-bold" value={bookingForm.date} onChange={e => setBookingForm({...bookingForm, date: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Preferowany termin</label>
+                  <input required type="datetime-local" className="w-full bg-white/[0.03] border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-300/50 text-white font-bold transition-colors" value={bookingForm.date} onChange={e => setBookingForm({...bookingForm, date: e.target.value})} />
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs opacity-70 leading-relaxed mt-2">
-                  To jest zgłoszenie preferencji. Ostateczny termin zostanie potwierdzony przez recepcję telefonicznie lub SMS-em.
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs text-slate-400 leading-relaxed mt-2 font-medium">
+                  To jest zgłoszenie preferencji. Ostateczny termin zostanie potwierdzony przez recepcję w systemie lub telefonicznie.
                 </div>
 
-                <button type="submit" className="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-black shadow-lg hover:scale-[1.02] transition-transform mt-4" style={{ backgroundColor: secColor }}>
-                  Wyślij zgłoszenie
+                <button type="submit" className="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-[#071016] bg-cyan-200 shadow-lg shadow-cyan-300/10 hover:bg-cyan-100 hover:scale-[1.02] transition-transform mt-4">
+                  Wyślij prośbę o wizytę
                 </button>
               </form>
             </motion.div>
