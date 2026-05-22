@@ -5621,7 +5621,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 {/* ============================================================================ */}
-{/* strona uczestnika */}
+{/* PORTAL PACJENTA / STRONA PUBLICZNA */}
 {/* ============================================================================ */}
 {activeTab === 'strona_uczestnika' && (
   <form onSubmit={handleSaveParticipantPageSettings} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -5630,11 +5630,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Globe size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
-          Portal pacjenta i rejestracja online
+          <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          Portal Pacjenta i e-Rejestracja
         </h3>
         <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Ustaw, które sekcje mają pojawić się na publicznej stronie pacjenta. To tutaj pacjent zostawia pierwszy kontakt, dane do rejestracji i wybiera dodatkowe opcje wizyty.
+          Skonfiguruj Cyfrową Ścieżkę Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje się z informacjami o zabiegach.
         </p>
       </div>
       
@@ -5648,7 +5648,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }`}
         >
           {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />} 
-          Zapisz zmiany
+          Zapisz zmiany w Portalu
         </button>
       </div>
     </div>
@@ -5660,15 +5660,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
       <div>
         <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
-          Uwaga dla administratora
+          Uwaga dla administratora systemu medycznego
         </p>
         <p className={`text-xs font-medium mt-1 leading-relaxed ${isDarkMode ? 'text-amber-500/80' : 'text-amber-900'}`}>
-          Ten edytor operuje na strukturze tabeli `b2b_events`. Jeśli wgrana aktualizacja wymaga nowych sekcji, upewnij się, że schemat SQL w Supabase został zaktualizowany, w przeciwnym razie ustawienia widoczności nowych bloków nie zostaną trwale zapisane.
+          Ten edytor zarządza strukturą tabeli `b2b_events`. Jeśli integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych bloków (np. historii zabiegowej), upewnij się, że schemat SQL w Supabase został zaktualizowany.
         </p>
       </div>
     </div>
 
-    {/* GŁÓWNA SIATKA SEKCJI */}
+    {/* GŁÓWNA SIATKA SEKCJI PORTALU */}
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 md:gap-6">
       {publicSectionConfigs.map((section: any) => {
         const fields = getPublicSectionFields(section.key, section.actionField)
@@ -5702,7 +5702,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {section.label}
                   </h4>
                   <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                    Konfiguracja bloku
+                    Konfiguracja modułu pacjenta
                   </p>
                 </div>
               </div>
@@ -5718,7 +5718,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                     : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')
                 }`}>
-                  {isSectionVisible ? 'Widoczna' : 'Ukryta'}
+                  {isSectionVisible ? 'Aktywna' : 'Ukryta'}
                 </span>
               </div>
             </div>
@@ -5735,7 +5735,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }`}>
                   <div className="pr-4">
                     <p className={`font-black text-sm ${isSectionVisible ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      Pokaż na stronie
+                      Pokaż w Portalu Pacjenta
                     </p>
                   </div>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -5763,7 +5763,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   }`}>
                     <div className="pr-4">
                       <p className={`font-black text-sm ${editForm?.[fields.action] === true ? (isDarkMode ? 'text-indigo-400' : 'text-indigo-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                        Aktywna Akcja (Form)
+                        Aktywna Akcja (Formularz)
                       </p>
                     </div>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -5788,7 +5788,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               {/* POLA TEKSTOWE */}
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł sekcji na stronie</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł sekcji w Portalu</label>
                   <input
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={editForm?.[fields.title] || ''}
@@ -5806,7 +5806,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
 
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla gości (Sub-title)</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (Podtytuł)</label>
                   <textarea
                     rows={2}
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -5827,18 +5827,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Przycisk CTA */}
                   <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tekst przycisku CTA</label>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tekst przycisku (CTA)</label>
                     <input
                       className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={editForm?.[fields.cta] || ''}
                       onChange={e => setEditForm({ ...editForm, [fields.cta]: e.target.value })}
-                      placeholder="np. Otwórz formularz"
+                      placeholder="np. Umów konsultację"
                     />
                   </div>
 
                   {/* Zdjęcie Tła */}
                   <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie sekcji (Opcjonalne)</label>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie sekcji (np. gabinet, sprzęt)</label>
                     {fileKey ? (
                       <div className="relative">
                         <input
@@ -5858,7 +5858,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     )}
                     {editForm?.[fields.image] && (
                       <p className="text-[9px] font-mono mt-1.5 truncate text-blue-500 hover:underline cursor-help" title={editForm[fields.image]}>
-                        Załączony plik (kliknij by sprawdzić strukturę)
+                        Załączony plik (kliknij by sprawdzić)
                       </p>
                     )}
                   </div>
@@ -5880,7 +5880,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         }`}
       >
         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie widoków...' : 'Zapisz układ i treści na publicznej'}
+        {updating ? 'Zapisywanie struktury...' : 'Zapisz układ Portalu Pacjenta'}
       </button>
     </div>
 
