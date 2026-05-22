@@ -1635,37 +1635,6 @@ const exportContractorsToCSV = () => {
   URL.revokeObjectURL(url);
 };
 
-const fetchGUSData = async () => {
-  const nip = (contractorForm.tax_id || '').replace(/\D/g, '');
-  if (nip.length !== 10) {
-    showNotification('Podaj poprawny 10-cyfrowy NIP', 'error');
-    return;
-  }
-
-  setUpdating(true);
-  try {
-    const res = await fetch(`/api/gus?nip=${nip}`);
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message || 'Nie udało się pobrać danych z GUS');
-
-    setContractorForm({
-      ...contractorForm,
-      name: data.name || contractorForm.name,
-      tax_id: data.nip || contractorForm.tax_id,
-      regon: data.regon || contractorForm.regon,
-      krs: data.krs || contractorForm.krs,
-      address: data.address || contractorForm.address
-    });
-    showNotification('Dane firmy pobrane z GUS', 'success');
-  } catch (err: any) {
-    showNotification(err.message || 'GUS chwilowo niedostępny', 'error');
-    window.open(`https://www.wyszukiwarkaregon.pl/szukaj?nip=${nip}`, '_blank');
-  } finally {
-    setUpdating(false);
-  }
-};
-
 const filteredContractors = useMemo(() => {
   let filtered = contractors;
   if (filterTag) filtered = filtered.filter(c => c.tags?.includes(filterTag));
@@ -9985,12 +9954,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>NIP</label>
-                  <div className="flex gap-2">
-                    <input className={`flex-1 border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.tax_id || ''} onChange={e => setContractorForm({...contractorForm, tax_id: e.target.value})} />
-                    <button type="button" onClick={() => fetchGUSData()} className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-900 text-white hover:bg-black'}`}>
-                      GUS
-                    </button>
-                  </div>
+                  <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.tax_id || ''} onChange={e => setContractorForm({...contractorForm, tax_id: e.target.value})} />
                 </div>
               </div>
 

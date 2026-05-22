@@ -1,11 +1,11 @@
 {
-  "name": "ANM Planner Eventowy",
-  "short_name": "ANM Planner",
-  "description": "Zarządzaj swoimi wydarzeniami z łatwością.",
-  "start_url": "/dashboard",
+  "name": "ANM Event Green Hub",
+  "short_name": "ANM Green Hub",
+  "description": "B2B platforma AI do cyrkularnego zarzadzania wydarzeniami.",
+  "start_url": "/b2b/dashboard",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#D4AF37",
+  "background_color": "#07110d",
+  "theme_color": "#253a2a",
   "icons": [
     {
       "src": "/192x192.png",
