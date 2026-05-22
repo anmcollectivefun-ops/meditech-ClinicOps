@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calendar, MapPin, CheckCircle2, X, Clock,
   User, Activity, Stethoscope, FileText, Bell,
-  Plus, Download, LogOut, HeartPulse, ArrowRight
+  Plus, Download, LogOut, HeartPulse, ArrowRight,
+  ShieldCheck, Info
 } from 'lucide-react'
 
 // ==========================================

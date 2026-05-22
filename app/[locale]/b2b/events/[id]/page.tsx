@@ -1260,7 +1260,6 @@ const AiTextAssistButton = ({
   const publicSectionConfigs = [
     { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietę, leki albo przygotowanie do wizyty.' },
     { key: 'gadgets', label: 'Pakiety pacjenta', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'Włącz wybór pakietu pacjenta', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Pakiet pacjenta', placeholderDescription: 'Opisz pakiety, materiały lub dodatki przekazywane pacjentowi.' },
-    { key: 'transport', label: 'Dojazd i opieka', icon: Bus, operational: true, actionField: 'transport_selection_enabled', actionLabel: 'Włącz potwierdzanie dojazdu/opieki', imageFileKey: 'transportSectionImg', placeholderTitle: 'Dojazd do kliniki', placeholderDescription: 'Opisz dojazd, parking, opiekuna po zabiegu lub odbiór pacjenta.' },
     { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostępne wizyty, konsultacje i procedury.' },
     { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz użycie kodu QR do check-inu wizyty i dostępu personelu.' },
     { key: 'theme', label: 'Standard placówki', icon: Palette, placeholderTitle: 'Standard obsługi', placeholderDescription: 'Opisz standard wizyty, komfort i doświadczenie pacjenta.' },
@@ -1271,7 +1270,6 @@ const AiTextAssistButton = ({
     { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub ważne pliki.' },
     { key: 'announcements', label: 'Ogłoszenia / aktualności', icon: MessageSquare, placeholderTitle: 'Ogłoszenia', placeholderDescription: 'Dodaj ważne komunikaty dla uczestników.' },
     { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe działania promocyjne.' },
-    { key: 'live', label: 'Transmisje live', icon: Video, imageFileKey: 'liveSectionImg', placeholderTitle: 'Transmisje live', placeholderDescription: 'Dodaj informacje o transmisjach na żywo.' },
     { key: 'gallery', label: 'Galeria / klimat eventu', icon: ImageIcon, placeholderTitle: 'Galeria wydarzenia', placeholderDescription: 'Pokaż zdjęcia, klimat i wizualną zapowiedź wydarzenia.' },
     { key: 'faq', label: 'FAQ / ważne informacje', icon: AlertTriangle, placeholderTitle: 'Ważne informacje', placeholderDescription: 'Zbierz najważniejsze odpowiedzi i informacje organizacyjne.' },
     { key: 'documents', label: 'Regulamin / dokumenty', icon: FileText, placeholderTitle: 'Regulamin i dokumenty', placeholderDescription: 'Dodaj regulamin, polityki, dokumenty lub warunki uczestnictwa.' },
@@ -3504,9 +3502,6 @@ const loadSpaceLayoutData = useCallback(async () => {
       const { data: apps } = await supabase.from('b2b_applications').select('*').eq('event_id', id).order('created_at', { ascending: false })
       const { data: sess } = await supabase.from('event_sessions').select('*').eq('event_id', id).order('start_time', { ascending: true })
       const { data: gadg } = await supabase.from('event_gadgets').select('*').eq('event_id', id).order('sort_order', { ascending: true })
-      const { data: mealData } = await supabase.from('event_meals').select('*').eq('event_id', id).order('created_at', { ascending: false })
-      const { data: cateringOfferData } = await supabase.from('event_catering_offers').select('*').eq('event_id', id).order('created_at', { ascending: false })
-      const { data: videoData } = await supabase.from('event_videos').select('*').eq('event_id', id).order('display_order', { ascending: true })
       const { data: tierData } = await supabase.from('ticket_tiers').select('*').eq('event_id', id).order('sort_order', { ascending: true }).order('created_at', { ascending: true })
       const { data: promoData } = await supabase.from('promo_codes').select('*').eq('event_id', id).order('created_at', { ascending: false })
      // const { data: speakerData } = await supabase.from('event_speakers').select('*').eq('event_id', id).order('created_at', { ascending: true })//
@@ -3532,32 +3527,23 @@ const { data: checklistItemData } = await supabase
       const { data: partnerData } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
       const { data: contractorData } = await supabase.from('contractors').select('*').eq('event_id', id).order('created_at', { ascending: false })
     
-      const { data: organizedRouteData } = await supabase.from('organized_transport_routes').select('*').eq('event_id', id).order('created_at', { ascending: false })
-      const { data: organizedStopData } = await supabase.from('organized_transport_stops').select('*').eq('event_id', id).order('stop_order', { ascending: true })
-const { data: fleetData } = await supabase
-  .from('transport_fleet')
-  .select('*')
-  .eq('event_id', id)
-
-await loadCarpoolingAds()
-
-setFleet(fleetData || [])
       setEvent(ev)
       setEditForm(ev)
       setApplications(apps || [])
       setSessions(sess || [])
       setGadgets(gadg || [])
-      setCateringOffers(cateringOfferData || [])
-      setEventVideos(videoData || [])
-      if (mealData) setMeals(mealData)
+      setCateringOffers([])
+      setEventVideos([])
+      setMeals([])
       setTiers(tierData || [])
       setPromoCodes(promoData || [])
       //setSpeakers(speakerData || [])//
       setMaterials(materialData || [])
       setPartners(partnerData || [])
       setContractors(contractorData || [])
-      setOrganizedRoutes(organizedRouteData || [])
-      setTransportStops(organizedStopData || [])
+      setOrganizedRoutes([])
+      setTransportStops([])
+      setFleet([])
       setChecklistGroups(checklistGroupData || [])
 setChecklistItems(checklistItemData || [])
 await loadBudgetData()
@@ -4742,13 +4728,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       desc: 'Treści widoczne dla gości',
       items: [
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
-        { tabId: 'edycja' as TabModule, icon: Settings, label: 'Edycja strony' },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: materials.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
         { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Lekarze / specjaliści', count: partners.filter(p => p.type === 'speaker').length },
         { tabId: 'dresscode' as TabModule, icon: Palette, label: 'Standard placówki' },
-        { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Pakiety pacjenta', count: gadgets.length },
-        { tabId: 'streaming' as TabModule, icon: Video, label: 'Telekonsultacje' }
+        { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Pakiety pacjenta', count: gadgets.length }
       ]
     },
     {
@@ -4758,8 +4742,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
         { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
         { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' },
-        { tabId: 'transport' as TabModule, icon: Truck, label: 'Transport' },
-        { tabId: 'catering_meals' as TabModule, icon: UtensilsCrossed, label: 'Catering', count: meals.length },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja wizyt', count: tiers.length }
       ]
@@ -15031,7 +15013,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ---------------------------------------------------------------
   Domyślny placeholder dla nieistniejących zakładek
   --------------------------------------------------------------- */}
-    {!['rekrutacja', 'logistyka', 'edycja', 'dresscode', 'harmonogram', 'transport', 'komunikacja', 'eko', 'checklista', 'finanse', 'gadgets', 'catering_meals', 'stoly', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'streaming', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
+    {!['rekrutacja', 'logistyka', 'dresscode', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'gadgets', 'stoly', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
   <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
 )}
    </div>
