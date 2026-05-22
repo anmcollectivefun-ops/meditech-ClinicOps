@@ -155,11 +155,6 @@ const getPreviewUrl = (file: File | null, currentUrl: string | null) => {
 };
 
 
-
-
-
-
-
 const SortablePartnerItem = ({ 
   item, 
   onEdit, 
@@ -222,13 +217,6 @@ const SortablePartnerItem = ({
     </div>
   );
 };
-
-
-
-
-
-
-
 
 
 // ==========================================================================
@@ -567,11 +555,6 @@ const [staffAccessForm, setStaffAccessForm] = useState<any>({})
 
 
 
-
-
-
-
-
  const HelpButton = ({ sectionKey }: { sectionKey: string }) => {
   const doc = helpDocuments.find(
     (item: any) => item.section_key === sectionKey && item.is_active !== false
@@ -608,11 +591,6 @@ const [staffAccessForm, setStaffAccessForm] = useState<any>({})
     </a>
   )
 }
-
-
-
-
-
 
 
   const openAiTextAssist = (config: any) => {
@@ -1098,7 +1076,29 @@ const AiTextAssistButton = ({
     await loadEventPassData()
     showNotification('Wygenerowano QR dla pakietu uczestnika', 'success')
   }
+const createPatientQrUnit = async (patient: any) => {
+  const { error } = await supabase.from('event_attendee_units').insert([{
+    event_id: id,
+    patient_id: patient.id,
+    unit_type: 'patient',
+    display_name: `${patient.first_name} ${patient.last_name}`,
+    first_name: patient.first_name,
+    last_name: patient.last_name,
+    email: patient.email,
+    phone: patient.phone,
+    qr_token: patient.qr_token || crypto.randomUUID(),
+    qr_status: 'active',
+    access_status: 'active'
+  }])
 
+  if (error) {
+    showNotification('Nie udało się wygenerować QR pacjenta', 'error')
+    return
+  }
+
+  await loadEventPassData()
+  showNotification('QR pacjenta wygenerowany', 'success')
+}
   const handleGenerateUnitsForAllApplications = async () => {
     const existingApplicationIds = new Set(attendeeUnits.map(unit => unit.application_id))
     const activeApps = applications.filter((app: any) =>
