@@ -1,0 +1,23 @@
+{
+  "name": "ANM Planner Eventowy",
+  "short_name": "ANM Planner",
+  "description": "Zarządzaj swoimi wydarzeniami z łatwością.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#D4AF37",
+  "icons": [
+    {
+      "src": "/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

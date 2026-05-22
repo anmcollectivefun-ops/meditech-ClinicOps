@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Montserrat+Alternates:wght@300;400;600;700&family=Montserrat:wght@300;400;600;700;900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -8,8 +9,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  /* Definicje fontów dla Tailwinda v4 */
+  --font-sans: 'Montserrat', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-script: 'Great Vibes', cursive;
+  --font-sans-alt: 'Montserrat Alternates', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +27,27 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans); 
+}
+
+/* --- Narzędzia ANM Collective --- */
+
+@layer utilities {
+  /* Ukrywa paski przewijania */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Animacja błysku dla paska postępu */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
 }
