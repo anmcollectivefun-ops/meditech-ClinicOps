@@ -1,11 +1,11 @@
 {
-  "name": "ANM Event Green Hub",
-  "short_name": "ANM Green Hub",
-  "description": "B2B platforma AI do cyrkularnego zarzadzania wydarzeniami.",
+  "name": "ANM ClinicOps",
+  "short_name": "ClinicOps",
+  "description": "System CRM do zarzadzania pacjentem, kontaktem, zgodami i analityka kliniki.",
   "start_url": "/b2b/dashboard",
   "display": "standalone",
-  "background_color": "#07110d",
-  "theme_color": "#253a2a",
+  "background_color": "#071016",
+  "theme_color": "#0e7490",
   "icons": [
     {
       "src": "/192x192.png",
