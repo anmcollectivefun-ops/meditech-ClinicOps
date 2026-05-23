@@ -5727,321 +5727,55 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
 
 {/* ============================================================================ */}
-{/* PORTAL PACJENTA / STRONA PUBLICZNA */}
+{/* NOWE CENTRUM DOWODZENIA PORTALU PACJENTA (Zastępuje stare kafelki) */}
 {/* ============================================================================ */}
 {activeTab === 'strona_uczestnika' && (
-  <form onSubmit={handleSaveParticipantPageSettings} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-
-    {/* NAGŁÓWEK */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="min-w-0">
-        <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Portal Pacjenta i e-Rejestracja
-        </h3>
-        <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Skonfiguruj Cyfrową Ścieżkę Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje się z informacjami o zabiegach.
-        </p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-        <HelpButton sectionKey="guest_page" />
-        <button
-          type="submit"
-          disabled={updating}
-          className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 ${
-            isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'
-          }`}
-        >
-          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-          Zapisz zmiany w Portalu
-        </button>
-      </div>
-    </div>
-
-    {/* UWAGA TECHNICZNA */}
-    <div className={`rounded-[24px] border p-5 flex items-start gap-4 shadow-sm ${isDarkMode ? 'bg-amber-900/10 border-amber-900/30' : 'bg-amber-50 border-amber-200'}`}>
-      <div className={`shrink-0 p-2 rounded-xl ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-        <AlertTriangle size={18} />
-      </div>
-      <div>
-        <p className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
-          Uwaga dla administratora systemu medycznego
-        </p>
-        <p className={`text-xs font-medium mt-1 leading-relaxed ${isDarkMode ? 'text-amber-500/80' : 'text-amber-900'}`}>
-          Ten edytor zarządza strukturą tabeli `b2b_events`. Jeśli integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych bloków (np. historii zabiegowej), upewnij się, że schemat SQL w Supabase został zaktualizowany.
-        </p>
-      </div>
-    </div>
-
-    {/* GŁÓWNA SIATKA SEKCJI PORTALU */}
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 md:gap-6">
-      {publicSectionConfigs.map((section: any) => {
-        const fields = getPublicSectionFields(section.key, section.actionField)
-        const status = getPublicSectionStatus(section)
-        const Icon = section.icon
-        const fileKey = section.imageFileKey as keyof typeof newFiles | undefined
-        const hasDbColumns = !!event && Object.prototype.hasOwnProperty.call(event, fields.visible)
-        const isSectionVisible = editForm?.[fields.visible] === true
-
-        return (
-          <div
-            key={section.key}
-            className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-all duration-300 ${
-              isSectionVisible
-                ? (isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200')
-                : (isDarkMode ? 'bg-slate-900/40 border-slate-800/60' : 'bg-slate-50/50 border-slate-200/60')
-            }`}
-          >
-            {/* HEADER KAFELKA */}
-            <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/80'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                  isSectionVisible
-                    ? (isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-800')
-                    : (isDarkMode ? 'bg-slate-800/50 text-slate-500' : 'bg-slate-100 text-slate-400')
-                }`}>
-                  <Icon size={18} />
-                </div>
-                <div>
-                  <h4 className={`font-black text-base ${isSectionVisible ? (isDarkMode ? 'text-white' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                    {section.label}
-                  </h4>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                    Konfiguracja modułu pacjenta
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 shrink-0">
-                {!hasDbColumns && (
-                  <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    Wymaga SQL
-                  </span>
-                )}
-                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
-                  isSectionVisible
-                    ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
-                    : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')
-                }`}>
-                  {isSectionVisible ? 'Aktywna' : 'Ukryta'}
-                </span>
-              </div>
-            </div>
-
-            {/* ZAWARTOŚĆ KAFELKA */}
-            <div className={`p-5 md:p-6 space-y-5 transition-opacity ${!isSectionVisible && 'opacity-60 grayscale-[30%]'}`}>
-
-              {/* TOGGLES (WIDOCZNOŚĆ I AKCJA) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  isSectionVisible
-                    ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900/80 shadow-md' : 'border-slate-900 bg-white shadow-sm')
-                    : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-                }`}>
-                  <div className="pr-4">
-                    <p className={`font-black text-sm ${isSectionVisible ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      Pokaż w Portalu Pacjenta
-                    </p>
-                  </div>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <input
-                      type="checkbox"
-                      checked={isSectionVisible}
-                      onChange={e => setEditForm({ ...editForm, [fields.visible]: e.target.checked })}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                      isSectionVisible
-                        ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
-                        : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
-                    }`}>
-                      {isSectionVisible && <CheckCircle2 size={12} />}
-                    </div>
-                  </div>
-                </label>
-
-                {section.operational && fields.action && (
-                  <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    editForm?.[fields.action] === true
-                      ? (isDarkMode ? 'border-indigo-500 bg-indigo-900/10 shadow-md' : 'border-indigo-500 bg-indigo-50 shadow-sm')
-                      : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-                  }`}>
-                    <div className="pr-4">
-                      <p className={`font-black text-sm ${editForm?.[fields.action] === true ? (isDarkMode ? 'text-indigo-400' : 'text-indigo-700') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                        Aktywna Akcja (Formularz)
-                      </p>
-                    </div>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <input
-                        type="checkbox"
-                        checked={editForm?.[fields.action] === true}
-                        onChange={e => setEditForm({ ...editForm, [fields.action!]: e.target.checked })}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                        editForm?.[fields.action] === true
-                          ? (isDarkMode ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white')
-                          : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
-                      }`}>
-                        {editForm?.[fields.action] === true && <CheckCircle2 size={12} />}
-                      </div>
-                    </div>
-                  </label>
-                )}
-              </div>
-
-              {/* POLA TEKSTOWE */}
-              <div className="space-y-4 pt-2">
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł sekcji w Portalu</label>
-                  <input
-                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    value={editForm?.[fields.title] || ''}
-                    onChange={e => setEditForm({ ...editForm, [fields.title]: e.target.value })}
-                    placeholder={section.placeholderTitle}
-                  />
-                  <AiTextAssistButton
-                    eventId={id}
-                    sectionKey={section.key}
-                    fieldKey={fields.title}
-                    currentValue={editForm?.[fields.title] || ''}
-                    placeholder={section.placeholderTitle}
-                    onApply={(text) => setEditForm({ ...editForm, [fields.title]: text })}
-                  />
-                </div>
-
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (Podtytuł)</label>
-                  <textarea
-                    rows={2}
-                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    value={editForm?.[fields.description] || ''}
-                    onChange={e => setEditForm({ ...editForm, [fields.description]: e.target.value })}
-                    placeholder={section.placeholderDescription}
-                  />
-                  <AiTextAssistButton
-                    eventId={id}
-                    sectionKey={section.key}
-                    fieldKey={fields.description}
-                    currentValue={editForm?.[fields.description] || ''}
-                    placeholder={section.placeholderDescription}
-                    onApply={(text) => setEditForm({ ...editForm, [fields.description]: text })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Przycisk CTA */}
-                  <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tekst przycisku (CTA)</label>
-                    <input
-                      className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                      value={editForm?.[fields.cta] || ''}
-                      onChange={e => setEditForm({ ...editForm, [fields.cta]: e.target.value })}
-                      placeholder="np. Umów konsultację"
-                    />
-                  </div>
-
-                  {/* Zdjęcie Tła */}
-                  <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie sekcji (np. gabinet, sprzęt)</label>
-                    {fileKey ? (
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className={`w-full border rounded-xl px-3 py-2 text-xs transition-colors file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:cursor-pointer ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-400 file:bg-slate-800 file:text-slate-300' : 'bg-slate-50 border-slate-300 text-slate-600 file:bg-white file:text-slate-700'}`}
-                          onChange={e => setNewFiles({ ...newFiles, [fileKey]: e.target.files ? e.target.files[0] : null })}
-                        />
-                      </div>
-                    ) : (
-                      <input
-                        className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                        value={editForm?.[fields.image] || ''}
-                        onChange={e => setEditForm({ ...editForm, [fields.image]: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    )}
-                    {editForm?.[fields.image] && (
-                      <p className="text-[9px] font-mono mt-1.5 truncate text-blue-500 hover:underline cursor-help" title={editForm[fields.image]}>
-                        Załączony plik (kliknij by sprawdzić)
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-
-    {/* ZAPIS STICKY BUTTON */}
-    <div className="sticky bottom-6 z-30 flex justify-end mt-8">
-      <button
-        type="submit"
-        disabled={updating}
-        className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:scale-100 ${
-          isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-[#e8ce7a]'
-        }`}
-      >
-        {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie struktury...' : 'Zapisz układ Portalu Pacjenta'}
-      </button>
-    </div>
-
-  </form>
-)}
-
-{/* ============================================================================ */}
-{/* NOWE CENTRUM ZARZĄDZANIA TREŚCIAMI I KOMUNIKATAMI PACJENTA */}
-{/* ============================================================================ */}
-{activeTab === 'edycja' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
     
-    {/* NAGŁÓWEK */}
+    {/* NAGŁÓWEK MODUŁU */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-        <Globe size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-        Centrum Publikacji i Komunikatów
+        <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+        Centrum Dowodzenia Portalem Pacjenta
       </h3>
       <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-        Twórz i wysyłaj dedykowane treści na Portal Pacjenta. Wybierz, czy informacja ma trafić do jednej wybranej osoby, czy do wszystkich pacjentów kliniki.
+        Publikuj unikalne informacje dla konkretnych osób lub zarządzaj ogólną zawartością stron informacyjnych dla wszystkich pacjentów.
       </p>
     </div>
 
+    {/* DWIE KOLUMNY Z FORMULARZAMI OBOK SIEBIE */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8">
       
-      {/* FORMULARZ 1: DLA WYBRANEGO PACJENTA (PERSONALNY) */}
+      {/* LEWA STRONA: FORMULARZ DLA KONKRETNEGO PACJENTA */}
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-6 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <form onSubmit={handleSavePersonalAnnouncement} className="space-y-5">
-          <div className="border-b dark:border-slate-800 pb-3">
+          <div className="border-b dark:border-slate-800 pb-3 mb-2">
             <h4 className={`font-black text-base flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
-              <User size={18} /> 1. Komunikat dla konkretnego Pacjenta
+              <User size={18} /> 1. Treści dedykowane (Dla wybranego Pacjenta)
             </h4>
-            <p className="text-[10px] opacity-60 mt-0.5">Treść pojawi się tylko na wybranym koncie pacjenta.</p>
+            <p className="text-[10px] opacity-60 mt-0.5">Informacja trafi wyłącznie na konto wybranej osoby z bazy.</p>
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz Pacjenta *</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz Pacjenta odbiorcę *</label>
             <select
               required
-              value={personalForm.patient_id}
+              value={personalForm.patient_id || ''}
               onChange={e => setPersonalForm({ ...personalForm, patient_id: e.target.value })}
-              className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+              className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
             >
-              <option value="">-- Wyszukaj pacjenta z bazy --</option>
+              <option value="">-- Wyszukaj pacjenta z bazy danych --</option>
               {patients.map((p: any) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.pesel})</option>)}
             </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj ogłoszenia *</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj sekcji / modułu *</label>
               <select
-                value={personalForm.category}
+                value={personalForm.category || 'zalecenia'}
                 onChange={e => setPersonalForm({ ...personalForm, category: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
                 <option value="zalecenia">Zalecenia po wizycie</option>
                 <option value="wizyty">Wizyty / Konsultacje</option>
@@ -6050,96 +5784,96 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </select>
             </div>
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krój czcionki</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybiór czcionki</label>
               <select
-                value={personalForm.font_family}
+                value={personalForm.font_family || 'Inter, sans-serif'}
                 onChange={e => setPersonalForm({ ...personalForm, font_family: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="Inter, sans-serif">Sans-Serif (Nowoczesny)</option>
-                <option value="Playfair Display, serif">Serif (Elegancki)</option>
-                <option value="JetBrains Mono, monospace">Monospace (Kod/Mono)</option>
+                <option value="Inter, sans-serif">Sans-Serif (Nowoczesna/Czysta)</option>
+                <option value="Playfair Display, serif">Serif (Elegancka/Premium)</option>
+                <option value="JetBrains Mono, monospace">Monospace (Techniczna)</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł wiadomości *</label>
-            <input required value={personalForm.title || ''} onChange={e => setPersonalForm({ ...personalForm, title: e.target.value })} placeholder="np. Indywidualne zalecenia po kwasie hialuronowym" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł nagłówka *</label>
+            <input required value={personalForm.title || ''} onChange={e => setPersonalForm({ ...personalForm, title: e.target.value })} placeholder="np. Indywidualne zalecenia po zabiegu kwasu" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis / Treść wiadomości</label>
-            <textarea rows={4} value={personalForm.description || ''} onChange={e => setPersonalForm({ ...personalForm, description: e.target.value })} placeholder="Wpisz szczegółowe zalecenia dla tego pacjenta..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis / Treść wiadomości medycznej</label>
+            <textarea rows={4} value={personalForm.description || ''} onChange={e => setPersonalForm({ ...personalForm, description: e.target.value })} placeholder="Wpisz pełną personalną treść dla tego pacjenta..." className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
           <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie / Załącznik graficzny</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodaj zdjęcie do wpisu</label>
             <input type="file" accept="image/*" onChange={e => setPersonalImgFile(e.target.files ? e.target.files[0] : null)} className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300' : 'text-slate-700 file:bg-white'}`} />
           </div>
 
           <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            {updating ? 'Wysyłanie...' : 'Wyślij do Karty Pacjenta'}
+            {updating ? 'Przetwarzanie bazy...' : 'Zapisz i Wyślij Pacjentowi'}
           </button>
         </form>
       </div>
 
-      {/* FORMULARZ 2: DLA WSZYSTKICH PACJENTÓW (GLOBALNY) */}
+      {/* PRAWA STRONA: FORMULARZ GLOBALNY (WIDOCZNY DLA WSZYSTKICH) */}
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-6 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <form onSubmit={handleSaveGlobalAnnouncement} className="space-y-5">
-          <div className="border-b dark:border-slate-800 pb-3">
+          <div className="border-b dark:border-slate-800 pb-3 mb-2">
             <h4 className={`font-black text-base flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
-              <Users size={18} /> 2. Ogłoszenie Globalne (Dla Wszystkich)
+              <Users size={18} /> 2. Ogłoszenia stałe (Dla wszystkich stron pacjentów)
             </h4>
-            <p className="text-[10px] opacity-60 mt-0.5">Treść wyświetli się każdemu pacjentowi na tablicy głównej.</p>
+            <p className="text-[10px] opacity-60 mt-0.5">Treść wyświetli się każdemu pacjentowi w danej sekcji informacyjnej.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj sekcji *</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj ogłoszenia / sekcji *</label>
               <select
-                value={globalForm.category}
+                value={globalForm.category || 'standard'}
                 onChange={e => setGlobalForm({ ...globalForm, category: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
                 <option value="standard">Standard placówki</option>
-                <option value="lekarze">Lekarze / Specjaliści</option>
+                <option value="lekarze">Lekarze / specjaliści</option>
                 <option value="promocja">Strefa promocyjna</option>
-                <option value="faq">FAQ / Ważne informacje</option>
-                <option value="regulamin">Regulamin / Dokumenty</option>
+                <option value="faq">FAQ / ważne informacje</option>
+                <option value="regulamin">Regulamin / dokumenty</option>
               </select>
             </div>
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krój czcionki</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybiór czcionki</label>
               <select
-                value={globalForm.font_family}
+                value={globalForm.font_family || 'Inter, sans-serif'}
                 onChange={e => setGlobalForm({ ...globalForm, font_family: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="Inter, sans-serif">Sans-Serif (Nowoczesny)</option>
-                <option value="Playfair Display, serif">Serif (Elegancki)</option>
-                <option value="JetBrains Mono, monospace">Monospace (Kod/Mono)</option>
+                <option value="Inter, sans-serif">Sans-Serif (Nowoczesna/Czysta)</option>
+                <option value="Playfair Display, serif">Serif (Elegancka/Premium)</option>
+                <option value="JetBrains Mono, monospace">Monospace (Techniczna)</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł ogłoszenia *</label>
-            <input required value={globalForm.title || ''} onChange={e => setGlobalForm({ ...globalForm, title: e.target.value })} placeholder="np. Zmiany w godzinach otwarcia kliniki w Boże Ciało" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł ogłoszenia globalnego *</label>
+            <input required value={globalForm.title || ''} onChange={e => setGlobalForm({ ...globalForm, title: e.target.value })} placeholder="np. Nowoczesne lasery CO2 już dostępne w naszej klinice" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis / Treść ogłoszenia</label>
-            <textarea rows={4} value={globalForm.description || ''} onChange={e => setGlobalForm({ ...globalForm, description: e.target.value })} placeholder="Wpisz treść komunikatu widoczną dla wszystkich..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Pełny opis ogłoszenia</label>
+            <textarea rows={4} value={globalForm.description || ''} onChange={e => setGlobalForm({ ...globalForm, description: e.target.value })} placeholder="Wpisz treść widoczną dla wszystkich odwiedzających portal..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
           </div>
 
           <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie / Grafika ogłoszenia</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodaj zdjęcie / baner</label>
             <input type="file" accept="image/*" onChange={e => setGlobalImgFile(e.target.files ? e.target.files[0] : null)} className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300' : 'text-slate-700 file:bg-white'}`} />
           </div>
 
           <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            {updating ? 'Publikowanie...' : 'Opublikuj Ogłoszenie Globalne'}
+            {updating ? 'Publikowanie...' : 'Opublikuj dla Wszystkich'}
           </button>
         </form>
       </div>
@@ -6147,6 +5881,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     </div>
   </div>
 )}
+
+
 
 {/* ============================================================================ */}
 {/* DOKUMENTACJA I WYWIAD MEDYCZNY (Dawne 'materialy') */}
