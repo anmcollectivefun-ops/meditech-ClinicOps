@@ -525,11 +525,11 @@ const [aiTextLoading, setAiTextLoading] = useState(false)
 const [organizerCurrentMonth, setOrganizerCurrentMonth] = useState(() => new Date().getMonth())
 const [organizerCurrentYear, setOrganizerCurrentYear] = useState(() => new Date().getFullYear())
 const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(() => new Date().toISOString().slice(0, 10))
-const [patients, setPatients] = useState<any[]>([])
-const [patientSearch, setPatientSearch] = useState('')
+
 const [isStaffAccessModalOpen, setIsStaffAccessModalOpen] = useState(false)
 const [staffAccessForm, setStaffAccessForm] = useState<any>({})
 const [patients, setPatients] = useState<any[]>([])
+const [patientConsents, setPatientConsents] = useState<any[]>([])
 const [patientSearch, setPatientSearch] = useState('')
 const [patientQrFilter, setPatientQrFilter] = useState('all')
 const [expandedPatientIds, setExpandedPatientIds] = useState<Record<string, boolean>>({})
@@ -980,7 +980,21 @@ const loadPatients = useCallback(async () => {
 
   setPatients(data || [])
 }, [supabase])
+const loadPatientConsents = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('patient_consents')
+    .select('*')
+    .eq('event_id', id)
+    .order('signed_at', { ascending: false })
 
+  if (error) {
+    console.warn('Patient consents load error:', error.message)
+    setPatientConsents([])
+    return
+  }
+
+  setPatientConsents(data || [])
+}, [id, supabase])
 
   const buildAttendeeUnitRows = (app: any) => {
     const baseName = `${app.first_name || ''} ${app.last_name || ''}`.trim()
@@ -1137,45 +1151,7 @@ const createPatientQrUnit = async (patient: any) => {
   }
 
   await loadPatients()
-  await loadEventPassData()
-  showNotification('QR pacjenta wygenerowany', 'success')
-}
-
- 
-
-  const qrToken = patient.qr_token || crypto.randomUUID()
-
-  if (!patient.qr_token) {
-    await supabase
-      .from('patients')
-      .update({ qr_token: qrToken })
-      .eq('id', patient.id)
-  }
-
-  const { error } = await supabase.from('event_attendee_units').insert([{
-    event_id: id,
-    patient_id: patient.id,
-    unit_type: 'patient',
-    display_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || patient.email || 'Pacjent',
-    first_name: patient.first_name || null,
-    last_name: patient.last_name || null,
-    email: patient.email || null,
-    phone: patient.phone || null,
-    qr_token: qrToken,
-    qr_status: 'active',
-    access_status: 'active',
-    checked_in: false,
-    source_data: {
-      pesel: patient.pesel || null
-    }
-  }])
-
-  if (error) {
-    showNotification('Nie udało się wygenerować QR pacjenta: ' + error.message, 'error')
-    return
-  }
-
-  await loadPatients()
+  await loadPatientConsents()
   await loadEventPassData()
   showNotification('QR pacjenta wygenerowany', 'success')
 }
@@ -1741,6 +1717,16 @@ const allTags = useMemo(() => {
   contractors.forEach(c => c.tags?.forEach((t: string) => tagsSet.add(t)));
   return Array.from(tagsSet).sort();
 }, [contractors]);
+
+const patientConsentsByPatientId = useMemo(() => {
+  return patientConsents.reduce((acc: Record<string, any[]>, consent: any) => {
+    if (!consent.patient_id) return acc
+    if (!acc[consent.patient_id]) acc[consent.patient_id] = []
+    acc[consent.patient_id].push(consent)
+    return acc
+  }, {})
+}, [patientConsents])
+
 const patientUnitsByPatientId = useMemo(() => {
   return attendeeUnits.reduce((acc: Record<string, any>, unit: any) => {
     if (!unit.patient_id) return acc
@@ -3201,6 +3187,7 @@ setChecklistItems(checklistItemData || [])
 await loadBudgetData()
 await loadEventPassData()
 await loadPatients()
+await loadPatientConsents()
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
 
@@ -3209,7 +3196,7 @@ await loadPatients()
     } finally {
       setLoading(false)
     }
-  }, [id, supabase, loadBudgetData, loadEventPassData])
+ }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientConsents])
 
   useEffect(() => {
     loadEventData()
@@ -12098,6 +12085,52 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             ))}
           </div>
+{(() => {
+  const consents = patientConsentsByPatientId[selectedAttendeeUnit.patient_id] || []
+
+  return (
+    <div className={`mt-6 p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
+      <h4 className={`font-black flex items-center gap-2 text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+        <FileText size={16} />
+        Podpisane zgody pacjenta
+      </h4>
+
+      {consents.length === 0 ? (
+        <p className={`text-xs mt-3 font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          Brak podpisanych zgód dla tego pacjenta.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {consents.map((consent: any) => (
+            <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="min-w-0">
+                <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {consent.title}
+                </p>
+                <p className={`text-[10px] font-bold mt-0.5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  Podpisano: {consent.signed_at ? new Date(consent.signed_at).toLocaleString('pl-PL') : 'brak daty'}
+                </p>
+              </div>
+
+              {consent.file_url && (
+                <a
+                  href={consent.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`shrink-0 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                >
+                  Otwórz
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+})()}
+
+
         </div>
       </div>
     )}
