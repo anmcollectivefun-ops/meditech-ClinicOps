@@ -607,6 +607,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 // --- STANY DLA NOWEGO MODUŁU WIZYT I ZABIEGÓW ---
   const [treatments, setTreatments] = useState<any[]>([])
   const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
+  const [appointmentsList, setAppointmentsList] = useState<any[]>([])
   const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '' })
 
   // --- PRAWDZIWE STANY KATALOGU ZABIEGÓW ---
@@ -685,6 +686,22 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     if (mData) setTreatmentMappings(mData);
   }
 
+  const loadAppointments = async () => {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*, patients(*)')
+      .eq('event_id', id)
+      .order('appointment_date', { ascending: true })
+
+    if (error) {
+      console.warn('Appointments table unavailable:', error.message)
+      setAppointmentsList([])
+      return
+    }
+
+    setAppointmentsList(data || [])
+  }
+
   // GŁÓWNA FUNKCJA: TWORZY WIZYTĘ I GENERUJE ZGODY
   const handleBookAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -696,6 +713,10 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     try {
       // 1. Znajdź nazwę zabiegu w słowniku
       const selectedTreatment = treatments.find(t => t.id === appointmentForm.treatment_id);
+      if (!selectedTreatment) {
+        showNotification('Nie znaleziono wybranego zabiegu w katalogu', 'error');
+        return;
+      }
 
       // 2. Utwórz nową wizytę w bazie
       const { data: newAppointment, error: appError } = await supabase
@@ -705,6 +726,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           event_id: id, // Globalne ID środowiska
           treatment_id: appointmentForm.treatment_id,
           treatment_name: selectedTreatment?.name || 'Zabieg medyczny',
+          doctor_id: selectedTreatment?.doctor_id || null,
           appointment_date: appointmentForm.appointment_date,
           status: 'scheduled'
         }])
@@ -735,10 +757,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgód.`, 'success');
       setIsBookingModalOpen(false);
       setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '' });
-      
-      // Odśwież widoki (wywołaj funkcje, które masz w kodzie)
-      // await loadPatientConsents();
-      // await loadAppointments(); // Jeśli już masz taką funkcję
+      await loadAppointments();
+      await loadPatientConsents();
       
     } catch (err: any) {
       showNotification('Błąd zapisu: ' + err.message, 'error');
@@ -3616,6 +3636,8 @@ const { data: checklistItemData } = await supabase
       await loadPatientConsents()
       await loadConsentTemplates() // <--- DODANO TUTAJ
       await loadTreatmentsCatalog()
+      await loadPartnersCatalog()
+      await loadAppointments()
 
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
@@ -7244,7 +7266,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               const query = treatmentSearch.toLowerCase();
               const doctor = doctorsList.find(d => d.id === t.doctor_id);
               const docName = doctor ? `${doctor.first_name} ${doctor.last_name}`.toLowerCase() : '';
-              return t.name.toLowerCase().includes(query) || docName.includes(query);
+              return String(t.name || '').toLowerCase().includes(query) || docName.includes(query);
             })
             .map(treatment => {
               const requiredConsentsCount = treatmentMappings.filter((m:any) => m.treatment_id === treatment.id).length;
