@@ -697,7 +697,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const handleBookAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appointmentForm.patient_id || !appointmentForm.treatment_id || !appointmentForm.appointment_date) {
-      return showNotification('WypeĹ‚nij wszystkie pola', 'error');
+      return showNotification('Wypełnij wszystkie pola', 'error');
     }
     
     setUpdating(true);
@@ -750,14 +750,14 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         if (consentsError) throw consentsError;
       }
 
-      showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgĂłd.`, 'success');
+      showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgód.`, 'success');
       setIsBookingModalOpen(false);
       setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' });
       await loadAppointments();
       await loadPatientConsents();
       
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -7054,7 +7054,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-slate-800 border-slate-100">
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               <CalendarPlus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-              UmĂłw WizytÄ™
+              Umów Wizytę
             </h3>
             <button onClick={() => setIsBookingModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
               <X size={20} />
@@ -7091,14 +7091,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="">-- Wybierz usĹ‚ugÄ™ z bazy --</option>
+                <option value="">-- Wybierz usługę z bazy --</option>
                 {treatments.filter(t => t.is_active).map((t: any) => (
                   <option key={t.id} value={t.id}>
                     {t.name}{t.price_amount ? ` - ${Number(t.price_amount).toLocaleString('pl-PL')} ${t.currency || 'PLN'}` : ''}
                   </option>
                 ))}
               </select>
-              <p className="text-[9px] mt-2 opacity-60 px-1">Lekarz i preparaty zostanÄ… przypisane automatycznie na podstawie definicji zabiegu.</p>
+              <p className="text-[9px] mt-2 opacity-60 px-1">Lekarz i preparaty zostaną przypisane automatycznie na podstawie definicji zabiegu.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
