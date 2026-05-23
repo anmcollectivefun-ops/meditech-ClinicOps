@@ -128,24 +128,24 @@ const defaultFleetForm: FleetForm = {
 }
 
 // ==========================================================================
-// 3. DANE MOCKOWE I POMOCNICZE (POZA GÄąÂÄ‚â€śWNYM KOMPONENTEM)
+// 3. DANE MOCKOWE I POMOCNICZE (POZA GŁÓWNYM KOMPONENTEM)
 // ==========================================================================
 
 const generateMockMenu = (): MenuItem[] => {
   return [
-    { id: '1', name: 'SaÄąâ€šatka z lokalnych warzyw', category: 'starter', ingredients: ['saÄąâ€šata', 'pomidory', 'ogÄ‚Ĺ‚rek'], allergens: [], co2_footprint: 0.2, waste_potential: 5, portions_planned: 50, portions_actual: 45 },
-    { id: '2', name: 'PolĂ„â„˘dwica z jelenia', category: 'main', ingredients: ['polĂ„â„˘dwica', 'ziemniaki', 'szparagi'], allergens: ['seler'], co2_footprint: 2.1, waste_potential: 15, portions_planned: 50, portions_actual: 38 },
-    { id: '3', name: 'Risotto z grzybami', category: 'vegetarian', ingredients: ['ryÄąÄ˝', 'grzyby', 'parmezan'], allergens: ['laktoza'], co2_footprint: 0.8, waste_potential: 10, portions_planned: 30, portions_actual: 28 },
-    { id: '4', name: 'Tarta owocowa', category: 'dessert', ingredients: ['jabÄąâ€ška', 'mĂ„â€¦ka', 'masÄąâ€šo'], allergens: ['gluten', 'laktoza'], co2_footprint: 0.4, waste_potential: 8, portions_planned: 60, portions_actual: 52 },
+    { id: '1', name: 'Sałatka z lokalnych warzyw', category: 'starter', ingredients: ['sałata', 'pomidory', 'ogórek'], allergens: [], co2_footprint: 0.2, waste_potential: 5, portions_planned: 50, portions_actual: 45 },
+    { id: '2', name: 'Polędwica z jelenia', category: 'main', ingredients: ['polędwica', 'ziemniaki', 'szparagi'], allergens: ['seler'], co2_footprint: 2.1, waste_potential: 15, portions_planned: 50, portions_actual: 38 },
+    { id: '3', name: 'Risotto z grzybami', category: 'vegetarian', ingredients: ['ryż', 'grzyby', 'parmezan'], allergens: ['laktoza'], co2_footprint: 0.8, waste_potential: 10, portions_planned: 30, portions_actual: 28 },
+    { id: '4', name: 'Tarta owocowa', category: 'dessert', ingredients: ['jabłka', 'mąka', 'masło'], allergens: ['gluten', 'laktoza'], co2_footprint: 0.4, waste_potential: 8, portions_planned: 60, portions_actual: 52 },
   ]
 }
-// Funkcja liczĂ„â€¦ca Äąâ€şlad wĂ„â„˘glowy i koszty
+// Funkcja licząca ślad węglowy i koszty
 
 
 const generateMockRoutes = (apps: Guest[]): TransportRoute[] => {
   return [
-    { id: '1', name: 'Centrum Ă˘â€ â€™ Hotel', vehicle_type: 'bus', capacity: 50, occupied: 35, co2_per_person: 2.1, route: ['Dworzec GÄąâ€šÄ‚Ĺ‚wny', 'Hotel Conference', 'Centrum'] },
-    { id: '2', name: 'Lotnisko Ă˘â€ â€™ Miejsce', vehicle_type: 'van', capacity: 15, occupied: 12, co2_per_person: 3.5, route: ['Lotnisko', 'Hotel'] },
+    { id: '1', name: 'Centrum -> Hotel', vehicle_type: 'bus', capacity: 50, occupied: 35, co2_per_person: 2.1, route: ['Dworzec Główny', 'Hotel Conference', 'Centrum'] },
+    { id: '2', name: 'Lotnisko -> Miejsce', vehicle_type: 'van', capacity: 15, occupied: 12, co2_per_person: 3.5, route: ['Lotnisko', 'Hotel'] },
   ]
 }
 
@@ -220,7 +220,7 @@ const SortablePartnerItem = ({
 
 
 // ==========================================================================
-// 4. GÄąÂÄ‚â€śWNY KOMPONENT B2BEventDetail
+// 4. GŁÓWNY KOMPONENT B2BEventDetail
 // ==========================================================================
 
 export default function B2BEventDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -228,7 +228,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
-  // ----- 4.1. STANY GÄąÂÄ‚â€śWNE -----
+  // ----- 4.1. STANY GŁÓWNE -----
   const [event, setEvent] = useState<any>(null)
   const [applications, setApplications] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
@@ -348,14 +348,14 @@ const [newFiles, setNewFiles] = useState<{
   const [vendors, setVendors] = useState([
     { id: '1', category: 'Obiekt/Hotel', name: 'Hotel Conference Center', contactPerson: 'Anna Kowalska', email: 'anna@hotel.pl', phone: '+48 500 600 700', status: 'Umowa podpisana' },
     { id: '2', category: 'Catering', name: 'EkoFood Solutions', contactPerson: 'Marek Nowak', email: 'kontakt@ekofood.pl', phone: '+48 600 700 800', status: 'Wycena' },
-    { id: '3', category: 'Transport', name: 'Bus-Trans sp. z o.o.', contactPerson: 'Piotr WiÄąâ€şniewski', email: 'biuro@bustrans.pl', phone: '+48 700 800 900', status: 'Brak kontaktu' }
+    { id: '3', category: 'Transport', name: 'Bus-Trans sp. z o.o.', contactPerson: 'Piotr Wiśniewski', email: 'biuro@bustrans.pl', phone: '+48 700 800 900', status: 'Brak kontaktu' }
   ])
 
   const [runOfShow, setRunOfShow] = useState<any[]>([
-    { id: '1', time: '06:00', task: 'Wjazd ekipy technicznej (Scena i AV)', assignee: 'Firma AV', location: 'Sala GÄąâ€šÄ‚Ĺ‚wna', status: 'done', isCritical: true },
+    { id: '1', time: '06:00', task: 'Wjazd ekipy technicznej (Scena i AV)', assignee: 'Firma AV', location: 'Sala Główna', status: 'done', isCritical: true },
     { id: '2', time: '08:00', task: 'Rozstawienie cateringu - przerwa kawowa', assignee: 'Catering', location: 'Foyer', status: 'pending', isCritical: false },
-    { id: '3', time: '08:30', task: 'Odprawa recepcji, odpalenie skanerÄ‚Ĺ‚w', assignee: 'Koordynator', location: 'Recepcja', status: 'pending', isCritical: true },
-    { id: '4', time: '09:45', task: 'GotowoÄąâ€şĂ„â€ˇ prowadzĂ„â€¦cego, wÄąâ€šĂ„â€¦czenie muzyki', assignee: 'ReÄąÄ˝yser', location: 'Backstage', status: 'pending', isCritical: true },
+    { id: '3', time: '08:30', task: 'Odprawa recepcji, odpalenie skanerów', assignee: 'Koordynator', location: 'Recepcja', status: 'pending', isCritical: true },
+    { id: '4', time: '09:45', task: 'Gotowość prowadzącego, włączenie muzyki', assignee: 'Reżyser', location: 'Backstage', status: 'pending', isCritical: true },
   ])
   const [spaceLayout, setSpaceLayout] = useState<any | null>(null)
 const [spaceObjects, setSpaceObjects] = useState<any[]>([])
@@ -447,7 +447,7 @@ const [searchContractor, setSearchContractor] = useState('')
 
 const [expandedContractorId, setExpandedContractorId] = useState<string | null>(null);
 // ==========================================
-  // STANY DOTYCZĂ„â€žCE TRANSPORTU
+  // STANY DOTYCZĄCE TRANSPORTU
   // ==========================================
   const [fleet, setFleet] = useState<any[]>([])
   const [carpoolingAds, setCarpoolingAds] = useState<any[]>([])
@@ -472,7 +472,7 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
     co2ReductionPercent: 0
   });
 }, [fleet, carpoolingAds]);
-// --- STANY DLA ZAKÄąÂADKI DOKUMENTACJI ---
+// --- STANY DLA ZAKŁADKI DOKUMENTACJI ---
   const [templateSearch, setTemplateSearch] = useState('')
   const [activeTemplateSendId, setActiveTemplateSendId] = useState<string | null>(null)
   const [selectedPatientForTemplate, setSelectedPatientForTemplate] = useState<string>('')
@@ -520,7 +520,7 @@ const [ecoAiReport, setEcoAiReport] = useState<any>(null)
 const [ecoAiLoading, setEcoAiLoading] = useState(false)
 const [aiTextAssistConfig, setAiTextAssistConfig] = useState<any>(null)
 const [aiTextTone, setAiTextTone] = useState('premium')
-const [aiTextLength, setAiTextLength] = useState('Äąâ€şrednia')
+const [aiTextLength, setAiTextLength] = useState('średnia')
 const [aiTextDocumentType, setAiTextDocumentType] = useState('consent')
 const [aiTextInstruction, setAiTextInstruction] = useState('')
 const [aiTextSuggestion, setAiTextSuggestion] = useState('')
@@ -540,7 +540,7 @@ const [patientQrFilter, setPatientQrFilter] = useState('all')
 const [expandedPatientIds, setExpandedPatientIds] = useState<Record<string, boolean>>({})
 const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
-// --- STANY DLA ZGÄ‚â€śD I DOKUMENTACJI MEDYCZNEJ ---
+// --- STANY DLA ZGÓD I DOKUMENTACJI MEDYCZNEJ ---
   const [consentTemplates, setConsentTemplates] = useState<any[]>([])
   const [isConsentTemplateModalOpen, setIsConsentTemplateModalOpen] = useState(false)
   const [consentTemplateForm, setConsentTemplateForm] = useState<any>({})
@@ -548,12 +548,12 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [isScanUploadModalOpen, setIsScanUploadModalOpen] = useState(false)
   const [scanUploadForm, setScanUploadForm] = useState<any>({ patient_id: '', template_id: '', file: null, preview: null })
 
-// --- STANY DLA BAZY PACJENTÄ‚â€śW I WYWIADÄ‚â€śW ---
+// --- STANY DLA BAZY PACJENTÓW I WYWIADÓW ---
   const [todayPatientSearch, setTodayPatientSearch] = useState('')
   const [allPatientSearch, setAllPatientSearch] = useState('')
   const [expandedPatientDocs, setExpandedPatientDocs] = useState<string | null>(null)
 // ============================================================================
-// ----- 4.2. FUNKCJE POMOCNICZE (wywoÄąâ€šywane z wnĂ„â„˘trza) -----
+// ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
 
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -610,7 +610,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     (item: any) => item.section_key === sectionKey && item.is_active !== false
   )
 
-  // Nowy, wyrÄ‚Ĺ‚ÄąÄ˝niajĂ„â€¦cy siĂ„â„˘ styl (Indygo) z peÄąâ€šnym wsparciem Dark Mode
+  // Nowy, wyróżniający się styl (Indygo) z pełnym wsparciem Dark Mode
   const className =
     'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-[10px] font-black uppercase transition-all shadow-sm shrink-0 hover:scale-105'
 
@@ -618,7 +618,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     return (
       <button
         type="button"
-        onClick={() => showNotification('Instrukcja dla tej sekcji nie zostaÄąâ€ša jeszcze dodana.', 'info')}
+        onClick={() => showNotification('Instrukcja dla tej sekcji nie została jeszcze dodana.', 'info')}
         className={className}
         title="Pomoc"
       >
@@ -646,7 +646,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const openAiTextAssist = (config: any) => {
     setAiTextAssistConfig(config)
     setAiTextTone('premium')
-    setAiTextLength('Äąâ€şrednia')
+    setAiTextLength('średnia')
     setAiTextDocumentType(config.documentType === 'info' ? 'aftercare' : (config.documentType || 'consent'))
     setAiTextInstruction('')
     setAiTextSuggestion(config.currentValue || '')
@@ -672,7 +672,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     const treatmentName = String(config?.relatedEntityTitle || consentTemplateForm?.required_for_treatment || consentTemplateForm?.title || '').trim()
     const eventTitle = event?.title || 'wydarzenie'
     const eventLocation = event?.location ? ` w lokalizacji ${event.location}` : ''
-    const short = String(aiTextLength || '').toLowerCase().includes('krÄ‚Ĺ‚t')
+    const short = String(aiTextLength || '').toLowerCase().includes('krót')
     const isMedicalDocument = sectionKey === 'medical_documents' || sectionKey === 'medical_docs' || sectionKey === 'patient_consents'
 
     if (isMedicalDocument) {
@@ -680,60 +680,60 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
       if (documentType === 'questionnaire') {
         return [
-          `WYWIAD MEDYCZNY PRZED PROCEDURĂ„â€ž: ${procedure}`,
+          `WYWIAD MEDYCZNY PRZED PROCEDURĄ: ${procedure}`,
           '',
           'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
           'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
-          'Data wypeÄąâ€šnienia: [DATA]',
+          'Data wypełnienia: [DATA]',
           '',
           '1. Cel wywiadu',
           'Celem wywiadu jest zebranie informacji istotnych dla bezpiecznej kwalifikacji pacjenta do procedury.',
           '',
-          '2. Pytania ogÄ‚Ĺ‚lne',
+          '2. Pytania ogólne',
           '- Czy pacjent choruje przewlekle?',
           '- Czy pacjent przyjmuje stale leki?',
-          '- Czy wystĂ„â„˘pujĂ„â€¦ alergie lub nadwraÄąÄ˝liwoÄąâ€şci?',
+          '- Czy występują alergie lub nadwrażliwości?',
           '- Czy w ostatnim czasie wykonano podobne procedury?',
           '',
           '3. Przeciwwskazania i czynniki ryzyka',
-          '- CiĂ„â€¦ÄąÄ˝a lub karmienie piersiĂ„â€¦: [TAK/NIE]',
+          '- Ciąża lub karmienie piersią: [TAK/NIE]',
           '- Aktywne infekcje lub stany zapalne: [TAK/NIE]',
-          '- SkÄąâ€šonnoÄąâ€şĂ„â€ˇ do bliznowcÄ‚Ĺ‚w lub zaburzeÄąâ€ž gojenia: [TAK/NIE]',
+          '- Skłonność do bliznowców lub zaburzeń gojenia: [TAK/NIE]',
           '- Inne istotne informacje: [OPIS]',
           '',
-          '4. OÄąâ€şwiadczenie pacjenta',
-          'OÄąâ€şwiadczam, ÄąÄ˝e przekazane informacje sĂ„â€¦ zgodne z mojĂ„â€¦ wiedzĂ„â€¦.',
+          '4. Oświadczenie pacjenta',
+          'Oświadczam, że przekazane informacje są zgodne z moją wiedzą.',
           '',
           'Podpis pacjenta: ____________________    Podpis personelu: ____________________',
           '',
-          'Uwaga: dokument wymaga zatwierdzenia przez osobĂ„â„˘ uprawnionĂ„â€¦ przed uÄąÄ˝yciem.'
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
         ].join('\n')
       }
 
       if (documentType === 'aftercare' || documentType === 'precare') {
-        const phase = documentType === 'precare' ? 'PRZED PROCEDURĂ„â€ž' : 'PO PROCEDURZE'
+        const phase = documentType === 'precare' ? 'PRZED PROCEDURĄ' : 'PO PROCEDURZE'
         return [
           `ZALECENIA DLA PACJENTA ${phase}: ${procedure}`,
           '',
           'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
           '',
           '1. Cel dokumentu',
-          'PoniÄąÄ˝sze zalecenia majĂ„â€¦ pomÄ‚Ĺ‚c pacjentowi w bezpiecznym postĂ„â„˘powaniu po procedurze.',
+          'Poniższe zalecenia mają pomóc pacjentowi w bezpiecznym postępowaniu po procedurze.',
           '',
-          '2. Zalecenia ogÄ‚Ĺ‚lne',
-          '- StosowaĂ„â€ˇ siĂ„â„˘ do indywidualnych zaleceÄąâ€ž osoby wykonujĂ„â€¦cej procedurĂ„â„˘.',
-          '- ObserwowaĂ„â€ˇ miejsce zabiegowe i zgÄąâ€šaszaĂ„â€ˇ niepokojĂ„â€¦ce objawy.',
-          '- UnikaĂ„â€ˇ dziaÄąâ€šaÄąâ€ž wskazanych jako przeciwwskazane po procedurze.',
+          '2. Zalecenia ogólne',
+          '- Stosować się do indywidualnych zaleceń osoby wykonującej procedurę.',
+          '- Obserwować miejsce zabiegowe i zgłaszać niepokojące objawy.',
+          '- Unikać działań wskazanych jako przeciwwskazane po procedurze.',
           '',
-          '3. Kiedy skontaktowaĂ„â€ˇ siĂ„â„˘ z placÄ‚Ĺ‚wkĂ„â€¦',
-          '- NasilajĂ„â€¦cy siĂ„â„˘ bÄ‚Ĺ‚l, obrzĂ„â„˘k lub zaczerwienienie.',
+          '3. Kiedy skontaktować się z placówką',
+          '- Nasilający się ból, obrzęk lub zaczerwienienie.',
           '- Objawy infekcji lub reakcja alergiczna.',
-          '- KaÄąÄ˝dy objaw budzĂ„â€¦cy niepokÄ‚Ĺ‚j pacjenta.',
+          '- Każdy objaw budzący niepokój pacjenta.',
           '',
           '4. Kontrola',
           'Termin kontroli / kontaktu follow-up: [TERMIN]',
           '',
-          'Uwaga: dokument wymaga zatwierdzenia przez osobĂ„â„˘ uprawnionĂ„â€¦ przed uÄąÄ˝yciem.'
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
         ].join('\n')
       }
 
@@ -741,20 +741,20 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         return [
           `FOLLOW-UP DO PACJENTA PO WIZYCIE / PROCEDURZE: ${procedure}`,
           '',
-          'Status treÄąâ€şci: WERSJA ROBOCZA DO WERYFIKACJI',
+          'Status treści: WERSJA ROBOCZA DO WERYFIKACJI',
           '',
-          'DzieÄąâ€ž dobry [IMIE_PACJENTA],',
+          'Dzień dobry [IMIE_PACJENTA],',
           '',
-          'kontaktujemy siĂ„â„˘ po wizycie, aby upewniĂ„â€ˇ siĂ„â„˘, ÄąÄ˝e wszystko przebiega prawidÄąâ€šowo.',
+          'kontaktujemy się po wizycie, aby upewnić się, że wszystko przebiega prawidłowo.',
           '',
-          'Prosimy o kontakt z placÄ‚Ĺ‚wkĂ„â€¦, jeÄąâ€şli pojawiÄąâ€šy siĂ„â„˘ niepokojĂ„â€¦ce objawy, nasilony bÄ‚Ĺ‚l, obrzĂ„â„˘k, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
+          'Prosimy o kontakt z placówką, jeśli pojawiły się niepokojące objawy, nasilony ból, obrzęk, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
           '',
           'Termin kontroli / kolejnego kontaktu: [TERMIN]',
           '',
           'Pozdrawiamy,',
           '[NAZWA_PLACOWKI]',
           '',
-          'Uwaga: treÄąâ€şĂ„â€ˇ wymaga zatwierdzenia przez osobĂ„â„˘ uprawnionĂ„â€¦ przed wysyÄąâ€škĂ„â€¦.'
+          'Uwaga: treść wymaga zatwierdzenia przez osobę uprawnioną przed wysyłką.'
         ].join('\n')
       }
 
@@ -768,62 +768,62 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           'Administratorem danych jest: [NAZWA_PLACOWKI], [ADRES], [KONTAKT].',
           '',
           '2. Zakres danych',
-          'Dane mogĂ„â€¦ obejmowaĂ„â€ˇ dane identyfikacyjne, kontaktowe, informacje o wizytach oraz dokumentacjĂ„â„˘ zwiĂ„â€¦zanĂ„â€¦ z obsÄąâ€šugĂ„â€¦ pacjenta.',
+          'Dane mogą obejmować dane identyfikacyjne, kontaktowe, informacje o wizytach oraz dokumentację związaną z obsługą pacjenta.',
           '',
           '3. Cele przetwarzania',
-          '- obsÄąâ€šuga pacjenta i wizyt,',
+          '- obsługa pacjenta i wizyt,',
           '- prowadzenie dokumentacji,',
           '- kontakt organizacyjny,',
-          '- dziaÄąâ€šania marketingowe wyÄąâ€šĂ„â€¦cznie po wyraÄąÄ˝eniu odrĂ„â„˘bnej zgody.',
+          '- działania marketingowe wyłącznie po wyrażeniu odrębnej zgody.',
           '',
           '4. Zgody',
-          '[ ] WyraÄąÄ˝am zgodĂ„â„˘ na kontakt SMS/e-mail w sprawach organizacyjnych.',
-          '[ ] WyraÄąÄ˝am zgodĂ„â„˘ na kontakt marketingowy.',
-          '[ ] WyraÄąÄ˝am zgodĂ„â„˘ na wykorzystanie wizerunku / zdjĂ„â„˘Ă„â€ˇ przed i po, jeÄąÄ˝eli dotyczy.',
+          '[ ] Wyrażam zgodę na kontakt SMS/e-mail w sprawach organizacyjnych.',
+          '[ ] Wyrażam zgodę na kontakt marketingowy.',
+          '[ ] Wyrażam zgodę na wykorzystanie wizerunku / zdjęć przed i po, jeżeli dotyczy.',
           '',
           'Podpis pacjenta: ____________________    Data: [DATA]',
           '',
-          'Uwaga: dokument wymaga weryfikacji prawnej przed uÄąÄ˝yciem.'
+          'Uwaga: dokument wymaga weryfikacji prawnej przed użyciem.'
         ].join('\n')
       }
 
       return [
-        `ZGODA PACJENTA NA PROCEDURĂ„Â: ${procedure}`,
+        `ZGODA PACJENTA NA PROCEDURĘ: ${procedure}`,
         '',
         'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNO-PRAWNEJ',
         'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
         'Data: [DATA]',
-        'PlacÄ‚Ĺ‚wka: [NAZWA_PLACOWKI]',
+        'Placówka: [NAZWA_PLACOWKI]',
         '',
         '1. Opis procedury',
-        'Pacjent zostaÄąâ€š poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
+        'Pacjent został poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
         '',
-        '2. MoÄąÄ˝liwe przeciwwskazania',
+        '2. Możliwe przeciwwskazania',
         '- aktywne infekcje lub stany zapalne,',
-        '- ciĂ„â€¦ÄąÄ˝a lub karmienie piersiĂ„â€¦, jeÄąÄ˝eli dotyczy procedury,',
-        '- alergie lub nadwraÄąÄ˝liwoÄąâ€şci na stosowane preparaty,',
-        '- inne przeciwwskazania wskazane przez osobĂ„â„˘ kwalifikujĂ„â€¦cĂ„â€¦.',
+        '- ciąża lub karmienie piersią, jeżeli dotyczy procedury,',
+        '- alergie lub nadwrażliwości na stosowane preparaty,',
+        '- inne przeciwwskazania wskazane przez osobę kwalifikującą.',
         '',
-        '3. MoÄąÄ˝liwe dziaÄąâ€šania niepoÄąÄ˝Ă„â€¦dane / powikÄąâ€šania',
-        '- bÄ‚Ĺ‚l, obrzĂ„â„˘k, zaczerwienienie, siniaki,',
+        '3. Możliwe działania niepożądane / powikłania',
+        '- ból, obrzęk, zaczerwienienie, siniaki,',
         '- reakcja alergiczna,',
         '- infekcja lub zaburzenia gojenia,',
-        '- efekt estetyczny odbiegajĂ„â€¦cy od oczekiwaÄąâ€ž pacjenta.',
+        '- efekt estetyczny odbiegający od oczekiwań pacjenta.',
         '',
-        '4. Alternatywy i moÄąÄ˝liwoÄąâ€şĂ„â€ˇ odmowy',
-        'Pacjent zostaÄąâ€š poinformowany o moÄąÄ˝liwoÄąâ€şci rezygnacji z procedury oraz o dostĂ„â„˘pnych alternatywach, jeÄąÄ˝eli wystĂ„â„˘pujĂ„â€¦.',
+        '4. Alternatywy i możliwość odmowy',
+        'Pacjent został poinformowany o możliwości rezygnacji z procedury oraz o dostępnych alternatywach, jeżeli występują.',
         '',
-        '5. OÄąâ€şwiadczenia pacjenta',
-        '[ ] OÄąâ€şwiadczam, ÄąÄ˝e miaÄąâ€šem/am moÄąÄ˝liwoÄąâ€şĂ„â€ˇ zadania pytaÄąâ€ž.',
-        '[ ] OÄąâ€şwiadczam, ÄąÄ˝e przekazaÄąâ€šem/am prawdziwe informacje o stanie zdrowia.',
-        '[ ] WyraÄąÄ˝am Äąâ€şwiadomĂ„â€¦ zgodĂ„â„˘ na wykonanie procedury.',
+        '5. Oświadczenia pacjenta',
+        '[ ] Oświadczam, że miałem/am możliwość zadania pytań.',
+        '[ ] Oświadczam, że przekazałem/am prawdziwe informacje o stanie zdrowia.',
+        '[ ] Wyrażam świadomą zgodę na wykonanie procedury.',
         '',
         '6. Zalecenia',
-        'Pacjent otrzymaÄąâ€š zalecenia przed i po procedurze oraz zostaÄąâ€š poinformowany o koniecznoÄąâ€şci kontaktu w razie niepokojĂ„â€¦cych objawÄ‚Ĺ‚w.',
+        'Pacjent otrzymał zalecenia przed i po procedurze oraz został poinformowany o konieczności kontaktu w razie niepokojących objawów.',
         '',
         'Podpis pacjenta: ____________________    Podpis osoby uprawnionej: ____________________',
         '',
-        'Uwaga: dokument wymaga zatwierdzenia przez osobĂ„â„˘ uprawnionĂ„â€¦ przed uÄąÄ˝yciem z pacjentem.'
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem z pacjentem.'
       ].join('\n')
     }
 
@@ -833,29 +833,29 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     if (fieldKey.includes('title')) {
       if (sectionKey === 'menu') return 'Menu wydarzenia'
       if (sectionKey === 'transport') return 'Transport i dojazd'
-      if (sectionKey === 'gadgets') return 'GadÄąÄ˝ety dla uczestnikÄ‚Ĺ‚w'
-      if (sectionKey === 'workshops') return 'Warsztaty i aktywnoÄąâ€şci'
-      if (sectionKey === 'faq') return 'NajwaÄąÄ˝niejsze informacje'
+      if (sectionKey === 'gadgets') return 'Gadżety dla uczestników'
+      if (sectionKey === 'workshops') return 'Warsztaty i aktywności'
+      if (sectionKey === 'faq') return 'Najważniejsze informacje'
       return `Sekcja wydarzenia ${eventTitle}`
     }
 
     if (fieldKey.includes('cta')) {
       if (sectionKey === 'menu') return 'Wybierz menu'
-      if (sectionKey === 'transport') return 'PotwierdÄąĹź transport'
-      if (sectionKey === 'gadgets') return 'Wybierz gadÄąÄ˝et'
-      if (sectionKey === 'workshops') return 'Zapisz siĂ„â„˘'
-      return 'SprawdÄąĹź szczegÄ‚Ĺ‚Äąâ€šy'
+      if (sectionKey === 'transport') return 'Potwierdź transport'
+      if (sectionKey === 'gadgets') return 'Wybierz gadżet'
+      if (sectionKey === 'workshops') return 'Zapisz się'
+      return 'Sprawdź szczegóły'
     }
 
     if (aiTextTone === 'eco') {
       return short
-        ? `SprawdÄąĹź aktualne informacje o ${eventTitle}${eventLocation}. Korzystamy z cyfrowej strony, aby ograniczaĂ„â€ˇ wydruki.`
-        : `Tutaj znajdziesz aktualne informacje o ${eventTitle}${eventLocation}. To cyfrowe centrum uczestnika, ktÄ‚Ĺ‚re organizator moÄąÄ˝e aktualizowaĂ„â€ˇ na bieÄąÄ˝Ă„â€¦co bez dodatkowych wydrukÄ‚Ĺ‚w.`
+        ? `Sprawdź aktualne informacje o ${eventTitle}${eventLocation}. Korzystamy z cyfrowej strony, aby ograniczać wydruki.`
+        : `Tutaj znajdziesz aktualne informacje o ${eventTitle}${eventLocation}. To cyfrowe centrum uczestnika, które organizator może aktualizować na bieżąco bez dodatkowych wydruków.`
     }
 
     return short
-      ? `SprawdÄąĹź aktualne informacje o ${eventTitle}${eventLocation}.`
-      : `Tutaj znajdziesz aktualne informacje dotyczĂ„â€¦ce wydarzenia ${eventTitle}${eventLocation}. Organizator moÄąÄ˝e aktualizowaĂ„â€ˇ tĂ„â„˘ sekcjĂ„â„˘ na bieÄąÄ˝Ă„â€¦co, dlatego warto wracaĂ„â€ˇ do strony przed wydarzeniem.`
+      ? `Sprawdź aktualne informacje o ${eventTitle}${eventLocation}.`
+      : `Tutaj znajdziesz aktualne informacje dotyczące wydarzenia ${eventTitle}${eventLocation}. Organizator może aktualizować tę sekcję na bieżąco, dlatego warto wracać do strony przed wydarzeniem.`
   }
 
   const generateAiTextSuggestion = async () => {
@@ -896,13 +896,13 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           normalizedSuggestion.includes('wydarzen') ||
           normalizedSuggestion.includes('organizator') ||
           normalizedSuggestion.includes('regulaminie') ||
-          normalizedSuggestion.includes('goÄąâ€şci')
+          normalizedSuggestion.includes('gości')
         )
 
       if (looksLikeOldEventFallback || (isMedicalDocumentRequest && !suggestion.trim())) {
         setAiTextSuggestion(buildLocalAiTextFallback(aiTextAssistConfig))
-        setAiTextReason('Odrzucono eventowĂ„â€¦ odpowiedÄąĹź starej funkcji AI i uÄąÄ˝yto bezpiecznego medycznego szkieletu dokumentu.')
-        setAiTextMissingContext(['WdrÄ‚Ĺ‚ÄąÄ˝ zaktualizowanĂ„â€¦ Edge Function generate-text-suggestion, aby model generowaÄąâ€š dokumenty medyczne bez fallbacku.'])
+        setAiTextReason('Odrzucono eventową odpowiedź starej funkcji AI i użyto bezpiecznego medycznego szkieletu dokumentu.')
+        setAiTextMissingContext(['Wdróż zaktualizowaną Edge Function generate-text-suggestion, aby model generował dokumenty medyczne bez fallbacku.'])
       } else {
         setAiTextSuggestion(suggestion)
         setAiTextReason(data?.reason || '')
@@ -916,9 +916,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         code: error?.code
       })
       setAiTextSuggestion(buildLocalAiTextFallback(aiTextAssistConfig))
-      setAiTextReason('Edge Function nie odpowiedziaÄąâ€ša, wiĂ„â„˘c pokazano bezpieczny lokalny szkic na podstawie danych pola. Po wdroÄąÄ˝eniu funkcji Supabase sugestie bĂ„â„˘dĂ„â€¦ generowane przez AI.')
-      setAiTextMissingContext(['SprawdÄąĹź, czy Edge Function generate-text-suggestion jest wdroÄąÄ˝ona w Supabase i ma ustawiony sekret DEEPSEEK_API_KEY.'])
-      showNotification('Edge Function AI nie odpowiedziaÄąâ€ša. PokazaÄąâ€šam lokalny szkic treÄąâ€şci do rĂ„â„˘cznej edycji.', 'info')
+      setAiTextReason('Edge Function nie odpowiedziała, więc pokazano bezpieczny lokalny szkic na podstawie danych pola. Po wdrożeniu funkcji Supabase sugestie będą generowane przez AI.')
+      setAiTextMissingContext(['Sprawdź, czy Edge Function generate-text-suggestion jest wdrożona w Supabase i ma ustawiony sekret DEEPSEEK_API_KEY.'])
+      showNotification('Edge Function AI nie odpowiedziała. Pokazałam lokalny szkic treści do ręcznej edycji.', 'info')
     } finally {
       setAiTextLoading(false)
     }
@@ -929,8 +929,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     aiTextAssistConfig.onApply(aiTextSuggestion)
     showNotification(
       aiTextAssistConfig?.mode === 'medical_document'
-        ? 'Szkic AI zostaÄąâ€š wstawiony. Przed uÄąÄ˝yciem zatwierdÄąĹź go medycznie i prawnie.'
-        : 'Propozycja AI zostaÄąâ€ša wstawiona do pola. Zapisz formularz, aby utrwaliĂ„â€ˇ zmianĂ„â„˘.',
+        ? 'Szkic AI został wstawiony. Przed użyciem zatwierdź go medycznie i prawnie.'
+        : 'Propozycja AI została wstawiona do pola. Zapisz formularz, aby utrwalić zmianę.',
       'success'
     )
     closeAiTextAssist()
@@ -965,7 +965,7 @@ const AiTextAssistButton = ({
     type="button"
     onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, relatedEntityTitle, placeholder, mode, documentType, onApply })}
     className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-400/20 dark:to-purple-400/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:from-indigo-500/20 hover:to-purple-500/20"
-    title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalnĂ„â€¦ treÄąâ€şĂ„â€ˇ z AI'}
+    title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalną treść z AI'}
   >
     <Sparkles size={14} className="animate-pulse" />
     {label}
@@ -1020,7 +1020,7 @@ const AiTextAssistButton = ({
         await loadEcoAiReport()
       }
 
-      showNotification('Analiza AI Eco zostaÄąâ€ša odÄąâ€şwieÄąÄ˝ona na podstawie aktualnych danych z planera.', 'success')
+      showNotification('Analiza AI Eco została odświeżona na podstawie aktualnych danych z planera.', 'success')
     } catch (error: any) {
       console.error('Eco AI analysis invoke error:', {
         message: error?.message,
@@ -1028,7 +1028,7 @@ const AiTextAssistButton = ({
         hint: error?.hint,
         code: error?.code
       })
-      showNotification(`Nie udaÄąâ€šo siĂ„â„˘ odÄąâ€şwieÄąÄ˝yĂ„â€ˇ analizy AI: ${error?.message || 'Nieznany bÄąâ€šĂ„â€¦d'}`, 'error')
+      showNotification(`Nie udało się odświeżyć analizy AI: ${error?.message || 'Nieznany błąd'}`, 'error')
     } finally {
       setEcoAiLoading(false)
     }
@@ -1112,7 +1112,7 @@ const AiTextAssistButton = ({
     const isName = normalized && normalized !== '0' && normalized !== '1' && Number.isNaN(Number(normalized.replace('+', '')))
     return isName && index === 0
       ? normalized
-      : `Osoba towarzyszĂ„â€¦ca ${index + 1} - ${fallbackName || 'goÄąâ€şĂ„â€ˇ'}`
+      : `Osoba towarzysząca ${index + 1} - ${fallbackName || 'gość'}`
   }
 
   const parseSizes = (value: any) => {
@@ -1241,7 +1241,7 @@ const loadConsentTemplates = useCallback(async () => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn('BÄąâ€šĂ„â€¦d Äąâ€šadowania szablonÄ‚Ĺ‚w z bazy:', error.message);
+    console.warn('Błąd ładowania szablonów z bazy:', error.message);
     setConsentTemplates([]);
     return;
   }
@@ -1257,7 +1257,7 @@ const loadConsentTemplates = useCallback(async () => {
       event_id: id,
       application_id: app.id,
       unit_type: 'main',
-      display_name: baseName || app.email || 'GoÄąâ€şĂ„â€ˇ',
+      display_name: baseName || app.email || 'Gość',
       first_name: app.first_name || null,
       last_name: app.last_name || null,
       email: app.email || null,
@@ -1285,7 +1285,7 @@ const loadConsentTemplates = useCallback(async () => {
         event_id: id,
         application_id: app.id,
         unit_type: 'companion',
-        display_name: getCompanionDisplayName(app.companion, baseName || app.email || 'goÄąâ€şĂ„â€ˇ', index),
+        display_name: getCompanionDisplayName(app.companion, baseName || app.email || 'gość', index),
         first_name: null,
         last_name: null,
         email: null,
@@ -1311,13 +1311,13 @@ const loadConsentTemplates = useCallback(async () => {
         event_id: id,
         application_id: app.id,
         unit_type: 'child',
-        display_name: `Dziecko ${index + 1} - ${baseName || app.email || 'goÄąâ€şĂ„â€ˇ'}`,
+        display_name: `Dziecko ${index + 1} - ${baseName || app.email || 'gość'}`,
         first_name: null,
         last_name: null,
         email: null,
         phone: null,
         age_group: 'child',
-        diet: 'dzieciĂ„â„˘ce',
+        diet: 'dziecięce',
         allergies: app.allergies || null,
         ticket_type: ticketType,
         access_status: accessStatus,
@@ -1339,7 +1339,7 @@ const loadConsentTemplates = useCallback(async () => {
     if (!app?.id) return
     const existing = attendeeUnits.some(unit => unit.application_id === app.id)
     if (existing) {
-      showNotification('QR dla tego zgÄąâ€šoszenia juÄąÄ˝ istniejĂ„â€¦', 'info')
+      showNotification('QR dla tego zgłoszenia już istnieją', 'info')
       return
     }
 
@@ -1347,7 +1347,7 @@ const loadConsentTemplates = useCallback(async () => {
     const { error } = await supabase.from('event_attendee_units').insert(rows)
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ wygenerowaĂ„â€ˇ QR. SprawdÄąĹź tabelĂ„â„˘ event_attendee_units.', 'error')
+      showNotification('Nie udało się wygenerować QR. Sprawdź tabelę event_attendee_units.', 'error')
       return
     }
 
@@ -1359,7 +1359,7 @@ const createPatientQrUnit = async (patient: any) => {
   const existing = attendeeUnits.find((unit: any) => unit.patient_id === patient.id)
 
   if (existing) {
-    showNotification('Ten pacjent ma juÄąÄ˝ wygenerowany QR', 'info')
+    showNotification('Ten pacjent ma już wygenerowany QR', 'info')
     return
   }
 
@@ -1372,7 +1372,7 @@ const createPatientQrUnit = async (patient: any) => {
       .eq('id', patient.id)
 
     if (patientUpdateError) {
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ zapisaĂ„â€ˇ tokenu pacjenta: ' + patientUpdateError.message, 'error')
+      showNotification('Nie udało się zapisać tokenu pacjenta: ' + patientUpdateError.message, 'error')
       return
     }
   }
@@ -1399,7 +1399,7 @@ const createPatientQrUnit = async (patient: any) => {
   }])
 
   if (error) {
-    showNotification('Nie udaÄąâ€šo siĂ„â„˘ wygenerowaĂ„â€ˇ QR pacjenta: ' + error.message, 'error')
+    showNotification('Nie udało się wygenerować QR pacjenta: ' + error.message, 'error')
     return
   }
 
@@ -1422,14 +1422,14 @@ const createPatientQrUnit = async (patient: any) => {
       .flatMap((app: any) => buildAttendeeUnitRows(app))
 
     if (rows.length === 0) {
-      showNotification('Nie ma brakujĂ„â€¦cych QR do wygenerowania', 'info')
+      showNotification('Nie ma brakujących QR do wygenerowania', 'info')
       return
     }
 
     const { error } = await supabase.from('event_attendee_units').insert(rows)
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ wygenerowaĂ„â€ˇ QR. SprawdÄąĹź tabelĂ„â„˘ event_attendee_units.', 'error')
+      showNotification('Nie udało się wygenerować QR. Sprawdź tabelę event_attendee_units.', 'error')
       return
     }
 
@@ -1459,7 +1459,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ checked_in: true, checked_in_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ zapisaĂ„â€ˇ check-in', 'error')
+      showNotification('Nie udało się zapisać check-in', 'error')
       return
     }
     await insertEventPassScan(unit, 'entry_checkin')
@@ -1474,7 +1474,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ wristband_code: wristbandCode, wristband_issued: true, wristband_issued_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ wydaĂ„â€ˇ opaski', 'error')
+      showNotification('Nie udało się wydać opaski', 'error')
       return
     }
     await insertEventPassScan(unit, 'wristband_issue')
@@ -1488,7 +1488,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ wristband_returned: true, wristband_returned_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ zapisaĂ„â€ˇ zwrotu opaski', 'error')
+      showNotification('Nie udało się zapisać zwrotu opaski', 'error')
       return
     }
     await insertEventPassScan(unit, 'wristband_return')
@@ -1497,7 +1497,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   }
 
   const handleResetUnitStatus = async (unit: any) => {
-    if (!confirm('ZresetowaĂ„â€ˇ status check-in i opaski dla tej jednostki?')) return
+    if (!confirm('Zresetować status check-in i opaski dla tej jednostki?')) return
     const { error } = await supabase
       .from('event_attendee_units')
       .update({
@@ -1511,7 +1511,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ zresetowaĂ„â€ˇ statusu', 'error')
+      showNotification('Nie udało się zresetować statusu', 'error')
       return
     }
     await loadEventPassData()
@@ -1536,13 +1536,13 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     const { error } = await supabase.from('event_staff_access').insert([data])
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaÄąâ€šo siĂ„â„˘ dodaĂ„â€ˇ dostĂ„â„˘pu obsÄąâ€šugi', 'error')
+      showNotification('Nie udało się dodać dostępu obsługi', 'error')
       return
     }
     setStaffAccessForm({})
     setIsStaffAccessModalOpen(false)
     await loadEventPassData()
-    showNotification('DostĂ„â„˘p obsÄąâ€šugi przygotowany', 'success')
+    showNotification('Dostęp obsługi przygotowany', 'success')
   }
 
   const getStaffPassUrl = (accessToken?: string) => {
@@ -1570,19 +1570,19 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   }
 
   const publicSectionConfigs = [
-    { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'WÄąâ€šĂ„â€¦cz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietĂ„â„˘, leki albo przygotowanie do wizyty.' },
-    { key: 'gadgets', label: 'Pakiety pacjenta', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'WÄąâ€šĂ„â€¦cz wybÄ‚Ĺ‚r pakietu pacjenta', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Pakiet pacjenta', placeholderDescription: 'Opisz pakiety, materiaÄąâ€šy lub dodatki przekazywane pacjentowi.' },
-    { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'WÄąâ€šĂ„â€¦cz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostĂ„â„˘pne wizyty, konsultacje i procedury.' },
-    { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'PokaÄąÄ˝ kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz uÄąÄ˝ycie kodu QR do check-inu wizyty i dostĂ„â„˘pu personelu.' },
-    { key: 'theme', label: 'Standard placÄ‚Ĺ‚wki', icon: Palette, placeholderTitle: 'Standard obsÄąâ€šugi', placeholderDescription: 'Opisz standard wizyty, komfort i doÄąâ€şwiadczenie pacjenta.' },
-    { key: 'agenda', label: 'ÄąĹˇcieÄąÄ˝ka wizyty', icon: ClipboardList, placeholderTitle: 'ÄąĹˇcieÄąÄ˝ka pacjenta', placeholderDescription: 'Opisz kolejne kroki od rejestracji po follow-up.' },
-    { key: 'speakers', label: 'Lekarze / specjaliÄąâ€şci', icon: Mic, placeholderTitle: 'ZespÄ‚Ĺ‚Äąâ€š medyczny', placeholderDescription: 'Przedstaw lekarzy, specjalistÄ‚Ĺ‚w i opiekunÄ‚Ĺ‚w pacjenta.' },
-    { key: 'sponsors', label: 'Partnerzy medyczni', icon: Briefcase, placeholderTitle: 'Partnerzy kliniki', placeholderDescription: 'Opisz partnerÄ‚Ĺ‚w, laboratoria lub wspÄ‚Ĺ‚Äąâ€špracujĂ„â€¦ce podmioty.' },
-    { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub waÄąÄ˝ne pliki.' },
-    { key: 'announcements', label: 'OgÄąâ€šoszenia / aktualnoÄąâ€şci', icon: MessageSquare, placeholderTitle: 'OgÄąâ€šoszenia', placeholderDescription: 'Dodaj waÄąÄ˝ne komunikaty dla uczestnikÄ‚Ĺ‚w.' },
-    { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe dziaÄąâ€šania promocyjne.' },
-    { key: 'gallery', label: 'Galeria / klimat eventu', icon: ImageIcon, placeholderTitle: 'Galeria wydarzenia', placeholderDescription: 'PokaÄąÄ˝ zdjĂ„â„˘cia, klimat i wizualnĂ„â€¦ zapowiedÄąĹź wydarzenia.' },
-    { key: 'faq', label: 'FAQ / waÄąÄ˝ne informacje', icon: AlertTriangle, placeholderTitle: 'WaÄąÄ˝ne informacje', placeholderDescription: 'Zbierz najwaÄąÄ˝niejsze odpowiedzi i informacje organizacyjne.' },
+    { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietę, leki albo przygotowanie do wizyty.' },
+    { key: 'gadgets', label: 'Pakiety pacjenta', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'Włącz wybór pakietu pacjenta', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Pakiet pacjenta', placeholderDescription: 'Opisz pakiety, materiały lub dodatki przekazywane pacjentowi.' },
+    { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostępne wizyty, konsultacje i procedury.' },
+    { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz użycie kodu QR do check-inu wizyty i dostępu personelu.' },
+    { key: 'theme', label: 'Standard placówki', icon: Palette, placeholderTitle: 'Standard obsługi', placeholderDescription: 'Opisz standard wizyty, komfort i doświadczenie pacjenta.' },
+    { key: 'agenda', label: 'Ścieżka wizyty', icon: ClipboardList, placeholderTitle: 'Ścieżka pacjenta', placeholderDescription: 'Opisz kolejne kroki od rejestracji po follow-up.' },
+    { key: 'speakers', label: 'Lekarze / specjaliści', icon: Mic, placeholderTitle: 'Zespół medyczny', placeholderDescription: 'Przedstaw lekarzy, specjalistów i opiekunów pacjenta.' },
+    { key: 'sponsors', label: 'Partnerzy medyczni', icon: Briefcase, placeholderTitle: 'Partnerzy kliniki', placeholderDescription: 'Opisz partnerów, laboratoria lub współpracujące podmioty.' },
+    { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub ważne pliki.' },
+    { key: 'announcements', label: 'Ogłoszenia / aktualności', icon: MessageSquare, placeholderTitle: 'Ogłoszenia', placeholderDescription: 'Dodaj ważne komunikaty dla uczestników.' },
+    { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe działania promocyjne.' },
+    { key: 'gallery', label: 'Galeria / klimat eventu', icon: ImageIcon, placeholderTitle: 'Galeria wydarzenia', placeholderDescription: 'Pokaż zdjęcia, klimat i wizualną zapowiedź wydarzenia.' },
+    { key: 'faq', label: 'FAQ / ważne informacje', icon: AlertTriangle, placeholderTitle: 'Ważne informacje', placeholderDescription: 'Zbierz najważniejsze odpowiedzi i informacje organizacyjne.' },
     { key: 'documents', label: 'Regulamin / dokumenty', icon: FileText, placeholderTitle: 'Regulamin i dokumenty', placeholderDescription: 'Dodaj regulamin, polityki, dokumenty lub warunki uczestnictwa.' },
   ]
 
@@ -1632,7 +1632,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       }
 
       if (Object.keys(updates).length === 0) {
-        showNotification('Najpierw dodaj kolumny ustawieÄąâ€ž strony uczestnika w b2b_events', 'info')
+        showNotification('Najpierw dodaj kolumny ustawień strony uczestnika w b2b_events', 'info')
         console.warn('Missing public section columns:', Array.from(missingFields))
         return
       }
@@ -1654,7 +1654,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       showNotification('Ustawienia strony uczestnika zapisane', 'success')
     } catch (err: any) {
       console.error('Participant page settings save error:', err)
-      showNotification('BÄąâ€šĂ„â€¦d zapisu ustawieÄąâ€ž strony uczestnika: ' + err.message, 'error')
+      showNotification('Błąd zapisu ustawień strony uczestnika: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -1665,7 +1665,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
 
     try {
       const fileExt = file.name.split('.').pop();
-      // Unikalna nazwa z timestampem gwarantuje, ÄąÄ˝e przeglĂ„â€¦darka nie pokaÄąÄ˝e starego cache'u
+      // Unikalna nazwa z timestampem gwarantuje, że przeglądarka nie pokaże starego cache'u
       const fileName = `${ownerId}/${prefix}-${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -1676,12 +1676,12 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
         });
 
       if (uploadError) {
-        console.error(`BÄąâ€šĂ„â€¦d przesyÄąâ€šania pliku (${prefix}):`, uploadError.message);
+        console.error(`Błąd przesyłania pliku (${prefix}):`, uploadError.message);
         showNotification(`Problem z obrazem ${prefix}: ${uploadError.message}`, 'error');
         return null;
       }
 
-      // Pobranie publicznego adresu URL z nowo utworzonej Äąâ€şcieÄąÄ˝ki
+      // Pobranie publicznego adresu URL z nowo utworzonej ścieżki
       const { data } = supabase.storage
         .from('event-covers')
         .getPublicUrl(fileName);
@@ -1689,7 +1689,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       return data.publicUrl;
 
     } catch (err) {
-      console.error("Nieoczekiwany bÄąâ€šĂ„â€¦d uploadu:", err);
+      console.error("Nieoczekiwany błąd uploadu:", err);
       return null;
     }
   };
@@ -1754,10 +1754,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     try {
       await supabase.from('b2b_applications').update({ status: newStatus }).eq('id', appId)
       setApplications(applications.map(a => a.id === appId ? { ...a, status: newStatus } : a))
-      showNotification(`Status goÄąâ€şcia zaktualizowany`, 'success')
+      showNotification(`Status gościa zaktualizowany`, 'success')
       calculateEcoMetrics(applications)
     } catch (error) {
-      showNotification('BÄąâ€šĂ„â€¦d aktualizacji statusu', 'error')
+      showNotification('Błąd aktualizacji statusu', 'error')
     }
   }
 
@@ -1770,10 +1770,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
         selectedGuests.includes(a.id) ? { ...a, status } : a
       ))
       setSelectedGuests([])
-      showNotification(`Zaktualizowano ${selectedGuests.length} goÄąâ€şci`, 'success')
+      showNotification(`Zaktualizowano ${selectedGuests.length} gości`, 'success')
       calculateEcoMetrics(applications)
     } catch (error) {
-      showNotification('BÄąâ€šĂ„â€¦d aktualizacji grupowej', 'error')
+      showNotification('Błąd aktualizacji grupowej', 'error')
     }
   }
 
@@ -1782,14 +1782,14 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       await supabase.from('b2b_applications').delete().eq('id', appId)
       setApplications(applications.filter(a => a.id !== appId))
       setShowDeleteConfirm(null)
-      showNotification('GoÄąâ€şĂ„â€ˇ usuniĂ„â„˘ty', 'success')
+      showNotification('Gość usunięty', 'success')
     } catch (error) {
-      showNotification('BÄąâ€šĂ„â€¦d usuwania goÄąâ€şcia', 'error')
+      showNotification('Błąd usuwania gościa', 'error')
     }
   }
 
   const exportToCSV = () => {
-    const headers = ['ImiĂ„â„˘', 'Nazwisko', 'Firma', 'Status', 'Dieta', 'Alkohol', 'SÄąâ€šodycze', 'Transport', 'Email']
+    const headers = ['Imię', 'Nazwisko', 'Firma', 'Status', 'Dieta', 'Alkohol', 'Słodycze', 'Transport', 'Email']
     const rows = applications.map(app => [
       app.first_name, app.last_name, app.company_name, app.status,
       app.diet, app.alcohol_preference || '-', app.sweets_preference || '-', app.transport, app.email
@@ -1801,7 +1801,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     a.href = url
     a.download = `goscie-${event?.title || 'wydarzenie'}.csv`
     a.click()
-    showNotification('Lista goÄąâ€şci wyeksportowana', 'success')
+    showNotification('Lista gości wyeksportowana', 'success')
   }
 
     const saveGuestChanges = async (e: React.FormEvent) => {
@@ -1812,10 +1812,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       const { error } = await supabase.from('b2b_applications').update(editingGuest).eq('id', editingGuest.id);
       if (error) throw error;
       setApplications(applications.map(a => a.id === editingGuest.id ? editingGuest : a));
-      showNotification('Dane goÄąâ€şcia zaktualizowane', 'success');
+      showNotification('Dane gościa zaktualizowane', 'success');
       setEditingGuest(null);
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -1863,13 +1863,13 @@ const handleSaveContractor = async (e: React.FormEvent) => {
       contact_person: contractorForm.contact_person,
       website_url: contractorForm.website_url,
 
-      // Typ usÄąâ€šugi / budÄąÄ˝et
+      // Typ usługi / budżet
       service_type: contractorForm.service_type,
       service_scope: contractorForm.service_scope,
       budget_category: contractorForm.budget_category || contractorForm.service_type,
       include_in_budget: contractorForm.include_in_budget !== false,
 
-      // Kwoty i pÄąâ€šatnoÄąâ€şci
+      // Kwoty i płatności
       amount: grossAmount,
       net_amount: netAmount,
       vat_rate: vatRate,
@@ -1889,7 +1889,7 @@ const handleSaveContractor = async (e: React.FormEvent) => {
       contract_signed_date: contractorForm.contract_signed_date || null,
       document_folder_url: contractorForm.document_folder_url,
 
-      // PowiĂ„â€¦zania
+      // Powiązania
       tags: contractorForm.tags || [],
       fleet_id: contractorForm.fleet_id || null,
       speaker_id: contractorForm.speaker_id || null,
@@ -1926,19 +1926,19 @@ const handleSaveContractor = async (e: React.FormEvent) => {
     setContractorForm({});
     showNotification('Podwykonawca zapisany', 'success');
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d zapisu: ' + err.message, 'error');
+    showNotification('Błąd zapisu: ' + err.message, 'error');
   } finally {
     setUpdating(false);
   }
 };
 const handleDeleteContractor = async (id: string) => {
-  if (!confirm('UsunĂ„â€¦Ă„â€ˇ podwykonawcĂ„â„˘?')) return;
+  if (!confirm('Usunąć podwykonawcę?')) return;
   try {
     await supabase.from('contractors').delete().eq('id', id);
     await loadContractors();
-    showNotification('UsuniĂ„â„˘to', 'success');
+    showNotification('Usunięto', 'success');
   } catch (err) {
-    showNotification('BÄąâ€šĂ„â€¦d', 'error');
+    showNotification('Błąd', 'error');
   }
 };
 
@@ -2028,7 +2028,7 @@ const patientQrMetrics = useMemo(() => ({
   visitsClosed: patientQrRows.filter((row: any) => row.unit?.wristband_returned).length,
 }), [patients.length, patientQrRows])
 // ============================================================================
-// ----- 4.3. HANDLERY DLA STOÄąÂÄ‚â€śW I DRAG & DROP -----
+// ----- 4.3. HANDLERY DLA STOŁÓW I DRAG & DROP -----
 // ============================================================================
 
 // --- FUNKCJA: IMPORT Z EXCEL ---
@@ -2045,17 +2045,17 @@ const patientQrMetrics = useMemo(() => ({
           await supabase.from('b2b_applications').insert([{
             event_id: id,
             patient_id: crypto.randomUUID(),
-            first_name: row['ImiĂ„â„˘'] || row['first_name'],
+            first_name: row['Imię'] || row['first_name'],
             last_name: row['Nazwisko'] || row['last_name'],
             email: row['Email'] || row['email'],
             company_name: row['Firma'] || row['company'],
             status: 'pending'
           }]);
         }
-        showNotification(`Zaimportowano ${rows.length} goÄąâ€şci`, 'success');
+        showNotification(`Zaimportowano ${rows.length} gości`, 'success');
         loadEventData();
       } catch (err) {
-        showNotification('BÄąâ€šĂ„â€¦d importu pliku Excel', 'error');
+        showNotification('Błąd importu pliku Excel', 'error');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -2067,7 +2067,7 @@ const patientQrMetrics = useMemo(() => ({
     const approved = applications.filter(a => a.status === 'approved');
 
     if (approved.length === 0) {
-      showNotification('Brak zaakceptowanych goÄąâ€şci do wydruku', 'info');
+      showNotification('Brak zaakceptowanych gości do wydruku', 'info');
       return;
     }
 
@@ -2079,7 +2079,7 @@ const patientQrMetrics = useMemo(() => ({
       doc.text(`${guest.first_name} ${guest.last_name}`, 105, yPos, { align: 'center' });
       doc.setFontSize(12);
       doc.text(guest.company_name?.toUpperCase() || '', 105, yPos + 10, { align: 'center' });
-      doc.setDrawColor(232, 206, 122); // Kolor zÄąâ€šoty ANM
+      doc.setDrawColor(232, 206, 122); // Kolor złoty ANM
       doc.line(50, yPos + 15, 160, yPos + 15);
     });
 
@@ -2091,7 +2091,7 @@ const patientQrMetrics = useMemo(() => ({
     const defaults = [
       { name: 'Catering', slug: 'catering', planned_budget: 0, color: '#f59e0b', sort_order: 1 },
       { name: 'Transport', slug: 'transport', planned_budget: 0, color: '#3b82f6', sort_order: 2 },
-      { name: 'GadÄąÄ˝ety', slug: 'gadgets', planned_budget: 0, color: '#10b981', sort_order: 3 },
+      { name: 'Gadżety', slug: 'gadgets', planned_budget: 0, color: '#10b981', sort_order: 3 },
       { name: 'Podwykonawcy', slug: 'contractors', planned_budget: 0, color: '#6366f1', sort_order: 4 },
       { name: 'Obiekt / lokalizacja', slug: 'venue', planned_budget: 0, color: '#8b5cf6', sort_order: 5 },
       { name: 'Marketing', slug: 'marketing', planned_budget: 0, color: '#ec4899', sort_order: 6 },
@@ -2101,9 +2101,9 @@ const patientQrMetrics = useMemo(() => ({
       { name: 'Przychody', slug: 'income', planned_budget: 0, color: '#22c55e', sort_order: 10 }
     ].map(category => ({ ...category, event_id: id }))
     const { error } = await supabase.from('event_budget_categories').insert(defaults)
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d tworzenia kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd tworzenia kategorii: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Kategorie budÄąÄ˝etu utworzone', 'success')
+    showNotification('Kategorie budżetu utworzone', 'success')
   }
 
   const getBudgetItemPaymentStatus = (grossAmount: number, paidAmount: number, advanceAmount: number, fallback = 'planned') => {
@@ -2162,9 +2162,9 @@ const patientQrMetrics = useMemo(() => ({
       await loadBudgetData()
       setIsBudgetItemModalOpen(false)
       setBudgetItemForm({})
-      showNotification('Pozycja budÄąÄ˝etu zapisana', 'success')
+      showNotification('Pozycja budżetu zapisana', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu pozycji: ' + err.message, 'error')
+      showNotification('Błąd zapisu pozycji: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2172,9 +2172,9 @@ const patientQrMetrics = useMemo(() => ({
 
   const handleDeactivateBudgetItem = async (itemId: string) => {
     const { error } = await supabase.from('event_budget_items').update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', itemId)
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d ukrywania pozycji: ' + error.message, 'error')
+    if (error) return showNotification('Błąd ukrywania pozycji: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Pozycja budÄąÄ˝etu ukryta', 'success')
+    showNotification('Pozycja budżetu ukryta', 'success')
   }
 
   const handleSaveBudgetCategory = async (e: React.FormEvent) => {
@@ -2191,7 +2191,7 @@ const patientQrMetrics = useMemo(() => ({
     const { error } = isEditingBudgetCategory && budgetCategoryForm.id
       ? await supabase.from('event_budget_categories').update(data).eq('id', budgetCategoryForm.id)
       : await supabase.from('event_budget_categories').insert([data])
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d zapisu kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd zapisu kategorii: ' + error.message, 'error')
     await loadBudgetData()
     setIsBudgetCategoryModalOpen(false)
     setBudgetCategoryForm({})
@@ -2199,18 +2199,18 @@ const patientQrMetrics = useMemo(() => ({
   }
 
   const handleDeleteBudgetCategory = async (categoryId: string) => {
-    if (!confirm('UsunĂ„â€¦Ă„â€ˇ kategoriĂ„â„˘ budÄąÄ˝etu?')) return
+    if (!confirm('Usunąć kategorię budżetu?')) return
     const { error } = await supabase.from('event_budget_categories').delete().eq('id', categoryId)
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d usuwania kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd usuwania kategorii: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Kategoria usuniĂ„â„˘ta', 'success')
+    showNotification('Kategoria usunięta', 'success')
   }
 
   const handleSaveBudgetTransfer = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = Number(budgetTransferForm.amount || 0)
     if (!budgetTransferForm.from_category_id || !budgetTransferForm.to_category_id || budgetTransferForm.from_category_id === budgetTransferForm.to_category_id || amount <= 0) {
-      return showNotification('UzupeÄąâ€šnij poprawnie przesuniĂ„â„˘cie Äąâ€şrodkÄ‚Ĺ‚w', 'error')
+      return showNotification('Uzupełnij poprawnie przesunięcie środków', 'error')
     }
     const fromCategory = budgetCategories.find((c: any) => c.id === budgetTransferForm.from_category_id)
     const toCategory = budgetCategories.find((c: any) => c.id === budgetTransferForm.to_category_id)
@@ -2222,7 +2222,7 @@ const patientQrMetrics = useMemo(() => ({
       currency: budgetTransferForm.currency || 'PLN',
       reason: budgetTransferForm.reason || null
     }])
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d przesuniĂ„â„˘cia: ' + error.message, 'error')
+    if (error) return showNotification('Błąd przesunięcia: ' + error.message, 'error')
     await Promise.all([
       supabase.from('event_budget_categories').update({ planned_budget: Number(fromCategory?.planned_budget || 0) - amount }).eq('id', fromCategory.id),
       supabase.from('event_budget_categories').update({ planned_budget: Number(toCategory?.planned_budget || 0) + amount }).eq('id', toCategory.id)
@@ -2230,7 +2230,7 @@ const patientQrMetrics = useMemo(() => ({
     await loadBudgetData()
     setIsBudgetTransferModalOpen(false)
     setBudgetTransferForm({})
-    showNotification(Number(fromCategory?.planned_budget || 0) < amount ? 'PrzesuniĂ„â„˘to Äąâ€şrodki, ale ÄąĹźrÄ‚Ĺ‚dÄąâ€šowa kategoria zeszÄąâ€ša poniÄąÄ˝ej zera' : 'ÄąĹˇrodki przesuniĂ„â„˘te', Number(fromCategory?.planned_budget || 0) < amount ? 'info' : 'success')
+    showNotification(Number(fromCategory?.planned_budget || 0) < amount ? 'Przesunięto środki, ale źródłowa kategoria zeszła poniżej zera' : 'Środki przesunięte', Number(fromCategory?.planned_budget || 0) < amount ? 'info' : 'success')
   }
 
   const handleAddBudgetPayment = async (e: React.FormEvent) => {
@@ -2247,7 +2247,7 @@ const patientQrMetrics = useMemo(() => ({
       payment_reference: budgetPaymentForm.payment_reference || null,
       notes: budgetPaymentForm.notes || null
     }])
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d dodawania pÄąâ€šatnoÄąâ€şci: ' + error.message, 'error')
+    if (error) return showNotification('Błąd dodawania płatności: ' + error.message, 'error')
     const newPaidAmount = Number(selectedBudgetItem.paid_amount || 0) + amount
     const grossAmount = Number(selectedBudgetItem.gross_amount || 0)
     const paymentStatus = newPaidAmount >= grossAmount ? 'paid' : newPaidAmount > 0 ? 'partially_paid' : 'planned'
@@ -2256,7 +2256,7 @@ const patientQrMetrics = useMemo(() => ({
     setIsBudgetPaymentModalOpen(false)
     setBudgetPaymentForm({})
     setSelectedBudgetItem(null)
-    showNotification('PÄąâ€šatnoÄąâ€şĂ„â€ˇ dodana', 'success')
+    showNotification('Płatność dodana', 'success')
   }
 
   const hasBudgetSource = (sourceType: string, sourceId: string) =>
@@ -2302,9 +2302,9 @@ const patientQrMetrics = useMemo(() => ({
           }
         })
       const count = await insertBudgetRows(rows)
-      showNotification(`Dodano ${count} podwykonawcÄ‚Ĺ‚w do budÄąÄ˝etu`, 'success')
+      showNotification(`Dodano ${count} podwykonawców do budżetu`, 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d importu podwykonawcÄ‚Ĺ‚w: ' + err.message, 'error')
+      showNotification('Błąd importu podwykonawców: ' + err.message, 'error')
     }
   }
 
@@ -2317,15 +2317,15 @@ const patientQrMetrics = useMemo(() => ({
           const net = Number((gross / 1.23).toFixed(2))
           return {
             event_id: id, source_type: 'gadget', source_id: summary.gadget.id, type: 'expense', category: 'gadgets',
-            title: `GadÄąÄ˝ety - ${summary.gadget.name}`, description: `Wybrane przez goÄąâ€şci: ${summary.totalQuantity} szt.`,
+            title: `Gadżety - ${summary.gadget.name}`, description: `Wybrane przez gości: ${summary.totalQuantity} szt.`,
             net_amount: net, vat_rate: 23, vat_amount: Number((gross - net).toFixed(2)), gross_amount: gross,
             paid_amount: 0, payment_status: 'planned', currency: 'PLN', is_active: true
           }
         })
       const count = await insertBudgetRows(rows)
-      showNotification(`Dodano ${count} pozycji gadÄąÄ˝etÄ‚Ĺ‚w do budÄąÄ˝etu`, 'success')
+      showNotification(`Dodano ${count} pozycji gadżetów do budżetu`, 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d importu gadÄąÄ˝etÄ‚Ĺ‚w: ' + err.message, 'error')
+      showNotification('Błąd importu gadżetów: ' + err.message, 'error')
     }
   }
 
@@ -2342,7 +2342,7 @@ const patientQrMetrics = useMemo(() => ({
       const count = await insertBudgetRows(rows)
       showNotification(`Dodano ${count} pozycji z checklisty`, 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d importu checklisty: ' + err.message, 'error')
+      showNotification('Błąd importu checklisty: ' + err.message, 'error')
     }
   }
 
@@ -2357,8 +2357,8 @@ const patientQrMetrics = useMemo(() => ({
       source_id: null,
       type: 'income',
       category: 'income',
-      title: 'Przychody z biletÄ‚Ĺ‚w',
-      description: `Oczekiwany przychÄ‚Ĺ‚d: ${formatMoney(expectedTicketRevenue)}`,
+      title: 'Przychody z biletów',
+      description: `Oczekiwany przychód: ${formatMoney(expectedTicketRevenue)}`,
       net_amount: paidTicketRevenue,
       vat_rate: 0,
       vat_amount: 0,
@@ -2373,9 +2373,9 @@ const patientQrMetrics = useMemo(() => ({
     const { error } = existing
       ? await supabase.from('event_budget_items').update(data).eq('id', existing.id)
       : await supabase.from('event_budget_items').insert([data])
-    if (error) return showNotification('BÄąâ€šĂ„â€¦d importu biletÄ‚Ĺ‚w: ' + error.message, 'error')
+    if (error) return showNotification('Błąd importu biletów: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Przychody z biletÄ‚Ĺ‚w przeliczone', 'success')
+    showNotification('Przychody z biletów przeliczone', 'success')
   }
 
   const handleSaveRegistrationSettings = async () => {
@@ -2400,7 +2400,7 @@ const patientQrMetrics = useMemo(() => ({
       setEditForm((prev: any) => ({ ...prev, ...updates }))
       showNotification('Ustawienia rejestracji zapisane', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu ustawieÄąâ€ž: ' + err.message, 'error')
+      showNotification('Błąd zapisu ustawień: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2439,21 +2439,21 @@ const patientQrMetrics = useMemo(() => ({
       setTicketTierForm({})
       showNotification('Typ biletu zapisany', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu biletu: ' + err.message, 'error')
+      showNotification('Błąd zapisu biletu: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
   }
 
   const handleDeleteTicketTier = async (tierId: string) => {
-    if (!confirm('UsunĂ„â€¦Ă„â€ˇ ten typ biletu?')) return
+    if (!confirm('Usunąć ten typ biletu?')) return
     try {
       const { error } = await supabase.from('ticket_tiers').delete().eq('id', tierId)
       if (error) throw error
       await loadEventData()
-      showNotification('Typ biletu usuniĂ„â„˘ty', 'success')
+      showNotification('Typ biletu usunięty', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d usuwania biletu: ' + err.message, 'error')
+      showNotification('Błąd usuwania biletu: ' + err.message, 'error')
     }
   }
 
@@ -2462,9 +2462,9 @@ const patientQrMetrics = useMemo(() => ({
       const { error } = await supabase.from('ticket_tiers').update({ is_active: tier.is_active === false }).eq('id', tier.id)
       if (error) throw error
       await loadEventData()
-      showNotification(tier.is_active === false ? 'Typ biletu aktywny' : 'Typ biletu wyÄąâ€šĂ„â€¦czony', 'success')
+      showNotification(tier.is_active === false ? 'Typ biletu aktywny' : 'Typ biletu wyłączony', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zmiany statusu biletu: ' + err.message, 'error')
+      showNotification('Błąd zmiany statusu biletu: ' + err.message, 'error')
     }
   }
 
@@ -2475,7 +2475,7 @@ const patientQrMetrics = useMemo(() => ({
       setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...updates } : app))
       showNotification(message, 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d aktualizacji zgÄąâ€šoszenia: ' + err.message, 'error')
+      showNotification('Błąd aktualizacji zgłoszenia: ' + err.message, 'error')
     }
   }
 
@@ -2485,10 +2485,10 @@ const patientQrMetrics = useMemo(() => ({
     ticket_paid_amount: Number(app.ticket_expected_amount || 0),
     payment_matched_by: 'manual',
     payment_matched_at: new Date().toISOString()
-  }, 'Oznaczono jako opÄąâ€šacone')
+  }, 'Oznaczono jako opłacone')
 
 
-  // --- FUNKCJA: IMPORT I AUTO-MATCHING WYCIĂ„â€žGÄ‚â€śW BANKOWYCH ---
+  // --- FUNKCJA: IMPORT I AUTO-MATCHING WYCIĄGÓW BANKOWYCH ---
   const handleImportBankStatement = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -2502,11 +2502,11 @@ const patientQrMetrics = useMemo(() => ({
 
       let matchCount = 0
 
-      // Przechodzimy przez kaÄąÄ˝dy wiersz z pliku bankowego/Bramki
+      // Przechodzimy przez każdy wiersz z pliku bankowego/Bramki
       for (const row of rows) {
         const rowString = JSON.stringify(row).toLowerCase()
 
-        // Szukamy pasujĂ„â€¦cej aplikacji po Emailu, Nazwisku lub Referencji
+        // Szukamy pasującej aplikacji po Emailu, Nazwisku lub Referencji
         const matchedApp = applications.find(app => {
           const refMatch = app.payment_reference && rowString.includes(app.payment_reference.toLowerCase())
           const emailMatch = app.email && rowString.includes(app.email.toLowerCase())
@@ -2515,25 +2515,25 @@ const patientQrMetrics = useMemo(() => ({
           return refMatch || emailMatch || nameMatch
         })
 
-        // JeÄąâ€şli znaleziono uczestnika i nie jest jeszcze opÄąâ€šacony
+        // Jeśli znaleziono uczestnika i nie jest jeszcze opłacony
         if (matchedApp && matchedApp.payment_status !== 'paid') {
-          // UÄąÄ˝ywamy Twojej juÄąÄ˝ istniejĂ„â€¦cej funkcji updateTicketApplication
+          // Używamy Twojej już istniejącej funkcji updateTicketApplication
           await updateTicketApplication(matchedApp.id, {
             payment_status: 'paid',
             ticket_status: 'paid',
             ticket_paid_amount: Number(matchedApp.ticket_expected_amount || 0),
             payment_matched_by: 'auto_import',
             payment_matched_at: new Date().toISOString()
-          }, `Zaimportowano wpÄąâ€šatĂ„â„˘ dla: ${matchedApp.first_name} ${matchedApp.last_name}`)
+          }, `Zaimportowano wpłatę dla: ${matchedApp.first_name} ${matchedApp.last_name}`)
           matchCount++
         }
       }
 
-      showNotification(`ZakoÄąâ€žczono analizĂ„â„˘ pliku. Dopasowano automatycznie ${matchCount} pÄąâ€šatnoÄąâ€şci.`, 'success')
-      await loadEventData() // OdÄąâ€şwieÄąÄ˝amy dane po imporcie
+      showNotification(`Zakończono analizę pliku. Dopasowano automatycznie ${matchCount} płatności.`, 'success')
+      await loadEventData() // Odświeżamy dane po imporcie
 
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d odczytu pliku z wyciĂ„â€¦giem: ' + err.message, 'error')
+      showNotification('Błąd odczytu pliku z wyciągiem: ' + err.message, 'error')
     } finally {
       setUpdating(false)
       if (e.target) e.target.value = '' // Reset inputu pliku
@@ -2551,21 +2551,21 @@ const patientQrMetrics = useMemo(() => ({
     ticket_status: 'waitlist',
     is_active_participant: false,
     status: 'pending'
-  }, 'Przeniesiono na listĂ„â„˘ rezerwowĂ„â€¦')
+  }, 'Przeniesiono na listę rezerwową')
 
   const cancelTicketParticipant = (app: any) => updateTicketApplication(app.id, {
     access_status: 'cancelled',
     ticket_status: 'cancelled',
     is_active_participant: false,
     status: 'rejected'
-  }, 'ZgÄąâ€šoszenie anulowane')
+  }, 'Zgłoszenie anulowane')
 
   const resetTicketParticipant = (app: any) => updateTicketApplication(app.id, {
     access_status: 'pending',
     ticket_status: 'new',
     is_active_participant: false,
     status: 'pending'
-  }, 'CofniĂ„â„˘to do oczekujĂ„â€¦cych')
+  }, 'Cofnięto do oczekujących')
 
   const handleSaveApplicationTicket = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2586,9 +2586,9 @@ const patientQrMetrics = useMemo(() => ({
       if (error) throw error
       setApplications(prev => prev.map(app => app.id === ticketApplicationForm.id ? { ...app, ...updates } : app))
       setIsTicketApplicationModalOpen(false)
-      showNotification('Dane biletu zgÄąâ€šoszenia zapisane', 'success')
+      showNotification('Dane biletu zgłoszenia zapisane', 'success')
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu zgÄąâ€šoszenia: ' + err.message, 'error')
+      showNotification('Błąd zapisu zgłoszenia: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2596,7 +2596,7 @@ const patientQrMetrics = useMemo(() => ({
 
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
-    const templateName = prompt('Podaj nazwĂ„â„˘ dla szablonu:', `${event?.title} - Szablon`);
+    const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
     if (!templateName) return;
 
     setUpdating(true);
@@ -2613,9 +2613,9 @@ const patientQrMetrics = useMemo(() => ({
       }]);
 
       if (error) throw error;
-      showNotification('Szablon zostaÄąâ€š zapisany pomyÄąâ€şlnie!', 'success');
+      showNotification('Szablon został zapisany pomyślnie!', 'success');
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -2630,7 +2630,7 @@ const patientQrMetrics = useMemo(() => ({
       const updates = { ...editForm };
       const oldFileUrlsToDelete: string[] = [];
 
-      // KLUCZOWE: Prefixy w kluczach (np. image_1_url) muszĂ„â€¦ byĂ„â€ˇ IDENTYCZNE jak nazwy kolumn w Supabase
+      // KLUCZOWE: Prefixy w kluczach (np. image_1_url) muszą być IDENTYCZNE jak nazwy kolumn w Supabase
       const filesToUpload = [
   { key: 'cover_image_url', file: newFiles.cover, prefix: 'cover' },
   { key: 'logo_url', file: newFiles.logo, prefix: 'logo' },
@@ -2649,7 +2649,7 @@ const patientQrMetrics = useMemo(() => ({
   { key: 'theme_image_4_url', file: newFiles.themeImg4, prefix: 'theme-4' }
 ];
 
-      // 1. Upload plikÄ‚Ĺ‚w rÄ‚Ĺ‚wnolegle
+      // 1. Upload plików równolegle
       const results = await Promise.all(
         filesToUpload.map(async (item) => {
           if (item.file) {
@@ -2663,7 +2663,7 @@ const patientQrMetrics = useMemo(() => ({
       // 2. Przypisanie URL z Cache-Bustingiem
       results.forEach(res => {
         if (res?.url) {
-          // UÄąÄ˝ywamy backtickÄ‚Ĺ‚w, aby dodaĂ„â€ˇ unikalny znacznik czasu
+          // Używamy backticków, aby dodać unikalny znacznik czasu
           const oldUrl = event?.[res.key] || editForm?.[res.key];
           if (oldUrl) oldFileUrlsToDelete.push(oldUrl);
           updates[res.key] = `${res.url}?t=${Date.now()}`;
@@ -2673,7 +2673,7 @@ const patientQrMetrics = useMemo(() => ({
 
       const { id: _id, created_at, business_id, ...cleanData } = updates;
 
-      // Opcjonalnie: usuwamy puste pola techniczne, jeÄąâ€şli React je dodaÄąâ€š
+      // Opcjonalnie: usuwamy puste pola techniczne, jeśli React je dodał
       delete (cleanData as any).event_sessions;
       delete (cleanData as any).event_gadgets;
 
@@ -2692,7 +2692,7 @@ const patientQrMetrics = useMemo(() => ({
 
       showNotification('Zmiany i multimedia zapisane!', 'success');
 
-      // 6. Resetowanie stanu plikÄ‚Ĺ‚w lokalnych
+      // 6. Resetowanie stanu plików lokalnych
 
 setNewFiles({
   cover: null,
@@ -2725,7 +2725,7 @@ setNewFiles({
 
     } catch (err: any) {
       console.error("Critical Update Error:", err);
-      showNotification("BÄąâ€šĂ„â€¦d: " + err.message, 'error');
+      showNotification("Błąd: " + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -2764,20 +2764,20 @@ setNewFiles({
       setIsEditingSession(false);
       showNotification('Harmonogram zaktualizowany!', 'success');
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d: ' + err.message, 'error');
+      showNotification('Błąd: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm('UsunĂ„â€¦Ă„â€ˇ tĂ„â„˘ sesjĂ„â„˘ z harmonogramu?')) return;
+    if (!confirm('Usunąć tę sesję z harmonogramu?')) return;
     try {
       await supabase.from('event_sessions').delete().eq('id', sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
-      showNotification('Sesja usuniĂ„â„˘ta', 'success');
+      showNotification('Sesja usunięta', 'success');
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d usuwania: ' + err.message, 'error');
+      showNotification('Błąd usuwania: ' + err.message, 'error');
     }
   };
 
@@ -2823,7 +2823,7 @@ setNewFiles({
       const { data: gadg } = await supabase.from('event_gadgets').select('*').eq('event_id', id).order('sort_order', { ascending: true });
       setGadgets(gadg || []);
       setIsEditingGadget(false);
-      showNotification('Katalog gadÄąÄ˝etÄ‚Ĺ‚w zaktualizowany', 'success');
+      showNotification('Katalog gadżetów zaktualizowany', 'success');
     } catch (err: any) {
       console.error('Gadget save error:', {
         message: err?.message,
@@ -2839,20 +2839,20 @@ setNewFiles({
           available_sizes: gadgetForm.size_required === true ? parseSizes(gadgetForm.available_sizes) : []
         }
       });
-      showNotification('BÄąâ€šĂ„â€¦d: ' + (err?.message || 'Nie udaÄąâ€šo siĂ„â„˘ zapisaĂ„â€ˇ gadÄąÄ˝etu'), 'error');
+      showNotification('Błąd: ' + (err?.message || 'Nie udało się zapisać gadżetu'), 'error');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeleteGadget = async (gadgetId: string) => {
-    if (!confirm('UsunĂ„â€¦Ă„â€ˇ ten gadÄąÄ˝et z katalogu?')) return;
+    if (!confirm('Usunąć ten gadżet z katalogu?')) return;
     try {
       await supabase.from('event_gadgets').delete().eq('id', gadgetId);
       setGadgets(gadgets.filter(g => g.id !== gadgetId));
-      showNotification('GadÄąÄ˝et usuniĂ„â„˘ty', 'success');
+      showNotification('Gadżet usunięty', 'success');
     } catch (err: any) {
-      showNotification('BÄąâ€šĂ„â€¦d: ' + err.message, 'error');
+      showNotification('Błąd: ' + err.message, 'error');
     }
   };
 
@@ -2898,17 +2898,17 @@ const handleSavePartner = async (e: React.FormEvent) => {
     await loadPartners();
     setIsPartnerModalOpen(false);
     setNewFiles({ ...newFiles, partnerPhoto: null });
-    showNotification('Zapisano pomyÄąâ€şlnie', 'success');
-  } catch (err) { showNotification('BÄąâ€šĂ„â€¦d zapisu', 'error'); } finally { setUpdating(false); }
+    showNotification('Zapisano pomyślnie', 'success');
+  } catch (err) { showNotification('Błąd zapisu', 'error'); } finally { setUpdating(false); }
 };
 
 const handleDeletePartner = async (id: string) => {
-  if (!confirm('UsunĂ„â€¦Ă„â€ˇ?')) return;
+  if (!confirm('Usunąć?')) return;
   try {
     await supabase.from('event_partners').delete().eq('id', id);
     await loadPartners();
-    showNotification('UsuniĂ„â„˘to', 'success');
-  } catch (err) { showNotification('BÄąâ€šĂ„â€¦d', 'error'); }
+    showNotification('Usunięto', 'success');
+  } catch (err) { showNotification('Błąd', 'error'); }
 };
 
 const handlePartnerDragEnd = async (event: DragEndEvent) => {
@@ -2984,14 +2984,14 @@ const handleSaveChecklistGroup = async (e: React.FormEvent) => {
     setChecklistGroupForm({})
     showNotification('Lista zapisana', 'success')
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d zapisu listy: ' + err.message, 'error')
+    showNotification('Błąd zapisu listy: ' + err.message, 'error')
   } finally {
     setUpdating(false)
   }
 }
 
 const handleDeleteChecklistGroup = async (groupId: string) => {
-  if (!confirm('UsunĂ„â€¦Ă„â€ˇ tĂ„â„˘ listĂ„â„˘ razem ze wszystkimi zadaniami?')) return
+  if (!confirm('Usunąć tę listę razem ze wszystkimi zadaniami?')) return
 
   try {
     const { error: itemsError } = await supabase
@@ -3009,9 +3009,9 @@ const handleDeleteChecklistGroup = async (groupId: string) => {
     if (error) throw error
 
     await loadChecklist()
-    showNotification('Lista usuniĂ„â„˘ta', 'success')
+    showNotification('Lista usunięta', 'success')
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d usuwania listy: ' + err.message, 'error')
+    showNotification('Błąd usuwania listy: ' + err.message, 'error')
   }
 }
 
@@ -3023,7 +3023,7 @@ const handleSaveChecklistItem = async (e: React.FormEvent) => {
     const groupId = checklistItemForm.group_id || activeChecklistGroupId
 
     if (!groupId) {
-      showNotification('Najpierw wybierz listĂ„â„˘', 'error')
+      showNotification('Najpierw wybierz listę', 'error')
       return
     }
 
@@ -3063,7 +3063,7 @@ const handleSaveChecklistItem = async (e: React.FormEvent) => {
     setActiveChecklistGroupId(null)
     showNotification('Zadanie zapisane', 'success')
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d zapisu zadania: ' + err.message, 'error')
+    showNotification('Błąd zapisu zadania: ' + err.message, 'error')
   } finally {
     setUpdating(false)
   }
@@ -3091,12 +3091,12 @@ const handleToggleChecklistItem = async (item: any) => {
       )
     )
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d aktualizacji zadania', 'error')
+    showNotification('Błąd aktualizacji zadania', 'error')
   }
 }
 
 const handleDeleteChecklistItem = async (itemId: string) => {
-  if (!confirm('UsunĂ„â€¦Ă„â€ˇ to zadanie?')) return
+  if (!confirm('Usunąć to zadanie?')) return
 
   try {
     const { error } = await supabase
@@ -3107,9 +3107,9 @@ const handleDeleteChecklistItem = async (itemId: string) => {
     if (error) throw error
 
     setChecklistItems(prev => prev.filter(i => i.id !== itemId))
-    showNotification('Zadanie usuniĂ„â„˘te', 'success')
+    showNotification('Zadanie usunięte', 'success')
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d usuwania zadania', 'error')
+    showNotification('Błąd usuwania zadania', 'error')
   }
 }
 
@@ -3126,7 +3126,7 @@ const toggleChecklistGroupOpen = async (group: any) => {
     .eq('id', group.id)
 }
 // ============================================================================
-// ----- 4.5. EFEKT GÄąÂÄ‚â€śWNY (Äąâ€šadowanie danych) -----
+// ----- 4.5. EFEKT GŁÓWNY (ładowanie danych) -----
 // ============================================================================
  const loadMaterials = useCallback(async () => {
   setMaterials([])
@@ -3146,7 +3146,7 @@ const handleDeleteMaterial = async (_materialId: string) => {
 }
 const addSpaceObject = async () => {
   if (!id || !spaceLayout?.id || !newSpaceObject.label.trim()) {
-    showNotification('Podaj nazwĂ„â„˘ elementu przestrzeni', 'info')
+    showNotification('Podaj nazwę elementu przestrzeni', 'info')
     return
   }
 
@@ -3188,7 +3188,7 @@ const addSpaceObject = async () => {
 
     showNotification('Dodano element do planu przestrzeni', 'success')
   } catch (err: any) {
-    showNotification('BÄąâ€šĂ„â€¦d dodawania elementu: ' + err.message, 'error')
+    showNotification('Błąd dodawania elementu: ' + err.message, 'error')
   } finally {
     setSpaceSaving(false)
   }
@@ -3208,12 +3208,12 @@ const updateSpaceObject = async (objectId: string, patch: any) => {
     .eq('id', objectId)
 
   if (error) {
-    showNotification('BÄąâ€šĂ„â€¦d aktualizacji elementu: ' + error.message, 'error')
+    showNotification('Błąd aktualizacji elementu: ' + error.message, 'error')
   }
 }
 
 const deleteSpaceObject = async (objectId: string) => {
-  if (!confirm('UsunĂ„â€¦Ă„â€ˇ ten element z planu przestrzeni?')) return
+  if (!confirm('Usunąć ten element z planu przestrzeni?')) return
 
   const { error } = await supabase
     .from('event_space_objects')
@@ -3221,13 +3221,13 @@ const deleteSpaceObject = async (objectId: string) => {
     .eq('id', objectId)
 
   if (error) {
-    showNotification('BÄąâ€šĂ„â€¦d usuwania elementu: ' + error.message, 'error')
+    showNotification('Błąd usuwania elementu: ' + error.message, 'error')
     return
   }
 
   setSpaceObjects(prev => prev.filter(obj => obj.id !== objectId))
   if (selectedSpaceObjectId === objectId) setSelectedSpaceObjectId(null)
-  showNotification('UsuniĂ„â„˘to element', 'success')
+  showNotification('Usunięto element', 'success')
 }
 
 
@@ -3245,7 +3245,7 @@ const updateSpaceLayout = async (patch: any) => {
     .eq('id', spaceLayout.id)
 
   if (error) {
-    showNotification('BÄąâ€šĂ„â€¦d aktualizacji planu przestrzeni: ' + error.message, 'error')
+    showNotification('Błąd aktualizacji planu przestrzeni: ' + error.message, 'error')
   }
 }
 const loadSpaceLayoutData = useCallback(async () => {
@@ -3268,7 +3268,7 @@ const loadSpaceLayoutData = useCallback(async () => {
       .from('event_space_layouts')
       .insert({
         event_id: id,
-        name: 'GÄąâ€šÄ‚Ĺ‚wny plan przestrzeni',
+        name: 'Główny plan przestrzeni',
         space_type: 'indoor',
         width_m: 20,
         height_m: 12,
@@ -3357,7 +3357,7 @@ const { data: checklistItemData } = await supabase
       calculateEcoMetrics(apps || [])
 
     } catch (error) {
-      showNotification('BÄąâ€šĂ„â€¦d Äąâ€šadowania danych', 'error')
+      showNotification('Błąd ładowania danych', 'error')
     } finally {
       setLoading(false)
     }
@@ -3379,13 +3379,13 @@ const transportAnalytics = useMemo(() => {
   const groups: Record<string, { total: number; guests: number; companions: number; kids: number }> = {};
 
   applications
-    .filter(a => a.status === 'approved' && a.transport !== 'WÄąâ€šasny dojazd' && a.transport_address)
+    .filter(a => a.status === 'approved' && a.transport !== 'Własny dojazd' && a.transport_address)
     .forEach(app => {
-      // Bezpieczne wyciĂ„â€¦gniĂ„â„˘cie miasta Ă˘â‚¬â€ś ostatni czÄąâ€šon po przecinku, jeÄąâ€şli brak przecinka Ă˘â‚¬â€ś caÄąâ€šoÄąâ€şĂ„â€ˇ
+      // Bezpieczne wyciągnięcie miasta - ostatni człon po przecinku, jeśli brak przecinka - całość
       const raw = app.transport_address.trim();
       const parts = raw.split(',');
       let city = parts.length > 1 ? parts.pop()?.trim() : raw;
-      if (!city) city = 'NieokreÄąâ€şlone';
+      if (!city) city = 'Nieokreślone';
 
       const compCount = parseCompanionCount(app.companion);
       const kidsCount = parseKidsCount(app.kids);
@@ -3536,11 +3536,11 @@ const transportAnalytics = useMemo(() => {
     return {
       meals: mealChoices.map((choice: any) => ({
         ...choice,
-        label: meals.find((meal: any) => meal.id === choice.meal_id)?.name || choice.meal_id || 'PosiÄąâ€šek'
+        label: meals.find((meal: any) => meal.id === choice.meal_id)?.name || choice.meal_id || 'Posiłek'
       })),
       gadgets: gadgetChoiceRows.map((choice: any) => ({
         ...choice,
-        label: gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.public_label || gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.name || choice.gadget_id || 'GadÄąÄ˝et'
+        label: gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.public_label || gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.name || choice.gadget_id || 'Gadżet'
       })),
       sessions: sessionRows.map((choice: any) => ({
         ...choice,
@@ -3789,7 +3789,7 @@ const transportAnalytics = useMemo(() => {
     const vegeMeals = safeMeals.filter((meal: any) => {
       const text = `${meal.dietary_category || ''} ${meal.meal_type || ''} ${meal.name || ''}`.toLowerCase()
 
-      return ['vege', 'vegetarian', 'wegetariaÄąâ€ž', 'vegan', 'wegan', 'plant'].some((word) =>
+      return ['vege', 'vegetarian', 'wegetariań', 'vegan', 'wegan', 'plant'].some((word) =>
         text.includes(word)
       )
     }).length
@@ -3886,121 +3886,121 @@ const transportAnalytics = useMemo(() => {
 
     if (foodWasteRisk > 25) {
       recommendations.push({
-        title: 'Domknij RSVP przed zamÄ‚Ĺ‚wieniem cateringu',
-        description: 'CzĂ„â„˘Äąâ€şĂ„â€ˇ osÄ‚Ĺ‚b nie potwierdziÄąâ€ša obecnoÄąâ€şci, co zwiĂ„â„˘ksza ryzyko nadwyÄąÄ˝ek jedzenia.',
+        title: 'Domknij RSVP przed zamówieniem cateringu',
+        description: 'Część osób nie potwierdziła obecności, co zwiększa ryzyko nadwyżek jedzenia.',
         impact: 'wysoki',
-        co2: 'Äąâ€şrednia redukcja',
-        actionLabel: 'PrzejdÄąĹź do zgÄąâ€šoszeÄąâ€ž',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do zgłoszeń',
         area: 'RSVP'
       })
     }
 
     if (foodWastePortionsRisk > 0) {
       recommendations.push({
-        title: 'Doprecyzuj liczbĂ„â„˘ porcji przed zamÄ‚Ĺ‚wieniem cateringu',
+        title: 'Doprecyzuj liczbę porcji przed zamówieniem cateringu',
         description: `Szacunkowo ${foodWastePortionsRisk} porcji jest jeszcze obarczonych ryzykiem przez brak potwierdzenia RSVP.`,
         impact: 'wysoki',
         co2: 'redukcja food waste',
-        actionLabel: 'SprawdÄąĹź RSVP',
+        actionLabel: 'Sprawdź RSVP',
         area: 'Catering'
       })
     }
 
     if (avoidedPrintsCount < totalApplications) {
       recommendations.push({
-        title: 'PrzenieÄąâ€ş wiĂ„â„˘cej materiaÄąâ€šÄ‚Ĺ‚w do wersji cyfrowej',
-        description: 'Im wiĂ„â„˘cej informacji trafia na stronĂ„â„˘ uczestnika i Event Pass, tym mniej wydrukÄ‚Ĺ‚w trzeba przygotowaĂ„â€ˇ.',
-        impact: 'Äąâ€şredni',
+        title: 'Przenieś więcej materiałów do wersji cyfrowej',
+        description: 'Im więcej informacji trafia na stronę uczestnika i Event Pass, tym mniej wydruków trzeba przygotować.',
+        impact: 'średni',
         co2: 'papier i transport',
-        actionLabel: 'PrzejdÄąĹź do strony uczestnika',
-        area: 'MateriaÄąâ€šy'
+        actionLabel: 'Przejdź do strony uczestnika',
+        area: 'Materiały'
       })
     }
 
     if (realCarpoolingChoices === 0 && activeParticipantsCount > 10) {
       recommendations.push({
         title: 'Uruchom carpooling lub transport zbiorowy',
-        description: 'Przy wiĂ„â„˘kszej liczbie uczestnikÄ‚Ĺ‚w transport zwykle ma najwiĂ„â„˘kszy wpÄąâ€šyw na emisje.',
+        description: 'Przy większej liczbie uczestników transport zwykle ma największy wpływ na emisje.',
         impact: 'wysoki',
         co2: 'wysoka redukcja',
-        actionLabel: 'PrzejdÄąĹź do transportu',
+        actionLabel: 'Przejdź do transportu',
         area: 'Transport'
       })
     }
 
     if (realCarpoolingChoices === 0 && activeCarpoolAds > 0) {
       recommendations.push({
-        title: 'Przypomnij goÄąâ€şciom o wspÄ‚Ĺ‚lnych przejazdach',
-        description: 'Masz aktywne ogÄąâ€šoszenia carpooling, ale brak potwierdzonych wyborÄ‚Ĺ‚w uczestnikÄ‚Ĺ‚w.',
-        impact: 'Äąâ€şredni',
-        co2: 'transport wspÄ‚Ĺ‚Äąâ€šdzielony',
-        actionLabel: 'PrzejdÄąĹź do transportu',
+        title: 'Przypomnij gościom o wspólnych przejazdach',
+        description: 'Masz aktywne ogłoszenia carpooling, ale brak potwierdzonych wyborów uczestników.',
+        impact: 'średni',
+        co2: 'transport współdzielony',
+        actionLabel: 'Przejdź do transportu',
         area: 'Transport'
       })
     }
 
     if (gadgetWasteRisk > 30) {
       recommendations.push({
-        title: 'Ogranicz zamÄ‚Ĺ‚wienie gadÄąÄ˝etÄ‚Ĺ‚w',
-        description: 'Zapas gadÄąÄ˝etÄ‚Ĺ‚w jest wiĂ„â„˘kszy niÄąÄ˝ aktualne wybory uczestnikÄ‚Ĺ‚w.',
-        impact: 'Äąâ€şredni',
-        co2: 'Äąâ€şrednia redukcja',
-        actionLabel: 'PrzejdÄąĹź do gadÄąÄ˝etÄ‚Ĺ‚w',
-        area: 'GadÄąÄ˝ety'
+        title: 'Ogranicz zamówienie gadżetów',
+        description: 'Zapas gadżetów jest większy niż aktualne wybory uczestników.',
+        impact: 'średni',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do gadżetów',
+        area: 'Gadżety'
       })
     }
 
     if (gadgetOverstockCount > 0) {
       recommendations.push({
-        title: 'ZamÄ‚Ĺ‚w gadÄąÄ˝ety wedÄąâ€šug realnych wyborÄ‚Ĺ‚w uczestnikÄ‚Ĺ‚w',
-        description: `AI Eco Engine widzi ${gadgetOverstockCount} szt. potencjalnej nadwyÄąÄ˝ki wzglĂ„â„˘dem aktualnych wyborÄ‚Ĺ‚w.`,
-        impact: 'Äąâ€şredni',
-        co2: 'mniej odpadÄ‚Ĺ‚w',
-        actionLabel: 'PrzejdÄąĹź do gadÄąÄ˝etÄ‚Ĺ‚w',
-        area: 'GadÄąÄ˝ety'
+        title: 'Zamów gadżety według realnych wyborów uczestników',
+        description: `AI Eco Engine widzi ${gadgetOverstockCount} szt. potencjalnej nadwyżki względem aktualnych wyborów.`,
+        impact: 'średni',
+        co2: 'mniej odpadów',
+        actionLabel: 'Przejdź do gadżetów',
+        area: 'Gadżety'
       })
     }
 
     if (localSuppliersCount === 0 && safeContractors.length > 0) {
       recommendations.push({
-        title: 'Dodaj lokalnych podwykonawcÄ‚Ĺ‚w',
-        description: 'Lokalni dostawcy mogĂ„â€¦ ograniczyĂ„â€ˇ transport, koszty logistyczne i emisje.',
-        impact: 'Äąâ€şredni',
-        co2: 'Äąâ€şrednia redukcja',
-        actionLabel: 'PrzejdÄąĹź do podwykonawcÄ‚Ĺ‚w',
+        title: 'Dodaj lokalnych podwykonawców',
+        description: 'Lokalni dostawcy mogą ograniczyć transport, koszty logistyczne i emisje.',
+        impact: 'średni',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do podwykonawców',
         area: 'Podwykonawcy'
       })
     }
 
     if (localBudgetShare < 30 && safeContractors.length > 0) {
       recommendations.push({
-        title: 'ZwiĂ„â„˘ksz udziaÄąâ€š lokalnych dostawcÄ‚Ĺ‚w w budÄąÄ˝ecie',
-        description: 'Lokalni podwykonawcy mogĂ„â€¦ obniÄąÄ˝yĂ„â€ˇ logistykĂ„â„˘, czas dostaw i emisje zwiĂ„â€¦zane z transportem usÄąâ€šug.',
-        impact: 'Äąâ€şredni',
+        title: 'Zwiększ udział lokalnych dostawców w budżecie',
+        description: 'Lokalni podwykonawcy mogą obniżyć logistykę, czas dostaw i emisje związane z transportem usług.',
+        impact: 'średni',
         co2: 'logistyka lokalna',
-        actionLabel: 'PrzejdÄąĹź do podwykonawcÄ‚Ĺ‚w',
-        area: 'BudÄąÄ˝et'
+        actionLabel: 'Przejdź do podwykonawców',
+        area: 'Budżet'
       })
     }
 
     if (safeMeals.length > 0 && vegeMeals / safeMeals.length < 0.3) {
       recommendations.push({
-        title: 'ZwiĂ„â„˘ksz udziaÄąâ€š menu roÄąâ€şlinnego',
-        description: 'WiĂ„â„˘kszy udziaÄąâ€š opcji vege lub vegan moÄąÄ˝e ograniczyĂ„â€ˇ Äąâ€şlad Äąâ€şrodowiskowy cateringu.',
-        impact: 'Äąâ€şredni',
-        co2: 'Äąâ€şrednia redukcja',
-        actionLabel: 'PrzejdÄąĹź do menu',
+        title: 'Zwiększ udział menu roślinnego',
+        description: 'Większy udział opcji vege lub vegan może ograniczyć ślad środowiskowy cateringu.',
+        impact: 'średni',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do menu',
         area: 'Menu'
       })
     }
 
     if (circularityScore < 60) {
       recommendations.push({
-        title: 'PodnieÄąâ€ş wynik GOZ przez RSVP, carpooling i lokalnych dostawcÄ‚Ĺ‚w',
-        description: 'NajwiĂ„â„˘kszy efekt dadzĂ„â€¦: domkniĂ„â„˘cie listy obecnoÄąâ€şci, transport wspÄ‚Ĺ‚Äąâ€šdzielony oraz lokalny Äąâ€šaÄąâ€žcuch dostaw.',
+        title: 'Podnieś wynik GOZ przez RSVP, carpooling i lokalnych dostawców',
+        description: 'Największy efekt dadzą: domknięcie listy obecności, transport współdzielony oraz lokalny łańcuch dostaw.',
         impact: 'wysoki',
         co2: 'systemowa redukcja',
-        actionLabel: 'Zobacz analizĂ„â„˘ obszarÄ‚Ĺ‚w',
+        actionLabel: 'Zobacz analizę obszarów',
         area: 'GOZ'
       })
     }
@@ -4008,7 +4008,7 @@ const transportAnalytics = useMemo(() => {
     if (recommendations.length === 0) {
       recommendations.push({
         title: 'Brak krytycznych ryzyk',
-        description: 'Na podstawie aktualnych danych AI Eco Engine nie wykryÄąâ€š pilnych ryzyk Äąâ€şrodowiskowych.',
+        description: 'Na podstawie aktualnych danych AI Eco Engine nie wykrył pilnych ryzyk środowiskowych.',
         impact: 'niski',
         co2: 'monitoring',
         actionLabel: 'Kontynuuj monitoring',
@@ -4022,14 +4022,14 @@ const transportAnalytics = useMemo(() => {
         status: transportEfficiency > 60 || realCarpoolingChoices > 0 ? 'dobrze' : 'wymaga uwagi',
         value: `${transportEfficiency}%`,
         description: realCarpoolingChoices > 0
-          ? 'Wykryto realne wybory carpooling lub transport wspÄ‚Ĺ‚Äąâ€šdzielony.'
-          : 'Warto zachĂ„â„˘ciĂ„â€ˇ uczestnikÄ‚Ĺ‚w do wspÄ‚Ĺ‚lnych przejazdÄ‚Ĺ‚w.'
+          ? 'Wykryto realne wybory carpooling lub transport współdzielony.'
+          : 'Warto zachęcić uczestników do wspólnych przejazdów.'
       },
       {
         name: 'RSVP / Catering',
         status: foodWasteRisk > 25 ? 'ryzyko' : 'dobrze',
         value: `${foodWasteRisk}%`,
-        description: 'Ryzyko nadwyÄąÄ˝ek jedzenia zaleÄąÄ˝ne od niepotwierdzonych RSVP.'
+        description: 'Ryzyko nadwyżek jedzenia zależne od niepotwierdzonych RSVP.'
       },
       {
         name: 'Menu',
@@ -4038,34 +4038,34 @@ const transportAnalytics = useMemo(() => {
         description: 'Liczba pozycji vege / vegan wykrytych w menu.'
       },
       {
-        name: 'GadÄąÄ˝ety',
+        name: 'Gadżety',
         status: gadgetWasteRisk > 30 ? 'ryzyko' : 'dobrze',
         value: `${gadgetOverstockCount} szt.`,
-        description: 'Ryzyko nadwyÄąÄ˝ek gadÄąÄ˝etÄ‚Ĺ‚w wzglĂ„â„˘dem wyborÄ‚Ĺ‚w uczestnikÄ‚Ĺ‚w.'
+        description: 'Ryzyko nadwyżek gadżetów względem wyborów uczestników.'
       },
       {
-        name: 'MateriaÄąâ€šy cyfrowe',
+        name: 'Materiały cyfrowe',
         status: avoidedPrintsCount > 0 ? 'dobrze' : 'monitoring',
         value: `${avoidedPrintsCount}`,
-        description: 'Szacowana liczba unikniĂ„â„˘tych wydrukÄ‚Ĺ‚w dziĂ„â„˘ki stronie uczestnika i cyfrowemu Event Pass.'
+        description: 'Szacowana liczba unikniętych wydruków dzięki stronie uczestnika i cyfrowemu Event Pass.'
       },
       {
-        name: 'BudÄąÄ˝et',
-        status: estimatedCostSavings > 0 ? 'potencjaÄąâ€š oszczĂ„â„˘dnoÄąâ€şci' : 'monitoring',
+        name: 'Budżet',
+        status: estimatedCostSavings > 0 ? 'potencjał oszczędności' : 'monitoring',
         value: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN`,
-        description: 'Potencjalne oszczĂ„â„˘dnoÄąâ€şci z cyfryzacji, mniejszych nadwyÄąÄ˝ek i dokÄąâ€šadniejszego cateringu.'
+        description: 'Potencjalne oszczędności z cyfryzacji, mniejszych nadwyżek i dokładniejszego cateringu.'
       },
       {
         name: 'Podwykonawcy',
         status: localSuppliersCount > 0 ? 'dobrze' : 'wymaga uwagi',
         value: `${localSuppliersCount}`,
-        description: 'Liczba lokalnych lub wysoko ocenionych eco dostawcÄ‚Ĺ‚w.'
+        description: 'Liczba lokalnych lub wysoko ocenionych eco dostawców.'
       },
       {
         name: 'ReSOLVE',
         status: circularityScore >= 70 ? 'mocny wynik' : 'do wzmocnienia',
         value: `${circularityScore}%`,
-        description: 'ÄąÂĂ„â€¦czny wynik obiegu zamkniĂ„â„˘tego na podstawie Virtualize, Optimize/Share, Loop, Exchange i Regenerate.'
+        description: 'Łączny wynik obiegu zamkniętego na podstawie Virtualize, Optimize/Share, Loop, Exchange i Regenerate.'
       }
     ]
 
@@ -4073,7 +4073,7 @@ const transportAnalytics = useMemo(() => {
       current: {
         label: 'Obecny plan',
         co2: totalCo2Saved,
-        cost: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN potencjaÄąâ€šu`,
+        cost: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN potencjału`,
         waste: `${Math.max(foodWasteRisk, gadgetWasteRisk)}%`
       },
       optimized: {
@@ -4088,17 +4088,17 @@ const transportAnalytics = useMemo(() => {
       {
         label: 'Cyfrowe zaproszenia',
         value: `${digitalInvitesCo2Saved} kg`,
-        detail: `${totalApplications} zgÄąâ€šoszeÄąâ€ž / zaproszeÄąâ€ž`
+        detail: `${totalApplications} zgłoszeń / zaproszeń`
       },
       {
         label: 'Transport',
         value: `${transportCo2Saved} kg`,
-        detail: `${realCarpoolingChoices} realnych wyborÄ‚Ĺ‚w carpooling, ${activeCarpoolAds} aktywnych ogÄąâ€šoszeÄąâ€ž, flota: ${fleetCapacity} miejsc`
+        detail: `${realCarpoolingChoices} realnych wyborów carpooling, ${activeCarpoolAds} aktywnych ogłoszeń, flota: ${fleetCapacity} miejsc`
       },
       {
         label: 'Plastik i papier',
         value: `${plasticCo2Saved} kg`,
-        detail: 'cyfrowe materiaÄąâ€šy, event pass i ograniczenie wydrukÄ‚Ĺ‚w'
+        detail: 'cyfrowe materiały, event pass i ograniczenie wydruków'
       },
       {
         label: 'Menu / catering',
@@ -4106,19 +4106,19 @@ const transportAnalytics = useMemo(() => {
         detail: `${vegeMeals} pozycji vege / vegan`
       },
       {
-        label: 'GadÄąÄ˝ety',
+        label: 'Gadżety',
         value: `${gadgetsCo2Saved} kg`,
-        detail: `${gadgetReserved} Äąâ€şwiadomych wyborÄ‚Ĺ‚w gadÄąÄ˝etÄ‚Ĺ‚w`
+        detail: `${gadgetReserved} świadomych wyborów gadżetów`
       },
       {
-        label: 'UnikniĂ„â„˘te wydruki',
+        label: 'Uniknięte wydruki',
         value: `${avoidedPrintsCount} szt.`,
-        detail: 'zaproszenia, identyfikatory, materiaÄąâ€šy i informacje przeniesione do kanaÄąâ€šÄ‚Ĺ‚w cyfrowych'
+        detail: 'zaproszenia, identyfikatory, materiały i informacje przeniesione do kanałów cyfrowych'
       },
       {
         label: 'Papier',
         value: `${paperSavedKg} kg`,
-        detail: 'szacunek masy papieru niewydrukowanego dziĂ„â„˘ki cyfrowemu flow'
+        detail: 'szacunek masy papieru niewydrukowanego dzięki cyfrowemu flow'
       },
       {
         label: 'Food waste',
@@ -4126,9 +4126,9 @@ const transportAnalytics = useMemo(() => {
         detail: 'porcje obarczone ryzykiem przez niepotwierdzone RSVP'
       },
       {
-        label: 'BudÄąÄ˝et / oszczĂ„â„˘dnoÄąâ€şci',
+        label: 'Budżet / oszczędności',
         value: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN`,
-        detail: 'potencjaÄąâ€š z wydrukÄ‚Ĺ‚w, gadÄąÄ˝etÄ‚Ĺ‚w i lepszego domkniĂ„â„˘cia cateringu'
+        detail: 'potencjał z wydruków, gadżetów i lepszego domknięcia cateringu'
       },
       {
         label: 'ReSOLVE',
@@ -4244,7 +4244,7 @@ const transportAnalytics = useMemo(() => {
 
 
 // ============================================================================
-// ----- 4.7. RENDEROWANIE (JEÄąĹˇLI ÄąÂADOWANIE) -----
+// ----- 4.7. RENDEROWANIE (JEŚLI ŁADOWANIE) -----
 // ============================================================================
 
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -4271,7 +4271,7 @@ const organizerCalendarEvents = useMemo(() => {
         date: task.date,
         time: task.time || '',
         title: task.task || 'Zadanie',
-        source: 'MinutÄ‚Ĺ‚wka',
+        source: 'Minutówka',
         isCritical: task.isCritical === true,
         color: task.isCritical ? 'bg-red-500' : 'bg-[#253a2a]'
       })
@@ -4301,7 +4301,7 @@ const organizerCalendarEvents = useMemo(() => {
         id: `payment-${contractor.id}`,
         date: contractor.payment_due_date,
         time: '12:00',
-        title: `PÄąâ€šatnoÄąâ€şĂ„â€ˇ: ${contractor.name || 'podwykonawca'} (${contractor.gross_amount || contractor.amount || 0} PLN)`,
+        title: `Płatność: ${contractor.name || 'podwykonawca'} (${contractor.gross_amount || contractor.amount || 0} PLN)`,
         source: 'Finanse',
         isCritical: true,
         color: 'bg-amber-500'
@@ -4321,7 +4321,7 @@ const organizerItems = useMemo(() => {
   const rosItems = (runOfShow || []).map((task: any) => ({
     id: task.id,
     source: 'run_of_show',
-    sourceLabel: 'MinutÄ‚Ĺ‚wka',
+    sourceLabel: 'Minutówka',
     date: task.date || eventDate,
     time: task.time || '',
     title: task.task || 'Zadanie',
@@ -4397,41 +4397,41 @@ const aiOrganizerTips = useMemo(() => {
   const tips: string[] = []
 
   if (organizerStats.critical > 0) {
-    tips.push('Masz aktywne punkty krytyczne. Zacznij odprawĂ„â„˘ ekipy wÄąâ€šaÄąâ€şnie od nich.')
+    tips.push('Masz aktywne punkty krytyczne. Zacznij odprawę ekipy właśnie od nich.')
   }
 
   if (organizerStats.pending > 8) {
-    tips.push('Lista operacyjna jest dÄąâ€šuga. Podziel zadania na osoby odpowiedzialne, ÄąÄ˝eby uniknĂ„â€¦Ă„â€ˇ chaosu w dniu eventu.')
+    tips.push('Lista operacyjna jest długa. Podziel zadania na osoby odpowiedzialne, żeby uniknąć chaosu w dniu eventu.')
   }
 
   if ((sessions || []).length > 0 && runOfShow.length === 0) {
-    tips.push('Masz agendĂ„â„˘, ale nie masz minutÄ‚Ĺ‚wki technicznej. Warto przepisaĂ„â€ˇ najwaÄąÄ˝niejsze punkty agendy na zadania operacyjne.')
+    tips.push('Masz agendę, ale nie masz minutówki technicznej. Warto przepisać najważniejsze punkty agendy na zadania operacyjne.')
   }
 
   if (upcomingOrganizerItems.length === 0) {
-    tips.push('Brak najbliÄąÄ˝szych terminÄ‚Ĺ‚w. Dodaj pierwsze zadania operacyjne, np. odbiÄ‚Ĺ‚r dekoracji, kontakt z cateringiem lub prÄ‚Ĺ‚bĂ„â„˘ technicznĂ„â€¦.')
+    tips.push('Brak najbliższych terminów. Dodaj pierwsze zadania operacyjne, np. odbiór dekoracji, kontakt z cateringiem lub próbę techniczną.')
   }
 
   return tips.slice(0, 3)
 }, [organizerStats, sessions, runOfShow.length, upcomingOrganizerItems.length])
 // ============================================================================
-// ----- 4.7. RENDEROWANIE (JEÄąĹˇLI ÄąÂADOWANIE) -----
+// ----- 4.7. RENDEROWANIE (JEŚLI ŁADOWANIE) -----
 // ============================================================================
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="text-center px-4">
         <RefreshCw size={48} className="animate-spin text-[#253a2a] mx-auto mb-4" />
-        <p className="font-black text-slate-700 text-lg">ÄąÂadowanie panelu operacyjnego...</p>
+        <p className="font-black text-slate-700 text-lg">Ładowanie panelu operacyjnego...</p>
         <p className="text-xs text-slate-500 mt-2">Przygotowujemy dane biznesowe</p>
       </div>
     </div>
   )
 // ============================================================================
-// ----- 4.8. KOMPONENT POMOCNICZY TabButton (wewnĂ„â€¦trz) -----
+// ----- 4.8. KOMPONENT POMOCNICZY TabButton (wewnątrz) -----
 // ============================================================================
 
-// PodmieÄąâ€ž tĂ„â„˘ funkcjĂ„â„˘ w swoim pliku!
+// Podmień tę funkcję w swoim pliku!
 const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   tabId: TabModule, icon: any, label: string, count?: number, urgent?: boolean
 }) => {
@@ -4480,16 +4480,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
-        { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Lekarze / specjaliÄąâ€şci', count: partners.filter(p => p.type === 'speaker').length },
+        { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Lekarze / specjaliści', count: partners.filter(p => p.type === 'speaker').length },
         { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
-        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'ÄąĹˇcieÄąÄ˝ka pacjenta', count: approvedApps.length }
+        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
     },
     {
       title: 'Pierwszy kontakt',
       desc: 'Leady, rejestracja i follow-up',
       items: [
-        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentÄ‚Ĺ‚w', count: pendingApps.length, urgent: true },
+        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja wizyt', count: tiers.length },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
         { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
@@ -4497,20 +4497,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ]
     },
     {
-      title: 'EfektywnoÄąâ€şĂ„â€ˇ kliniki',
-      desc: 'KPI, finanse i zarzĂ„â€¦dzanie placÄ‚Ĺ‚wkĂ„â€¦',
+      title: 'Efektywność kliniki',
+      desc: 'KPI, finanse i zarządzanie placówką',
       items: [
         { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
-        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'PÄąâ€šatnoÄąâ€şci i koszty' },
+        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
         { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' },
-        { tabId: 'stoly' as TabModule, icon: LayoutGrid, label: 'UkÄąâ€šad gabinetÄ‚Ĺ‚w' },
+        { tabId: 'stoly' as TabModule, icon: LayoutGrid, label: 'Układ gabinetów' },
         { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Pakiety pacjenta', count: gadgets.length }
       ]
     }
   ]
 
   // ==========================================================================
-  // 5. RENDER GÄąÂÄ‚â€śWNY nie zamykaj zamniesz wszystko
+  // 5. RENDER GŁÓWNY nie zamykaj zamniesz wszystko
   // ==========================================================================
 
  return (
@@ -4766,11 +4766,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-3">
                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
                     <span className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>
-                      {isMedicalDocumentAssistant ? 'Medical Document AI' : 'Asystent treÄąâ€şci AI'}
+                      {isMedicalDocumentAssistant ? 'Medical Document AI' : 'Asystent treści AI'}
                     </span>
                   </div>
                   <h3 className="text-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    {isMedicalDocumentAssistant ? 'Szkic dokumentu medycznego' : 'Magia sÄąâ€šÄ‚Ĺ‚w'}
+                    {isMedicalDocumentAssistant ? 'Szkic dokumentu medycznego' : 'Magia słów'}
                   </h3>
                   <p className={`text-xs mt-1 font-bold tracking-widest uppercase flex flex-wrap items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Edit3 size={12} /> Edytujesz:
@@ -4791,7 +4791,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="p-6 md:p-8 space-y-6">
                 {isMedicalDocumentAssistant && (
                   <div className={`rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed ${isDarkMode ? 'bg-amber-500/10 border-amber-500/25 text-amber-100' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-                    AI tworzy wyÄąâ€šĂ„â€¦cznie roboczy projekt dokumentu. Przed uÄąÄ˝yciem z pacjentem treÄąâ€şĂ„â€ˇ musi zostaĂ„â€ˇ sprawdzona i zatwierdzona przez osobĂ„â„˘ uprawnionĂ„â€¦ medycznie oraz, w razie potrzeby, prawnie.
+                    AI tworzy wyłącznie roboczy projekt dokumentu. Przed użyciem z pacjentem treść musi zostać sprawdzona i zatwierdzona przez osobę uprawnioną medycznie oraz, w razie potrzeby, prawnie.
                   </div>
                 )}
 
@@ -4827,23 +4827,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <option value="premium">Premium / luksusowy</option>
                       <option value="prosty">Prosty / klarowny</option>
                       <option value="formalny">Formalny / biznesowy</option>
-                      <option value="energiczny">Energiczny / angaÄąÄ˝ujĂ„â€¦cy</option>
+                      <option value="energiczny">Energiczny / angażujący</option>
                       <option value="eco">Eco / odpowiedzialny</option>
                     </select>
                   </div>
                   )}
                   <div className="space-y-2">
                     <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
-                      <Type size={14} /> DÄąâ€šugoÄąâ€şĂ„â€ˇ tekstu
+                      <Type size={14} /> Długość tekstu
                     </label>
                     <select
                       className={`w-full rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white'}`}
                       value={aiTextLength}
                       onChange={e => setAiTextLength(e.target.value)}
                     >
-                      <option value="krÄ‚Ĺ‚tka">ZwiĂ„â„˘zÄąâ€ša / krÄ‚Ĺ‚tka</option>
-                      <option value="Äąâ€şrednia">ÄąĹˇrednia / optymalna</option>
-                      <option value="rozbudowana">Rozbudowana / dÄąâ€šuga</option>
+                      <option value="krótka">Zwięzła / krótka</option>
+                      <option value="średnia">Średnia / optymalna</option>
+                      <option value="rozbudowana">Rozbudowana / długa</option>
                     </select>
                   </div>
                 </div>
@@ -4855,7 +4855,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <textarea
                     rows={2}
                     className={`w-full rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40 placeholder-slate-500' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white placeholder-slate-400'}`}
-                    placeholder={isMedicalDocumentAssistant ? 'Np. zabieg laserowy CO2, przeciwwskazania, zalecenia, ryzyka, ton formalny dla pacjenta...' : 'Np. podkreÄąâ€şl networking, ogranicz formalny ton, dodaj akcent eco...'}
+                    placeholder={isMedicalDocumentAssistant ? 'Np. zabieg laserowy CO2, przeciwwskazania, zalecenia, ryzyka, ton formalny dla pacjenta...' : 'Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco...'}
                     value={aiTextInstruction}
                     onChange={e => setAiTextInstruction(e.target.value)}
                   />
@@ -4870,16 +4870,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                     <span className="relative z-10 flex items-center gap-2.5">
                       {aiTextLoading ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} className="group-hover:animate-pulse" />}
-                    {aiTextLoading ? 'GenerujĂ„â„˘ szkic...' : (isMedicalDocumentAssistant ? 'Generuj szkic dokumentu' : 'Generuj treÄąâ€şĂ„â€ˇ')}
+                    {aiTextLoading ? 'Generuję szkic...' : (isMedicalDocumentAssistant ? 'Generuj szkic dokumentu' : 'Generuj treść')}
                     </span>
                   </button>
 
                 <div className="space-y-2 pt-2">
                   <label className={`text-[10px] font-black uppercase tracking-widest flex items-center justify-between gap-3 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> {isMedicalDocumentAssistant ? 'Roboczy szkic dokumentu' : 'Wygenerowana treÄąâ€şĂ„â€ˇ'}</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> {isMedicalDocumentAssistant ? 'Roboczy szkic dokumentu' : 'Wygenerowana treść'}</span>
                     {aiTextSuggestion && (
                       <span className={`text-[8px] px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-black/5 border-black/10 text-slate-500'}`}>
-                        {isMedicalDocumentAssistant ? 'Wymaga zatwierdzenia' : 'MoÄąÄ˝esz edytowaĂ„â€ˇ przed zapisem'}
+                        {isMedicalDocumentAssistant ? 'Wymaga zatwierdzenia' : 'Możesz edytować przed zapisem'}
                       </span>
                     )}
                   </label>
@@ -4887,7 +4887,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <textarea
                       rows={6}
                       className={`w-full rounded-2xl px-5 py-4 text-sm leading-relaxed outline-none resize-y transition-all border shadow-inner ${isDarkMode ? 'bg-black/40 border-emerald-500/30 text-emerald-50 focus:border-emerald-400 placeholder-slate-500' : 'bg-white border-emerald-200 text-slate-900 focus:border-emerald-500 placeholder-slate-400'}`}
-                      placeholder={aiTextAssistConfig.placeholder || (isMedicalDocumentAssistant ? 'Tu pojawi siĂ„â„˘ roboczy szkic dokumentu do weryfikacji...' : 'Tu pojawi siĂ„â„˘ gotowy tekst stworzony przez sztucznĂ„â€¦ inteligencjĂ„â„˘...')}
+                      placeholder={aiTextAssistConfig.placeholder || (isMedicalDocumentAssistant ? 'Tu pojawi się roboczy szkic dokumentu do weryfikacji...' : 'Tu pojawi się gotowy tekst stworzony przez sztuczną inteligencję...')}
                       value={aiTextSuggestion}
                       onChange={e => setAiTextSuggestion(e.target.value)}
                     />
@@ -4901,13 +4901,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 {aiTextReason && (
                   <p className={`rounded-2xl border px-4 py-3 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-white/70 border-indigo-100 text-slate-600'}`}>
-                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>{isMedicalDocumentAssistant ? 'Uzasadnienie szkicu:' : 'AI uÄąÄ˝yÄąâ€šo:'}</span> {aiTextReason}
+                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>{isMedicalDocumentAssistant ? 'Uzasadnienie szkicu:' : 'AI użyło:'}</span> {aiTextReason}
                   </p>
                 )}
 
                 {aiTextMissingContext.length > 0 && (
                   <div className={`rounded-2xl border px-4 py-3 text-xs font-medium ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-                    <p className="font-black">BrakujĂ„â€¦ce dane, ktÄ‚Ĺ‚re poprawiĂ„â€¦ sugestiĂ„â„˘:</p>
+                    <p className="font-black">Brakujące dane, które poprawią sugestię:</p>
                     <ul className="mt-1 list-disc pl-4">
                       {aiTextMissingContext.map((item, index) => (
                         <li key={`${item}-${index}`}>{item}</li>
@@ -4931,7 +4931,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   disabled={!aiTextSuggestion.trim() || aiTextLoading}
                   className={`px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 border ${isDarkMode ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/40 hover:text-emerald-100' : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600'}`}
                 >
-                  {isMedicalDocumentAssistant ? 'Wstaw szkic do dokumentu' : 'Zastosuj treÄąâ€şĂ„â€ˇ'}
+                  {isMedicalDocumentAssistant ? 'Wstaw szkic do dokumentu' : 'Zastosuj treść'}
                 </button>
               </div>
             </div>
@@ -4947,13 +4947,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 p-5">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#253a2a]">
-                  AI podpowiedÄąĹź treÄąâ€şci
+                  AI podpowiedź treści
                 </p>
                 <h3 className="mt-1 text-xl font-black text-slate-900">
                   {aiTextAssistConfig.sectionKey} / {aiTextAssistConfig.fieldKey}
                 </h3>
                 <p className="mt-1 text-xs font-medium text-slate-500">
-                  AI tylko proponuje tekst. Zapis nastĂ„â€¦pi dopiero po zapisaniu formularza.
+                  AI tylko proponuje tekst. Zapis nastąpi dopiero po zapisaniu formularza.
                 </p>
               </div>
               <button
@@ -4982,26 +4982,26 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">DÄąâ€šugoÄąâ€şĂ„â€ˇ</label>
+                  <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Długość</label>
                   <select
                     value={aiTextLength}
                     onChange={e => setAiTextLength(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#253a2a]"
                   >
-                    <option value="krÄ‚Ĺ‚tka">krÄ‚Ĺ‚tka</option>
-                    <option value="Äąâ€şrednia">Äąâ€şrednia</option>
+                    <option value="krótka">krótka</option>
+                    <option value="średnia">średnia</option>
                     <option value="rozbudowana">rozbudowana</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Dodatkowa wskazÄ‚Ĺ‚wka dla AI</label>
+                <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Dodatkowa wskazówka dla AI</label>
                 <textarea
                   rows={2}
                   value={aiTextInstruction}
                   onChange={e => setAiTextInstruction(e.target.value)}
-                  placeholder="Np. podkreÄąâ€şl networking, ogranicz formalny ton, dodaj akcent eco..."
+                  placeholder="Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco..."
                   className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#253a2a]"
                 />
               </div>
@@ -5013,7 +5013,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#253a2a] px-5 py-4 text-xs font-black uppercase tracking-widest text-[#e8ce7a] shadow-sm transition hover:bg-[#1a291e] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <Sparkles size={15} className={aiTextLoading ? 'animate-pulse' : ''} />
-                {aiTextLoading ? 'GenerujĂ„â„˘ propozycjĂ„â„˘...' : 'Wygeneruj propozycjĂ„â„˘'}
+                {aiTextLoading ? 'Generuję propozycję...' : 'Wygeneruj propozycję'}
               </button>
 
               <div>
@@ -5022,20 +5022,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   rows={8}
                   value={aiTextSuggestion}
                   onChange={e => setAiTextSuggestion(e.target.value)}
-                  placeholder={aiTextAssistConfig.placeholder || 'Tutaj pojawi siĂ„â„˘ propozycja AI...'}
+                  placeholder={aiTextAssistConfig.placeholder || 'Tutaj pojawi się propozycja AI...'}
                   className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium leading-relaxed text-slate-900 outline-none focus:border-[#253a2a]"
                 />
               </div>
 
               {aiTextReason && (
                 <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
-                  <span className="font-black text-slate-900">AI uÄąÄ˝yÄąâ€šo:</span> {aiTextReason}
+                  <span className="font-black text-slate-900">AI użyło:</span> {aiTextReason}
                 </p>
               )}
 
               {aiTextMissingContext.length > 0 && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-900">
-                  <p className="font-black">BrakujĂ„â€¦ce dane, ktÄ‚Ĺ‚re poprawiĂ„â€¦ sugestiĂ„â„˘:</p>
+                  <p className="font-black">Brakujące dane, które poprawią sugestię:</p>
                   <ul className="mt-1 list-disc pl-4">
                     {aiTextMissingContext.map((item, index) => (
                       <li key={`${item}-${index}`}>{item}</li>
@@ -5142,10 +5142,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   Centrum pomocy
                 </p>
                 <h3 className={`text-sm font-black mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Instrukcje obsÄąâ€šugi planera
+                  Instrukcje obsługi planera
                 </h3>
                 <p className={`text-[10px] font-medium mt-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Wybierz temat i otwÄ‚Ĺ‚rz PDF w nowej karcie.
+                  Wybierz temat i otwórz PDF w nowej karcie.
                 </p>
               </div>
 
@@ -5230,7 +5230,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         )}
       </div>
 
-      {/* Znaczek ECO EVENT - Zaktualizowany na spÄ‚Ĺ‚jne zÄąâ€šoto+grafit zamiast zieleni */}
+      {/* Znaczek ECO EVENT - Zaktualizowany na spójne złoto+grafit zamiast zieleni */}
       <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-colors ${
         isDarkMode
           ? 'bg-[#e8ce7a] text-[#0f172a]'
@@ -5247,7 +5247,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
      <main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
 
  {/* ============================================================================ */}
-  {/* BANER LINKU / QR (Teraz z peÄąâ€šnym Dark Mode i bez starych kolorÄ‚Ĺ‚w)  nie zamykaj zamniesz wszystko*/}
+  {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów)  nie zamykaj zamniesz wszystko*/}
  {/* ============================================================================ */}
         <div className={`rounded-[24px] md:rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-xl mb-6 md:mb-8 border transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-900 border-slate-800'}`}>
           <div className={`absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 rounded-full blur-3xl pointer-events-none ${isDarkMode ? 'bg-[#e8ce7a]/10' : 'bg-blue-500/20'}`}></div>
@@ -5261,7 +5261,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <Globe size={20} className="text-[#e8ce7a]" /> Centrum Dowodzenia ANM
                 </h3>
                 <p className="text-slate-400 text-xs md:text-sm mb-4 font-medium">
-                  UdostĂ„â„˘pnij link zaproszenia goÄąâ€şciom. QR na tym pasku prowadzi tylko do publicznej strony wydarzenia.
+                  Udostępnij link zaproszenia gościom. QR na tym pasku prowadzi tylko do publicznej strony wydarzenia.
                 </p>
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Link zaproszenia</p>
@@ -5273,7 +5273,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <Copy size={14} /> Kopiuj link
                     </button>
                     <a href={publicLink} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-[#e8ce7a] hover:bg-[#d4b963] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5">
-                      <ExternalLink size={14} /> OtwÄ‚Ĺ‚rz zaproszenie
+                      <ExternalLink size={14} /> Otwórz zaproszenie
                     </a>
                     <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 text-white">
                       <Printer size={14} /> Drukuj QR
@@ -5285,35 +5285,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className="xl:w-[340px] bg-black/30 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Link dla obsÄąâ€šugi na miejscu</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Link dla obsługi na miejscu</p>
                 {quickStaffPassUrl ? (
                   <>
                     <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="block font-mono text-[11px] font-bold text-[#e8ce7a] truncate hover:underline mb-1">
                       {quickStaffPassShortUrl}
                     </a>
                     <p className="text-[10px] font-medium text-slate-400">
-                      Szybki dostĂ„â„˘p: {quickStaffAccess?.name || quickStaffAccess?.role || 'obsÄąâ€šuga'}
+                      Szybki dostęp: {quickStaffAccess?.name || quickStaffAccess?.role || 'obsługa'}
                     </p>
                   </>
                 ) : (
                   <div>
-                    <p className="text-xs font-bold text-slate-400">Brak dostĂ„â„˘pu obsÄąâ€šugi</p>
+                    <p className="text-xs font-bold text-slate-400">Brak dostępu obsługi</p>
                   </div>
                 )}
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
                 {quickStaffPassUrl ? (
                   <>
-                    <button onClick={() => { navigator.clipboard.writeText(quickStaffPassUrl); showNotification('Link obsÄąâ€šugi skopiowany', 'success') }} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
+                    <button onClick={() => { navigator.clipboard.writeText(quickStaffPassUrl); showNotification('Link obsługi skopiowany', 'success') }} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
                       <Copy size={14} /> Kopiuj
                     </button>
                     <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
-                      <ExternalLink size={14} /> OtwÄ‚Ĺ‚rz
+                      <ExternalLink size={14} /> Otwórz
                     </a>
                   </>
                 ) : (
                   <button onClick={() => setActiveTab('eventpass')} className="w-full py-2.5 bg-[#e8ce7a] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider flex justify-center items-center gap-1.5">
-                    <ShieldCheck size={14} /> Skonfiguruj dostĂ„â„˘p
+                    <ShieldCheck size={14} /> Skonfiguruj dostęp
                   </button>
                 )}
               </div>
@@ -5322,11 +5322,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         {/* ============================================================================ */}
-        {/* GRID GÄąÂÄ‚â€śWNY - ZMODYFIKOWANY ABY LEWE MENU ZAWSZE BYÄąÂO W LINII, A NIE FIXED */}
+        {/* GRID GŁÓWNY - ZMODYFIKOWANY ABY LEWE MENU ZAWSZE BYŁO W LINII, A NIE FIXED */}
         {/* ============================================================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start">
 
-          {/* LEWY SIDEBAR (UÄąÄ˝ywamy kolumn Grida zamiast pozycjonowania fixed!) */}
+          {/* LEWY SIDEBAR (Używamy kolumn Grida zamiast pozycjonowania fixed!) */}
           <aside className={`${isNavCollapsed ? 'lg:col-span-1 lg:w-[85px]' : 'lg:col-span-3'} lg:sticky lg:top-24 space-y-4 transition-all duration-300 z-20`}>
             <div className={`border rounded-[28px] backdrop-blur-xl transition-colors duration-300 ${isNavCollapsed ? 'p-2 shadow-sm' : 'p-4 shadow-sm'} ${isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}`}>
               <div className={`flex items-center justify-between ${isNavCollapsed ? 'mb-2' : 'mb-4'}`}>
@@ -5347,7 +5347,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   type="button"
                   onClick={() => setIsNavCollapsed(!isNavCollapsed)}
                   className={`${isNavCollapsed ? 'w-full' : 'ml-auto'} h-10 px-3 rounded-2xl transition-colors flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-                  title={isNavCollapsed ? 'PokaÄąÄ˝ menu' : 'Ukryj menu'}
+                  title={isNavCollapsed ? 'Pokaż menu' : 'Ukryj menu'}
                 >
                   {isNavCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
                 </button>
@@ -5378,7 +5378,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </aside>
 
-          {/* GÄąâ€šÄ‚Ĺ‚wna zawartoÄąâ€şĂ„â€ˇ zajmuje caÄąâ€šĂ„â€¦ dostĂ„â„˘pnĂ„â€¦ szerokoÄąâ€şĂ„â€ˇ po usuniĂ„â„˘ciu prawego panelu raportÄ‚Ĺ‚w. */}
+          {/* Główna zawartość zajmuje całą dostępną szerokość po usunięciu prawego panelu raportów. */}
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
 
 
@@ -5389,7 +5389,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'strona_uczestnika' && (
   <form onSubmit={handleSaveParticipantPageSettings} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGÄąÂÄ‚â€śWEK */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -5397,7 +5397,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Portal Pacjenta i e-Rejestracja
         </h3>
         <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Skonfiguruj CyfrowĂ„â€¦ ÄąĹˇcieÄąÄ˝kĂ„â„˘ Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje siĂ„â„˘ z informacjami o zabiegach.
+          Skonfiguruj Cyfrową Ścieżkę Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje się z informacjami o zabiegach.
         </p>
       </div>
 
@@ -5426,12 +5426,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Uwaga dla administratora systemu medycznego
         </p>
         <p className={`text-xs font-medium mt-1 leading-relaxed ${isDarkMode ? 'text-amber-500/80' : 'text-amber-900'}`}>
-          Ten edytor zarzĂ„â€¦dza strukturĂ„â€¦ tabeli `b2b_events`. JeÄąâ€şli integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych blokÄ‚Ĺ‚w (np. historii zabiegowej), upewnij siĂ„â„˘, ÄąÄ˝e schemat SQL w Supabase zostaÄąâ€š zaktualizowany.
+          Ten edytor zarządza strukturą tabeli `b2b_events`. Jeśli integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych bloków (np. historii zabiegowej), upewnij się, że schemat SQL w Supabase został zaktualizowany.
         </p>
       </div>
     </div>
 
-    {/* GÄąÂÄ‚â€śWNA SIATKA SEKCJI PORTALU */}
+    {/* GŁÓWNA SIATKA SEKCJI PORTALU */}
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 md:gap-6">
       {publicSectionConfigs.map((section: any) => {
         const fields = getPublicSectionFields(section.key, section.actionField)
@@ -5465,7 +5465,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {section.label}
                   </h4>
                   <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                    Konfiguracja moduÄąâ€šu pacjenta
+                    Konfiguracja modułu pacjenta
                   </p>
                 </div>
               </div>
@@ -5486,10 +5486,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            {/* ZAWARTOÄąĹˇĂ„â€  KAFELKA */}
+            {/* ZAWARTOŚĆ KAFELKA */}
             <div className={`p-5 md:p-6 space-y-5 transition-opacity ${!isSectionVisible && 'opacity-60 grayscale-[30%]'}`}>
 
-              {/* TOGGLES (WIDOCZNOÄąĹˇĂ„â€  I AKCJA) */}
+              {/* TOGGLES (WIDOCZNOŚĆ I AKCJA) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
                   isSectionVisible
@@ -5498,7 +5498,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }`}>
                   <div className="pr-4">
                     <p className={`font-black text-sm ${isSectionVisible ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      PokaÄąÄ˝ w Portalu Pacjenta
+                      Pokaż w Portalu Pacjenta
                     </p>
                   </div>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -5551,7 +5551,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               {/* POLA TEKSTOWE */}
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuÄąâ€š sekcji w Portalu</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł sekcji w Portalu</label>
                   <input
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={editForm?.[fields.title] || ''}
@@ -5569,7 +5569,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
 
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (PodtytuÄąâ€š)</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (Podtytuł)</label>
                   <textarea
                     rows={2}
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -5595,13 +5595,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={editForm?.[fields.cta] || ''}
                       onChange={e => setEditForm({ ...editForm, [fields.cta]: e.target.value })}
-                      placeholder="np. UmÄ‚Ĺ‚w konsultacjĂ„â„˘"
+                      placeholder="np. Umów konsultację"
                     />
                   </div>
 
-                  {/* ZdjĂ„â„˘cie TÄąâ€ša */}
+                  {/* Zdjęcie Tła */}
                   <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjĂ„â„˘cie sekcji (np. gabinet, sprzĂ„â„˘t)</label>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie sekcji (np. gabinet, sprzęt)</label>
                     {fileKey ? (
                       <div className="relative">
                         <input
@@ -5621,7 +5621,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     )}
                     {editForm?.[fields.image] && (
                       <p className="text-[9px] font-mono mt-1.5 truncate text-blue-500 hover:underline cursor-help" title={editForm[fields.image]}>
-                        ZaÄąâ€šĂ„â€¦czony plik (kliknij by sprawdziĂ„â€ˇ)
+                        Załączony plik (kliknij by sprawdzić)
                       </p>
                     )}
                   </div>
@@ -5643,7 +5643,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         }`}
       >
         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie struktury...' : 'Zapisz ukÄąâ€šad Portalu Pacjenta'}
+        {updating ? 'Zapisywanie struktury...' : 'Zapisz układ Portalu Pacjenta'}
       </button>
     </div>
 
@@ -5657,20 +5657,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'edycja' && editForm && (
   <form onSubmit={handleUpdateEvent} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* SEKCJA: TREÄąĹˇCI TEKSTOWE */}
+    {/* SEKCJA: TREŚCI TEKSTOWE */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex items-center gap-3 mb-6">
         <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
           <Globe size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          GÄąâ€šÄ‚Ĺ‚wne TreÄąâ€şci Strony
+          Główne Treści Strony
         </h3>
       </div>
 
       <div className="space-y-5">
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuÄąâ€š wydarzenia</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł wydarzenia</label>
           <input
             className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
             value={editForm.title || ''}
@@ -5698,7 +5698,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             />
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spodziewana liczba goÄąâ€şci</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spodziewana liczba gości</label>
             <input
               type="number"
               className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -5709,13 +5709,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>PeÄąâ€šny opis wydarzenia</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Pełny opis wydarzenia</label>
           <textarea
             rows={4}
             className={`w-full border rounded-2xl px-4 py-3.5 font-medium outline-none resize-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
             value={editForm.description || ''}
             onChange={e => setEditForm({...editForm, description: e.target.value})}
-            placeholder="Opisz krÄ‚Ĺ‚tko czym jest to wydarzenie, kogo zapraszasz i czego moÄąÄ˝na siĂ„â„˘ spodziewaĂ„â€ˇ."
+            placeholder="Opisz krótko czym jest to wydarzenie, kogo zapraszasz i czego można się spodziewać."
           />
           {/* NOWY PRZYCISK AI */}
           <AiTextAssistButton
@@ -5723,7 +5723,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             sectionKey="general"
             fieldKey="description"
             currentValue={editForm.description || ''}
-            placeholder="Skup siĂ„â„˘ na powitaniu goÄąâ€şci..."
+            placeholder="Skup się na powitaniu gości..."
             onApply={(text) => setEditForm({ ...editForm, description: text })}
           />
         </div>
@@ -5737,7 +5737,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <ImageIcon size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Multimedia (ZdjĂ„â„˘cia i Logo)
+          Multimedia (Zdjęcia i Logo)
         </h3>
       </div>
 
@@ -5755,7 +5755,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         {/* COVER/HERO */}
         <div className={`p-5 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjĂ„â„˘cie TÄąâ€ša (Hero)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie Tła (Hero)</label>
           <div className={`h-28 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             {getPreviewUrl(newFiles.cover, event?.cover_image_url) ? (
               <img src={getPreviewUrl(newFiles.cover, event?.cover_image_url)!} className="w-full h-full object-cover" alt="Hero preview" />
@@ -5766,7 +5766,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         {/* RSVP IMAGE */}
         <div className={`p-5 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjĂ„â„˘cie w RSVP</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie w RSVP</label>
           <div className={`h-28 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             {getPreviewUrl(newFiles.rsvpImg, event?.rsvp_image_url) ? (
               <img src={getPreviewUrl(newFiles.rsvpImg, event?.rsvp_image_url)!} className="w-full h-full object-cover" alt="RSVP preview" />
@@ -5781,7 +5781,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[1, 2, 3].map(num => (
             <div key={num} className={`p-4 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjĂ„â„˘cie {num}</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie {num}</label>
               <div className={`h-24 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 {getPreviewUrl(newFiles[`img${num}` as keyof typeof newFiles], event?.[`image_${num}_url`]) ? (
                   <img src={getPreviewUrl(newFiles[`img${num}` as keyof typeof newFiles], event?.[`image_${num}_url`])!} className="w-full h-full object-cover" alt="Preview" />
@@ -5801,17 +5801,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <Palette size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          WyglĂ„â€¦d i Brand Book
+          Wygląd i Brand Book
         </h3>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-8">
         {[
-          { key: 'bg_color', label: 'TÄąâ€šo Strony' },
-          { key: 'card_bg_color', label: 'TÄąâ€šo KafelkÄ‚Ĺ‚w' },
-          { key: 'heading_color', label: 'NagÄąâ€šÄ‚Ĺ‚wki' },
+          { key: 'bg_color', label: 'Tło Strony' },
+          { key: 'card_bg_color', label: 'Tło Kafelków' },
+          { key: 'heading_color', label: 'Nagłówki' },
           { key: 'text_color', label: 'Tekst (Akapity)' },
-          { key: 'primary_color', label: 'Akcent GÄąâ€šÄ‚Ĺ‚wny' },
+          { key: 'primary_color', label: 'Akcent Główny' },
           { key: 'secondary_color', label: 'Akcent Dodatkowy' }
         ].map(field => (
           <div key={field.key} className={`p-3 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
@@ -5826,7 +5826,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       <div className={`border-t pt-6 mb-8 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h4 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Kolory tÄąâ€ša konkretnych sekcji
+          Kolory tła konkretnych sekcji
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
@@ -5861,7 +5861,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Czcionka NagÄąâ€šÄ‚Ĺ‚wkÄ‚Ĺ‚w</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Czcionka Nagłówków</label>
           <div className="space-y-2">
             <select
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
@@ -5877,7 +5877,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={getFontFamilyName(editForm.heading_font || 'Inter, sans-serif')}
               onChange={e => setEditForm({...editForm, heading_font: buildGoogleFontStack(e.target.value)})}
-              placeholder="Albo wpisz wÄąâ€šasnĂ„â€¦ nazwĂ„â„˘"
+              placeholder="Albo wpisz własną nazwę"
             />
           </div>
         </div>
@@ -5899,21 +5899,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={getFontFamilyName(editForm.body_font || 'Inter, sans-serif')}
               onChange={e => setEditForm({...editForm, body_font: buildGoogleFontStack(e.target.value)})}
-              placeholder="Albo wpisz wÄąâ€šasnĂ„â€¦ nazwĂ„â„˘"
+              placeholder="Albo wpisz własną nazwę"
             />
           </div>
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KsztaÄąâ€št ElementÄ‚Ĺ‚w (Border Radius)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kształt Elementów (Border Radius)</label>
           <select
             className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
             value={editForm.element_shape || 'rounded-none'}
             onChange={e => setEditForm({...editForm, element_shape: e.target.value})}
           >
-            <option value="rounded-none">Ostre krawĂ„â„˘dzie (Kwadrat)</option>
-            <option value="rounded-xl">ZaokrĂ„â€¦glone (Soft)</option>
-            <option value="rounded-[40px]">Mocno zaokrĂ„â€¦glone (Pill)</option>
+            <option value="rounded-none">Ostre krawędzie (Kwadrat)</option>
+            <option value="rounded-xl">Zaokrąglone (Soft)</option>
+            <option value="rounded-[40px]">Mocno zaokrąglone (Pill)</option>
           </select>
         </div>
       </div>
@@ -5929,7 +5929,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         }`}
       >
         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie plikÄ‚Ĺ‚w...' : 'Zapisz Ustawienia Strony'}
+        {updating ? 'Zapisywanie plików...' : 'Zapisz Ustawienia Strony'}
       </button>
     </div>
 
@@ -5951,10 +5951,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <ShieldCheck size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          ZarzĂ„â€¦dzanie Pacjentem i DokumentacjĂ„â€¦
+          Zarządzanie Pacjentem i Dokumentacją
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Kontrola Karty 360, weryfikacja wywiadÄ‚Ĺ‚w medycznych, wysyÄąâ€ška zgÄ‚Ĺ‚d i zarzĂ„â€¦dzanie historiĂ„â€¦ leczenia.
+          Kontrola Karty 360, weryfikacja wywiadów medycznych, wysyłka zgód i zarządzanie historią leczenia.
         </p>
       </div>
 
@@ -5966,12 +5966,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Sparkles size={14} />
-          Kreator ZgÄ‚Ĺ‚d AI
+          Kreator Zgód AI
         </button>
       </div>
     </div>
 
-    {/* SMART ALERT (Sygnalizacja bezpieczeÄąâ€žstwa prawnego) */}
+    {/* SMART ALERT (Sygnalizacja bezpieczeństwa prawnego) */}
     <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors ${isDarkMode ? 'bg-gradient-to-r from-red-950/40 to-[#0f172a] border-red-900/50' : 'bg-gradient-to-r from-red-50 to-white border-red-100'}`}>
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}>
@@ -5985,7 +5985,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Wykryto braki w dokumentacji na dzisiejsze wizyty
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            System weryfikuje statusy na ÄąÄ˝ywo. CzĂ„â„˘Äąâ€şĂ„â€ˇ umÄ‚Ĺ‚wionych pacjentÄ‚Ĺ‚w nie uzupeÄąâ€šniÄąâ€ša wywiadu medycznego lub nie zaakceptowaÄąâ€ša zgody zabiegowej. Nie dopuszczaj ich do gabinetu przed uzupeÄąâ€šnieniem dokumentacji cyfrowej.
+            System weryfikuje statusy na żywo. Część umówionych pacjentów nie uzupełniła wywiadu medycznego lub nie zaakceptowała zgody zabiegowej. Nie dopuszczaj ich do gabinetu przed uzupełnieniem dokumentacji cyfrowej.
           </p>
         </div>
       </div>
@@ -5993,7 +5993,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-      {/* KOLUMNA 1: CENTRUM DOWODZENIA RECEPCJI (Wizyty i Baza PacjentÄ‚Ĺ‚w) */}
+      {/* KOLUMNA 1: CENTRUM DOWODZENIA RECEPCJI (Wizyty i Baza Pacjentów) */}
       <div className="xl:col-span-2 space-y-6">
         
         {/* SEKCJA A: PACJENCI WYMAGAJACY DOKUMENTACJI */}
@@ -6138,21 +6138,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             )}
           </div>
         </div>
-        {/* SEKCJA B: PEÄąÂNA BAZA PACJENTÄ‚â€śW (Mapowanie ÄąÄ˝ywych danych z Supabase) */}
+        {/* SEKCJA B: PEŁNA BAZA PACJENTÓW (Mapowanie żywych danych z Supabase) */}
         <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors mt-8 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <div>
               <h4 className={`font-black flex items-center gap-2 text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <Users size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                Baza Wszystkich PacjentÄ‚Ĺ‚w ({patients.length})
+                Baza Wszystkich Pacjentów ({patients.length})
               </h4>
-              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Archiwum zgÄ‚Ĺ‚d i wywiadÄ‚Ĺ‚w z poprzednich wizyt</p>
+              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Archiwum zgód i wywiadów z poprzednich wizyt</p>
             </div>
             <div className="relative w-full xl:w-80 shrink-0">
               <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
               <input
                 type="text"
-                placeholder="Szukaj (ImiĂ„â„˘, Nazwisko, PESEL, Telefon)..."
+                placeholder="Szukaj (Imię, Nazwisko, PESEL, Telefon)..."
                 value={allPatientSearch}
                 onChange={e => setAllPatientSearch(e.target.value)}
                 className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
@@ -6175,7 +6175,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {patients.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-10 text-center font-bold text-sm text-slate-400">
-                      ÄąÂadowanie bazy pacjentÄ‚Ĺ‚w lub brak danych...
+                      Ładowanie bazy pacjentów lub brak danych...
                     </td>
                   </tr>
                 ) : (
@@ -6200,11 +6200,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{patient.email || 'Brak email'}</p>
                           </td>
                           <td className="p-4">
-                            <p className={`text-xs font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{patient.pesel || 'Ă˘â‚¬â€ť'}</p>
-                            <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{patient.phone || 'Ă˘â‚¬â€ť'}</p>
+                            <p className={`text-xs font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{patient.pesel || '-'}</p>
+                            <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{patient.phone || '-'}</p>
                           </td>
                           <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                            {consents.length} dokumentÄ‚Ĺ‚w
+                            {consents.length} dokumentów
                           </td>
                           <td className="p-4 text-center">
                             {hasValidInterview ? (
@@ -6227,7 +6227,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           </td>
                         </tr>
                         
-                        {/* Szufladka z peÄąâ€šnĂ„â€¦ historiĂ„â€¦ pacjenta */}
+                        {/* Szufladka z pełną historią pacjenta */}
                         {isExpanded && (
                           <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
                             <td colSpan={5} className="p-0 border-t-0">
@@ -6247,10 +6247,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                   </button>
                                 </div>
                                 
-                                {/* Prawdziwa Lista historycznych zgÄ‚Ĺ‚d pacjenta */}
+                                {/* Prawdziwa Lista historycznych zgód pacjenta */}
                                 <div className="space-y-2">
                                   {consents.length === 0 ? (
-                                    <p className="text-xs text-slate-500 font-bold">Pacjent nie ma jeszcze wgranych ÄąÄ˝adnych zgÄ‚Ĺ‚d ani wywiadÄ‚Ĺ‚w.</p>
+                                    <p className="text-xs text-slate-500 font-bold">Pacjent nie ma jeszcze wgranych żadnych zgód ani wywiadów.</p>
                                   ) : (
                                     consents.map((consent: any) => (
                                       <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
@@ -6291,14 +6291,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-     {/* KOLUMNA 2: BIBLIOTEKA SZABLONÄ‚â€śW (Centrum Dowodzenia) */}
+     {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW (Centrum Dowodzenia) */}
       <div className="xl:col-span-1 space-y-4">
         
-        {/* NAGÄąÂÄ‚â€śWEK I WYSZUKIWARKA */}
+        {/* NAGŁÓWEK I WYSZUKIWARKA */}
         <div className={`p-5 rounded-[24px] border shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center justify-between mb-4">
             <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza SzablonÄ‚Ĺ‚w
+              <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza Szablonów
             </h4>
             <span className={`px-2 py-1 text-[10px] font-black rounded-lg ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
               {consentTemplates.length} dok.
@@ -6317,12 +6317,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         
-        {/* LISTA SZABLONÄ‚â€śW */}
+        {/* LISTA SZABLONÓW */}
         <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
           {consentTemplates.length === 0 ? (
             <div className={`p-8 text-center border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-              <p className="text-xs font-bold">Brak szablonÄ‚Ĺ‚w w bazie.</p>
-              <p className="text-[10px] mt-1">UtwÄ‚Ĺ‚rz pierwszy wywiad lub zgodĂ„â„˘.</p>
+              <p className="text-xs font-bold">Brak szablonów w bazie.</p>
+              <p className="text-[10px] mt-1">Utwórz pierwszy wywiad lub zgodę.</p>
             </div>
           ) : (
             consentTemplates
@@ -6382,7 +6382,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       )}
                     </div>
                     
-                    {/* AKCJE (DRUKUJ / WYÄąĹˇLIJ) */}
+                    {/* AKCJE (DRUKUJ / WYŚLIJ) */}
                     <div className={`border-t flex ${isDarkMode ? 'border-slate-800/60 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
                       <button 
                         onClick={() => window.print()} 
@@ -6394,24 +6394,24 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <button 
                         onClick={() => setActiveTemplateSendId(isSendingMode ? null : template.id)} 
                         className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${isSendingMode ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]') : (isDarkMode ? 'text-[#e8ce7a] hover:bg-slate-800' : 'text-emerald-700 hover:bg-emerald-50')}`}
-                        title="WyÄąâ€şlij cyfrowĂ„â€¦ wersjĂ„â„˘ na urzĂ„â€¦dzenie pacjenta"
+                        title="Wyślij cyfrową wersję na urządzenie pacjenta"
                       >
-                        <Smartphone size={12}/> WyÄąâ€şlij do podpisu
+                        <Smartphone size={12}/> Wyślij do podpisu
                       </button>
                     </div>
 
-                    {/* WYSUWANY PANEL WYSYÄąÂKI DO PACJENTA */}
+                    {/* WYSUWANY PANEL WYSYŁKI DO PACJENTA */}
                     {isSendingMode && (
                       <div className={`p-4 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-950/50' : 'border-slate-200 bg-emerald-50/30'}`}>
                         <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                          Wybierz pacjenta (WyÄąâ€şlij SMS / Na portal)
+                          Wybierz pacjenta (Wyślij SMS / Na portal)
                         </label>
                         <select
                           className={`w-full border rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all mb-3 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
                           value={selectedPatientForTemplate}
                           onChange={(e) => setSelectedPatientForTemplate(e.target.value)}
                         >
-                          <option value="">-- ZnajdÄąĹź pacjenta... --</option>
+                          <option value="">-- Znajdź pacjenta... --</option>
                           {patients.map(patient => (
                             <option key={patient.id} value={patient.id}>
                               {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
@@ -6432,12 +6432,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                               if (error) throw error;
 
-                              showNotification('Dokument zostaÄąâ€š wysÄąâ€šany do Portalu Pacjenta do podpisu.', 'success');
+                              showNotification('Dokument został wysłany do Portalu Pacjenta do podpisu.', 'success');
                               setActiveTemplateSendId(null);
                               setSelectedPatientForTemplate('');
                               await loadPatientConsents();
                             } catch (err: any) {
-                              showNotification('BÄąâ€šĂ„â€¦d wysyÄąâ€ški dokumentu: ' + err.message, 'error');
+                              showNotification('Błąd wysyłki dokumentu: ' + err.message, 'error');
                             } finally {
                               setUpdating(false);
                             }
@@ -6446,7 +6446,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 disabled:opacity-60 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
                         >
                           {updating && activeTemplateSendId === template.id ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12}/>}
-                          {updating && activeTemplateSendId === template.id ? 'WysyÄąâ€šanie...' : 'WyÄąâ€şlij dokument'}
+                          {updating && activeTemplateSendId === template.id ? 'Wysyłanie...' : 'Wyślij dokument'}
                         </button>
                       </div>
                     )}
@@ -6462,7 +6462,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onClick={openNewConsentTemplateCreator}
           className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] hover:bg-[#d8bd65]' : 'bg-slate-900 text-[#e8ce7a] hover:bg-black'}`}
         >
-          <Sparkles size={16} /> Kreator ZgÄ‚Ĺ‚d AI
+          <Sparkles size={16} /> Kreator Zgód AI
         </button>
       </div>
     </div>
@@ -6497,7 +6497,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className={`rounded-2xl border flex items-center justify-center overflow-hidden bg-slate-100 ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-300'}`} style={{ minHeight: '250px' }}>
               {scanUploadForm.preview ? (
-                <img src={scanUploadForm.preview} alt="PodglĂ„â€¦d skanu" className="max-w-full max-h-[300px] object-contain" />
+                <img src={scanUploadForm.preview} alt="Podgląd skanu" className="max-w-full max-h-[300px] object-contain" />
               ) : (
                 <div className="text-center p-4 text-slate-400">
                   <FileIcon size={40} className="mx-auto mb-2 opacity-50" />
@@ -6531,12 +6531,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 if (error) throw error
 
-                showNotification('Dokument pomyÄąâ€şlnie poÄąâ€šĂ„â€¦czony z KartĂ„â€¦ Pacjenta!', 'success')
+                showNotification('Dokument pomyślnie połączony z Kartą Pacjenta!', 'success')
                 await loadPatientConsents()
                 setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
                 setIsScanUploadModalOpen(false)
               } catch (err: any) {
-                showNotification('BÄąâ€šĂ„â€¦d zapisu skanu: ' + err.message, 'error')
+                showNotification('Błąd zapisu skanu: ' + err.message, 'error')
               } finally {
                 setUpdating(false)
               }
@@ -6580,7 +6580,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  3. Plik / zdjĂ„â„˘cie dokumentu
+                  3. Plik / zdjęcie dokumentu
                 </label>
                 <input
                   type="file"
@@ -6602,7 +6602,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <ShieldCheck size={12}/> Audyt systemowy
                 </p>
                 <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
-                  Ten plik zostanie wgrany z Twoim podpisem cyfrowym jako pracownika weryfikujĂ„â€¦cego (Osoba z recepcji).
+                  Ten plik zostanie wgrany z Twoim podpisem cyfrowym jako pracownika weryfikującego (Osoba z recepcji).
                 </p>
               </div>
 
@@ -6620,7 +6620,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
 
     {/* ============================================================================ */}
-    {/* MODAL 2: KREATOR SZABLONÄ‚â€śW ZGÄ‚â€śD (Baza Managera) */}
+    {/* MODAL 2: KREATOR SZABLONÓW ZGÓD (Baza Managera) */}
     {/* ============================================================================ */}
     {isConsentTemplateModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
@@ -6632,7 +6632,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 Kreator Szablonu Dokumentu
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Dodaj nowy wzÄ‚Ĺ‚r, ktÄ‚Ĺ‚ry pacjenci bĂ„â„˘dĂ„â€¦ akceptowaĂ„â€ˇ w swoim panelu cyfrowym.
+                Dodaj nowy wzór, który pacjenci będą akceptować w swoim panelu cyfrowym.
               </p>
             </div>
             <button
@@ -6672,14 +6672,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   .eq('id', consentTemplateForm.id)
 
                 if (error) throw error
-                showNotification('Szablon dokumentu zostaÄąâ€š zaktualizowany w bazie danych.', 'success')
+                showNotification('Szablon dokumentu został zaktualizowany w bazie danych.', 'success')
               } else {
                 const { error } = await supabase
                   .from('medical_consent_templates')
                   .insert([payload])
 
                 if (error) throw error
-                showNotification('Nowy szablon dokumentu zostaÄąâ€š trwale zapisany w bazie.', 'success')
+                showNotification('Nowy szablon dokumentu został trwale zapisany w bazie.', 'success')
               }
 
               await loadConsentTemplates()
@@ -6687,8 +6687,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               setIsEditingConsentTemplate(false)
               setIsConsentTemplateModalOpen(false)
             } catch (err: any) {
-              console.error('BÄąâ€šĂ„â€¦d zapisu dokumentu:', err)
-              showNotification('Krytyczny bÄąâ€šĂ„â€¦d bazy danych: ' + (err?.message || 'Nieznany bÄąâ€šĂ„â€¦d'), 'error')
+              console.error('Błąd zapisu dokumentu:', err)
+              showNotification('Krytyczny błąd bazy danych: ' + (err?.message || 'Nieznany błąd'), 'error')
             } finally {
               setUpdating(false)
             }
@@ -6697,7 +6697,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  TytuÄąâ€š dokumentu *
+                  Tytuł dokumentu *
                 </label>
                 <input
                   required
@@ -6717,7 +6717,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={consentTemplateForm.document_type || 'consent'}
                   onChange={e => setConsentTemplateForm({ ...consentTemplateForm, document_type: e.target.value })}
                 >
-                  <option value="consent">Zgoda na zabieg (OÄąâ€şwiadczenie)</option>
+                  <option value="consent">Zgoda na zabieg (Oświadczenie)</option>
                   <option value="questionnaire">Wywiad Medyczny (Ankieta)</option>
                   <option value="rodo">Klauzula RODO / Regulamin</option>
                   <option value="info">Informacja / Zalecenia po</option>
@@ -6739,7 +6739,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  WaÄąÄ˝noÄąâ€şĂ„â€ˇ dokumentu (MiesiĂ„â€¦ce)
+                  Ważność dokumentu (Miesiące)
                 </label>
                 <input
                   type="number"
@@ -6767,12 +6767,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {
                   key: 'is_global_required',
                   title: 'Wymagane globalnie',
-                  desc: 'KaÄąÄ˝dy pacjent musi to podpisaĂ„â€ˇ (np. RODO)'
+                  desc: 'Każdy pacjent musi to podpisać (np. RODO)'
                 },
                 {
                   key: 'is_active',
                   title: 'Szablon Aktywny',
-                  desc: 'DostĂ„â„˘pny do wyboru przez recepcjĂ„â„˘ i pacjentÄ‚Ĺ‚w'
+                  desc: 'Dostępny do wyboru przez recepcję i pacjentów'
                 }
               ].map(item => {
                 const isChecked = consentTemplateForm[item.key] === true;
@@ -6815,7 +6815,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="flex flex-col gap-3 mb-3">
                 <div className="flex items-center justify-between gap-3">
                   <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    TreÄąâ€şĂ„â€ˇ Szablonu / Pytania
+                    Treść Szablonu / Pytania
                   </label>
                 </div>
                 <button
@@ -6828,15 +6828,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     relatedEntityTitle: consentTemplateForm.required_for_treatment || consentTemplateForm.title || '',
                     documentType: consentTemplateForm.document_type || 'consent',
                     mode: 'medical_document',
-                    placeholder: 'Tu pojawi siĂ„â„˘ roboczy szkic zgody, wywiadu lub zaleceÄąâ€ž do zatwierdzenia.',
+                    placeholder: 'Tu pojawi się roboczy szkic zgody, wywiadu lub zaleceń do zatwierdzenia.',
                     onApply: (text: string) => setConsentTemplateForm((prev: any) => ({ ...prev, content_template: text }))
                   })}
                   className={`w-full rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] ${isDarkMode ? 'bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
                 >
-                  <Sparkles size={16} /> UtwÄ‚Ĺ‚rz z pomocĂ„â€¦ AI
+                  <Sparkles size={16} /> Utwórz z pomocą AI
                 </button>
                 <p className={`text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                  AI przygotuje roboczy szkic dokumentu medycznego. Przed uÄąÄ˝yciem z pacjentem zatwierdÄąĹź treÄąâ€şĂ„â€ˇ medycznie i prawnie.
+                  AI przygotuje roboczy szkic dokumentu medycznego. Przed użyciem z pacjentem zatwierdź treść medycznie i prawnie.
                 </p>
               </div>
               <textarea
@@ -6844,7 +6844,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-xl px-4 py-4 text-sm font-medium outline-none resize-y transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={consentTemplateForm.content_template || ''}
                 onChange={e => setConsentTemplateForm({ ...consentTemplateForm, content_template: e.target.value })}
-                placeholder="Tutaj wpisz treÄąâ€şĂ„â€ˇ zgody (moÄąÄ˝esz uÄąÄ˝ywaĂ„â€ˇ znacznikÄ‚Ĺ‚w takich jak [IMIE_PACJENTA] czy [DATA] - system podmieni je automatycznie podczas generowania PDF)."
+                placeholder="Tutaj wpisz treść zgody (możesz używać znaczników takich jak [IMIE_PACJENTA] czy [DATA] - system podmieni je automatycznie podczas generowania PDF)."
               />
             </div>
 
@@ -6879,7 +6879,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Wizyty, zabiegi i konsultacje
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzĂ„â€¦dzaj kalendarzem wizyt, procedurami, konsultacjami i blokami pracy zespoÄąâ€šu medycznego.
+          Zarządzaj kalendarzem wizyt, procedurami, konsultacjami i blokami pracy zespołu medycznego.
         </p>
       </div>
 
@@ -6892,7 +6892,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Plus size={14} />
-          Dodaj wizytĂ„â„˘
+          Dodaj wizytę
         </button>
       )}
     </div>
@@ -6917,14 +6917,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                TytuÄąâ€š *
+                Tytuł *
               </label>
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
                 value={sessionForm.title || ''}
                 onChange={e => setSessionForm({ ...sessionForm, title: e.target.value })}
-                placeholder="np. Powitanie goÄąâ€şci"
+                placeholder="np. Powitanie gości"
               />
             </div>
 
@@ -6937,10 +6937,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 value={sessionForm.session_type || 'lecture'}
                 onChange={e => setSessionForm({ ...sessionForm, session_type: e.target.value })}
               >
-                <option value="lecture">WykÄąâ€šad</option>
+                <option value="lecture">Wykład</option>
                 <option value="workshop">Warsztat</option>
                 <option value="entertainment">Rozrywka</option>
-                <option value="meal">PosiÄąâ€šek</option>
+                <option value="meal">Posiłek</option>
                 <option value="networking">Networking</option>
                 <option value="break">Przerwa</option>
               </select>
@@ -6958,16 +6958,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
               value={sessionForm.description || ''}
               onChange={e => setSessionForm({ ...sessionForm, description: e.target.value })}
-              placeholder="ZwiĂ„â„˘zÄąâ€šy opis wydarzenia, co siĂ„â„˘ bĂ„â„˘dzie dziaÄąâ€šo..."
+              placeholder="Zwięzły opis wydarzenia, co się będzie działo..."
             />
-            {/* Przycisk AI wywoÄąâ€šujĂ„â€¦cy funkcjĂ„â„˘ podpowiedzi opisu */}
+            {/* Przycisk AI wywołujący funkcję podpowiedzi opisu */}
             <div className="mt-2">
               <AiTextAssistButton
                 eventId={id}
                 sectionKey="agenda"
                 fieldKey="description"
                 currentValue={sessionForm.description || ''}
-                placeholder="np. Skupmy siĂ„â„˘ na wartoÄąâ€şci dla uczestnika..."
+                placeholder="np. Skupmy się na wartości dla uczestnika..."
                 onApply={(text) => setSessionForm({ ...sessionForm, description: text })}
               />
             </div>
@@ -7002,7 +7002,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                ProwadzĂ„â€¦cy
+                Prowadzący
               </label>
               <input
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
@@ -7020,7 +7020,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
                 value={sessionForm.location || ''}
                 onChange={e => setSessionForm({ ...sessionForm, location: e.target.value })}
-                placeholder="np. Scena GÄąâ€šÄ‚Ĺ‚wna"
+                placeholder="np. Scena Główna"
               />
             </div>
           </div>
@@ -7028,7 +7028,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className={`p-4 md:p-5 border rounded-2xl ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest block mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                ZdjĂ„â„˘cie sesji
+                Zdjęcie sesji
               </label>
               <input
                 type="file"
@@ -7044,7 +7044,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   Publiczne
                 </p>
                 <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Czy sesja ma byĂ„â€ˇ widoczna na stronie wydarzenia?
+                  Czy sesja ma być widoczna na stronie wydarzenia?
                 </p>
               </div>
 
@@ -7065,7 +7065,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             disabled={updating}
             className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
           >
-            {updating ? 'Zapisywanie...' : 'Zapisz sesjĂ„â„˘'}
+            {updating ? 'Zapisywanie...' : 'Zapisz sesję'}
           </button>
         </form>
       </div>
@@ -7080,13 +7080,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
           {sessions.length === 0 ? (
             <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-              Harmonogram jest obecnie pusty. Dodaj pierwszĂ„â€¦ sesjĂ„â„˘.
+              Harmonogram jest obecnie pusty. Dodaj pierwszą sesję.
             </div>
           ) : sessions.map((item) => (
             <div key={item.id} className={`p-5 md:p-6 transition-colors group ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
               <div className="flex flex-col md:flex-row gap-5 md:gap-6">
 
-                {/* ZdjĂ„â„˘cie */}
+                {/* Zdjęcie */}
                 <div className={`w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
                   {item.image_url ? (
                     <img
@@ -7207,7 +7207,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               Partnerzy i prelegenci
             </h3>
             <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              ZarzĂ„â€¦dzaj goÄąâ€şĂ„â€ˇmi specjalnymi, dodawaj ich do agendy i na stronĂ„â„˘ publicznĂ„â€¦.
+              Zarządzaj gośćmi specjalnymi, dodawaj ich do agendy i na stronę publiczną.
             </p>
           </div>
         </div>
@@ -7240,22 +7240,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* LISTA PRELEGENTÄ‚â€śW, SPONSORÄ‚â€śW I PARTNERÄ‚â€śW */}
+    {/* LISTA PRELEGENTÓW, SPONSORÓW I PARTNERÓW */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           Wszystkie pozycje ({partners.length})
         </h4>
         <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          PrzeciĂ„â€¦gnij, aby zmieniĂ„â€ˇ kolejnoÄąâ€şĂ„â€ˇ
+          Przeciągnij, aby zmienić kolejność
         </span>
       </div>
 
       {partners.length === 0 ? (
         <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           <Users size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className="text-base mb-1">Brak prelegentÄ‚Ĺ‚w i sponsorÄ‚Ĺ‚w</p>
-          <p className="text-xs font-medium">Dodaj pierwszĂ„â€¦ osobĂ„â„˘, firmĂ„â„˘ lub partnera, aby pojawili siĂ„â„˘ na stronie.</p>
+          <p className="text-base mb-1">Brak prelegentów i sponsorów</p>
+          <p className="text-xs font-medium">Dodaj pierwszą osobę, firmę lub partnera, aby pojawili się na stronie.</p>
         </div>
       ) : (
         <DndContext
@@ -7308,7 +7308,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <form onSubmit={handleSavePartner} className="space-y-6">
 
-            {/* WSPÄ‚â€śLNE DLA OBU TYPÄ‚â€śW */}
+            {/* WSPÓLNE DLA OBU TYPÓW */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -7327,7 +7327,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div>
                   <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Widoczny na stronie</p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>PokaÄąÄ˝ kartĂ„â„˘ goÄąâ€şciom</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż kartę gościom</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
@@ -7347,7 +7347,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      ImiĂ„â„˘ *
+                      Imię *
                     </label>
                     <input
                       required
@@ -7375,7 +7375,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      TytuÄąâ€š / stanowisko
+                      Tytuł / stanowisko
                     </label>
                     <input
                       className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -7407,7 +7407,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={partnerForm.bio || ''}
                     onChange={e => setPartnerForm({ ...partnerForm, bio: e.target.value })}
-                    placeholder="Opisz krÄ‚Ĺ‚tko czym zajmuje siĂ„â„˘ prelegent..."
+                    placeholder="Opisz krótko czym zajmuje się prelegent..."
                   />
                   {/* Nowy Przycisk AI do szybkiego pisania Bio */}
                   <AiTextAssistButton
@@ -7452,7 +7452,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Logo z zewnĂ„â„˘trznego URL (opcjonalnie)
+                    Logo z zewnętrznego URL (opcjonalnie)
                   </label>
                   <input
                     className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -7464,10 +7464,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             )}
 
-            {/* SEKCJA ZDJĂ„ÂCIA / LOGO (WSPÄ‚â€śLNA) */}
+            {/* SEKCJA ZDJĘCIA / LOGO (WSPÓLNA) */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                {partnerForm.type === 'speaker' ? 'ZdjĂ„â„˘cie profilowe' : 'Wgraj plik z logo'}
+                {partnerForm.type === 'speaker' ? 'Zdjęcie profilowe' : 'Wgraj plik z logo'}
               </label>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -7479,7 +7479,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   }`}>
                     <img
                       src={getPreviewUrl(newFiles.partnerPhoto, partnerForm.type === 'speaker' ? partnerForm.photo_url : partnerForm.logo_url)!}
-                      alt="PodglĂ„â€¦d"
+                      alt="Podgląd"
                       className={`w-full h-full ${partnerForm.type === 'speaker' ? 'object-cover' : 'object-contain'}`}
                     />
                   </div>
@@ -7539,7 +7539,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`flex items-center justify-between pt-6 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
               <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                KolejnoÄąâ€şĂ„â€ˇ wyÄąâ€şwietlania
+                Kolejność wyświetlania
               </span>
               <input
                 type="number"
@@ -7554,7 +7554,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
             >
-              {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz zmiany' : 'Dodaj pozycjĂ„â„˘')}
+              {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz zmiany' : 'Dodaj pozycję')}
             </button>
           </form>
         </div>
@@ -7569,7 +7569,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'gadgets' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* PODSUMOWANIE WYBORÄ‚â€śW RSVP */}
+    {/* PODSUMOWANIE WYBORÓW RSVP */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-start justify-between gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
         <div className="flex items-start gap-3">
@@ -7578,10 +7578,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
           <div>
             <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Podsumowanie wyborÄ‚Ĺ‚w goÄąâ€şci
+              Podsumowanie wyborów gości
             </h3>
             <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Tutaj widzisz realne zapotrzebowanie z RSVP Ă˘â‚¬â€ť bez produkowania nadwyÄąÄ˝ki.
+              Tutaj widzisz realne zapotrzebowanie z RSVP - bez produkowania nadwyżki.
             </p>
           </div>
         </div>
@@ -7597,7 +7597,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               AI Overstock Guard
             </p>
             <p className={`text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-amber-900'}`}>
-              Lokalny alert: wykryto potencjalnĂ„â€¦ nadwyÄąÄ˝kĂ„â„˘ <strong className="font-black">{displayedEcoAnalysis.gadgetOverstockCount} szt.</strong> gadÄąÄ˝etÄ‚Ĺ‚w wzglĂ„â„˘dem aktualnych wyborÄ‚Ĺ‚w uczestnikÄ‚Ĺ‚w. AI wkrÄ‚Ĺ‚tce zasugeruje bezpieczne optymalizacje zamÄ‚Ĺ‚wieÄąâ€ž.
+              Lokalny alert: wykryto potencjalną nadwyżkę <strong className="font-black">{displayedEcoAnalysis.gadgetOverstockCount} szt.</strong> gadżetów względem aktualnych wyborów uczestników. AI wkrótce zasugeruje bezpieczne optymalizacje zamówień.
             </p>
           </div>
         </div>
@@ -7605,7 +7605,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       {gadgetSummary.length === 0 ? (
         <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Brak gadÄąÄ˝etÄ‚Ĺ‚w do podsumowania.
+          Brak gadżetów do podsumowania.
         </div>
       ) : (
         <div className={`mt-6 divide-y ${isDarkMode ? 'divide-slate-800' : 'divide-slate-100'}`}>
@@ -7618,7 +7618,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {summary.gadget.image_url ? (
                       <img
                         src={summary.gadget.image_url}
-                        alt={summary.gadget.name || 'GadÄąÄ˝et'}
+                        alt={summary.gadget.name || 'Gadżet'}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -7642,13 +7642,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                       {summary.gadget.eco_type === 'none' && (
                         <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          Bez gadÄąÄ˝etu
+                          Bez gadżetu
                         </span>
                       )}
                     </div>
 
                     <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      WybraÄąâ€šo: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{summary.totalQuantity}</strong> osÄ‚Ĺ‚b
+                      Wybrało: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{summary.totalQuantity}</strong> osób
                       {summary.maxQuantity !== null && (
                         <> / limit: <strong>{summary.maxQuantity}</strong></>
                       )}
@@ -7703,10 +7703,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                   <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-amber-900/20 border-amber-800/50' : 'bg-amber-50 border-amber-200'}`}>
                     <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-amber-500' : 'text-amber-600'}`}>
-                      ZostaÄąâ€šo
+                      Zostało
                     </p>
                     <p className={`text-xl font-black mt-1 tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>
-                      {summary.remaining !== null ? summary.remaining : 'Ă˘ÂĹľ'}
+                      {summary.remaining !== null ? summary.remaining : '∞'}
                     </p>
                   </div>
                 </div>
@@ -7716,7 +7716,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <details className="mt-5 group">
                   <summary className={`cursor-pointer text-[10px] font-black uppercase tracking-widest flex items-center gap-2 select-none transition-colors ${isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'}`}>
                     <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
-                    PokaÄąÄ˝ listĂ„â„˘ osÄ‚Ĺ‚b ({summary.choices.length})
+                    Pokaż listę osób ({summary.choices.length})
                   </summary>
 
                   <div className={`mt-3 rounded-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
@@ -7728,7 +7728,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         <span className={`font-black truncate pr-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
                           {choice.b2b_applications?.first_name} {choice.b2b_applications?.last_name}
                           {choice.selected_size && (
-                            <span className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}> Ă˘â‚¬â€ť rozm. {choice.selected_size}</span>
+                            <span className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}> - rozm. {choice.selected_size}</span>
                           )}
                         </span>
                         <span className={`font-medium truncate text-right ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
@@ -7745,15 +7745,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       )}
     </div>
 
-    {/* KATALOG GADÄąÂ»ETÄ‚â€śW */}
+    {/* KATALOG GADŻETÓW */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Gift size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Katalog gadÄąÄ˝etÄ‚Ĺ‚w
+          Katalog gadżetów
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zdefiniuj gadÄąÄ˝ety, limity, rozmiary i stany magazynowe.
+          Zdefiniuj gadżety, limity, rozmiary i stany magazynowe.
         </p>
       </div>
 
@@ -7766,18 +7766,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Plus size={14} />
-          Dodaj gadÄąÄ˝et
+          Dodaj gadżet
         </button>
       )}
     </div>
 
-    {/* FORMULARZ GADÄąÂ»ETU */}
+    {/* FORMULARZ GADŻETU */}
     {isEditingGadget ? (
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
         <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             <Edit3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
-            {gadgetForm.id ? 'Edycja gadÄąÄ˝etu' : 'Nowy gadÄąÄ˝et'}
+            {gadgetForm.id ? 'Edycja gadżetu' : 'Nowy gadżet'}
           </h4>
           <button
             onClick={() => setIsEditingGadget(false)}
@@ -7791,14 +7791,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Nazwa gadÄąÄ˝etu *
+                Nazwa gadżetu *
               </label>
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={gadgetForm.name || ''}
                 onChange={e => setGadgetForm({ ...gadgetForm, name: e.target.value })}
-                placeholder="np. Torba baweÄąâ€šniana GOTS"
+                placeholder="np. Torba bawełniana GOTS"
               />
             </div>
 
@@ -7820,23 +7820,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              KrÄ‚Ĺ‚tki opis
+              Krótki opis
             </label>
             <textarea
               rows={3}
               className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={gadgetForm.description || ''}
               onChange={e => setGadgetForm({ ...gadgetForm, description: e.target.value })}
-              placeholder="Opisz gadÄąÄ˝et dla goÄąâ€şci..."
+              placeholder="Opisz gadżet dla gości..."
             />
-            {/* Przycisk AI wywoÄąâ€šujĂ„â€¦cy funkcjĂ„â„˘ podpowiedzi opisu */}
+            {/* Przycisk AI wywołujący funkcję podpowiedzi opisu */}
             <div className="mt-2">
               <AiTextAssistButton
                 eventId={id}
                 sectionKey="gadgets"
                 fieldKey="description"
                 currentValue={gadgetForm.description || ''}
-                placeholder="KrÄ‚Ĺ‚tki angaÄąÄ˝ujĂ„â€¦cy opis gadÄąÄ˝etu..."
+                placeholder="Krótki angażujący opis gadżetu..."
                 onApply={(text) => setGadgetForm({ ...gadgetForm, description: text })}
               />
             </div>
@@ -7852,11 +7852,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 value={gadgetForm.eco_type || 'standard'}
                 onChange={e => setGadgetForm({ ...gadgetForm, eco_type: e.target.value })}
               >
-                <option value="standard">Standardowy gadÄąÄ˝et</option>
-                <option value="eco">Eco gadÄąÄ˝et</option>
+                <option value="standard">Standardowy gadżet</option>
+                <option value="eco">Eco gadżet</option>
                 <option value="tree">Posadzenie drzewa</option>
-                <option value="donation">Darowizna / cel spoÄąâ€šeczny</option>
-                <option value="none">Nie chcĂ„â„˘ gadÄąÄ˝etu</option>
+                <option value="donation">Darowizna / cel społeczny</option>
+                <option value="none">Nie chcę gadżetu</option>
               </select>
             </div>
 
@@ -7876,7 +7876,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                KolejnoÄąâ€şĂ„â€ˇ
+                Kolejność
               </label>
               <input
                 type="number"
@@ -7895,7 +7895,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={gadgetForm.public_label || ''}
               onChange={e => setGadgetForm({ ...gadgetForm, public_label: e.target.value })}
-              placeholder="np. PosadÄąĹź drzewo zamiast odbieraĂ„â€ˇ gadÄąÄ˝et"
+              placeholder="np. Posadź drzewo zamiast odbierać gadżet"
             />
           </div>
 
@@ -7908,7 +7908,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={gadgetForm.stock_note || ''}
               onChange={e => setGadgetForm({ ...gadgetForm, stock_note: e.target.value })}
-              placeholder="np. zamÄ‚Ĺ‚wiĂ„â€ˇ dopiero po zamkniĂ„â„˘ciu RSVP"
+              placeholder="np. zamówić dopiero po zamknięciu RSVP"
             />
           </div>
 
@@ -7917,7 +7917,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <Sparkles size={12}/> Wyliczane automatycznie przez AI
             </p>
             <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
-              Nie musisz znaĂ„â€ˇ Äąâ€şladu wĂ„â„˘glowego tej pozycji. AI Eco Engine oszacuje go automatycznie na podstawie danych organizacyjnych i wyborÄ‚Ĺ‚w goÄąâ€şci.
+              Nie musisz znać śladu węglowego tej pozycji. AI Eco Engine oszacuje go automatycznie na podstawie danych organizacyjnych i wyborów gości.
             </p>
           </div>
 
@@ -7950,7 +7950,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szt. na osobĂ„â„˘
+                Szt. na osobę
               </label>
               <input
                 type="number"
@@ -7963,7 +7963,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                PrÄ‚Ĺ‚g niskiego
+                Próg niskiego
               </label>
               <input
                 type="number"
@@ -7978,7 +7978,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           {gadgetForm.size_required === true && (
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                DostĂ„â„˘pne rozmiary
+                Dostępne rozmiary
               </label>
               <input
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -7992,7 +7992,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className={`p-4 md:p-5 border rounded-2xl ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest block mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                ZdjĂ„â„˘cie gadÄąÄ˝etu
+                Zdjęcie gadżetu
               </label>
               <input
                 type="file"
@@ -8019,29 +8019,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               },
               {
                 key: 'track_stock',
-                title: 'ÄąĹˇledzenie stanu',
-                desc: 'Blokuje wybÄ‚Ĺ‚r po wyczerpaniu',
+                title: 'Śledzenie stanu',
+                desc: 'Blokuje wybór po wyczerpaniu',
                 checked: gadgetForm.track_stock !== false,
                 onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, track_stock: checked })
               },
               {
                 key: 'is_required_choice',
-                title: 'WybÄ‚Ĺ‚r wymagany',
-                desc: 'GoÄąâ€şĂ„â€ˇ musi wybraĂ„â€ˇ gadÄąÄ˝et',
+                title: 'Wybór wymagany',
+                desc: 'Gość musi wybrać gadżet',
                 checked: gadgetForm.is_required_choice === true,
                 onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, is_required_choice: checked })
               },
               {
                 key: 'allow_decline',
-                title: 'MoÄąÄ˝na zrezygnowaĂ„â€ˇ',
-                desc: 'Opcja Ă˘â‚¬ĹľNie chcĂ„â„˘ gadÄąÄ˝etuĂ˘â‚¬ĹĄ',
+                title: 'Można zrezygnować',
+                desc: 'Opcja „Nie chcę gadżetu”',
                 checked: gadgetForm.allow_decline !== false,
                 onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, allow_decline: checked })
               },
               {
                 key: 'is_active',
                 title: 'Aktywny',
-                desc: 'Czy widoczny dla goÄąâ€şci?',
+                desc: 'Czy widoczny dla gości?',
                 checked: gadgetForm.is_active !== false,
                 onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, is_active: checked })
               }
@@ -8084,7 +8084,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             disabled={updating}
             className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
           >
-            {updating ? 'Zapisywanie...' : 'Zapisz gadÄąÄ˝et'}
+            {updating ? 'Zapisywanie...' : 'Zapisz gadżet'}
           </button>
         </form>
       </div>
@@ -8092,7 +8092,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {gadgets.length === 0 ? (
           <div className={`col-span-full p-12 text-center font-bold text-sm rounded-3xl border-2 border-dashed ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak gadÄąÄ˝etÄ‚Ĺ‚w w katalogu. Dodaj pierwszy produkt.
+            Brak gadżetów w katalogu. Dodaj pierwszy produkt.
           </div>
         ) : gadgets.map(gadget => {
           const reserved = getGadgetReservedQuantity(gadget.id)
@@ -8103,10 +8103,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             stockStatus === 'unlimited'
               ? 'Bez limitu'
               : stockStatus === 'sold_out'
-                ? 'NiedostĂ„â„˘pny'
+                ? 'Niedostępny'
                 : stockStatus === 'low_stock'
                   ? 'Ostatnie sztuki'
-                  : 'DostĂ„â„˘pny'
+                  : 'Dostępny'
 
           const statusClass =
             stockStatus === 'unlimited'
@@ -8142,7 +8142,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </button>
               </div>
 
-              {/* Obrazek GadÄąÄ˝etu */}
+              {/* Obrazek Gadżetu */}
               <div className={`h-52 relative overflow-hidden ${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}>
                 {gadget.image_url ? (
                   <img
@@ -8169,7 +8169,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 )}
               </div>
 
-              {/* SzczegÄ‚Ĺ‚Äąâ€šy w Kafelku */}
+              {/* Szczegóły w Kafelku */}
               <div className={`p-5 flex-1 flex flex-col justify-between border-t ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
                 <div>
                   <h5 className={`font-black text-lg pr-14 line-clamp-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -8177,7 +8177,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </h5>
 
                   <p className={`text-xs mt-1.5 font-medium line-clamp-2 min-h-[36px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {gadget.description || 'Brak opisu dla goÄąâ€şci.'}
+                    {gadget.description || 'Brak opisu dla gości.'}
                   </p>
                 </div>
 
@@ -8192,12 +8192,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{reserved} szt.</span>
                   </div>
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span className="opacity-60 block text-[8px] mb-0.5">Wydane goÄąâ€şciom</span>
+                    <span className="opacity-60 block text-[8px] mb-0.5">Wydane gościom</span>
                     <span className={`text-xs ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{redeemed}</span>
                   </div>
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span className="opacity-60 block text-[8px] mb-0.5">PozostaÄąâ€šo</span>
-                    <span className={`text-xs ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{available === Infinity ? 'Ă˘ÂĹľ' : available}</span>
+                    <span className="opacity-60 block text-[8px] mb-0.5">Pozostało</span>
+                    <span className={`text-xs ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{available === Infinity ? '∞' : available}</span>
                   </div>
                 </div>
 
@@ -8230,10 +8230,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Wallet size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          PÄąâ€šatnoÄąâ€şci i koszty procedur
+          Płatności i koszty procedur
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          PÄąâ€šatnoÄąâ€şci pacjentÄ‚Ĺ‚w, zaliczki, VAT, koszty procedur i kontrola rentownoÄąâ€şci kliniki.
+          Płatności pacjentów, zaliczki, VAT, koszty procedur i kontrola rentowności kliniki.
         </p>
       </div>
 
@@ -8243,7 +8243,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onClick={() => { setBudgetTransferForm({ currency: 'PLN' }); setIsBudgetTransferModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
-          <ArrowRightLeft size={14} /> PrzenieÄąâ€ş
+          <ArrowRightLeft size={14} /> Przenieś
         </button>
         <button
           onClick={() => { setBudgetCategoryForm({ color: '#94a3b8', planned_budget: 0 }); setIsEditingBudgetCategory(false); setIsBudgetCategoryModalOpen(true) }}
@@ -8271,12 +8271,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             AI Finance Advisor
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Finanse kliniki pod kontrolĂ„â€¦
+            Finanse kliniki pod kontrolą
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapÄąâ€šaty.
-            Gdy wprowadzisz wiĂ„â„˘cej danych (catering, druk), AI przeanalizuje wydatki i wskaÄąÄ˝e,
-            gdzie relokacja Äąâ€şrodkÄ‚Ĺ‚w da najwyÄąÄ˝szy "Green ROI" (najwiĂ„â„˘cej uratowanego COĂ˘â€šâ€š na kaÄąÄ˝dĂ„â€¦ wydanĂ„â€¦ zÄąâ€šotÄ‚Ĺ‚wkĂ„â„˘).
+            Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapłaty.
+            Gdy wprowadzisz więcej danych (catering, druk), AI przeanalizuje wydatki i wskaże,
+            gdzie relokacja środków da najwyższy "Green ROI" (najwięcej uratowanego CO2 na każdą wydaną złotówkę).
           </p>
         </div>
       </div>
@@ -8290,10 +8290,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* NOWOCZESNE KAFELKI KPI (Redesign) */}
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {[
-        { label: 'BudÄąÄ˝et planowany', value: budgetSummary.plannedBudget, icon: Wallet, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
+        { label: 'Budżet planowany', value: budgetSummary.plannedBudget, icon: Wallet, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
         { label: 'Koszty brutto', value: budgetSummary.totalExpenses, icon: TrendingDown, color: isDarkMode ? 'text-red-400' : 'text-red-600' },
-        { label: 'ZapÄąâ€šacono', value: budgetSummary.paidExpenses, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
-        { label: 'Do zapÄąâ€šaty', value: budgetSummary.unpaidExpenses, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+        { label: 'Zapłacono', value: budgetSummary.paidExpenses, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
+        { label: 'Do zapłaty', value: budgetSummary.unpaidExpenses, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
         { label: 'Przychody', value: budgetSummary.totalIncome, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
         { label: 'Wynik eventu', value: budgetSummary.eventResult, icon: Calculator, color: budgetSummary.eventResult >= 0 ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-red-400' : 'text-red-600') },
         { label: 'Koszt / uczestnik', value: budgetSummary.costPerParticipant, icon: Users, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' },
@@ -8321,7 +8321,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {budgetSummary.plannedBudget === 0 && (
       <div className={`rounded-2xl border p-4 text-xs font-black flex items-center gap-2 ${isDarkMode ? 'bg-amber-900/20 border-amber-800/50 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-        <AlertTriangle size={16}/> Ustaw budÄąÄ˝ety kategorii, aby widzieĂ„â€ˇ oszczĂ„â„˘dnoÄąâ€şci i wskaÄąĹźniki przekroczeÄąâ€ž.
+        <AlertTriangle size={16}/> Ustaw budżety kategorii, aby widzieć oszczędności i wskaźniki przekroczeń.
       </div>
     )}
 
@@ -8330,22 +8330,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
         <div>
           <h4 className={`font-black text-sm md:text-base flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <BadgeDollarSign size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Import kosztÄ‚Ĺ‚w
+            <BadgeDollarSign size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Import kosztów
           </h4>
           <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            ZaciĂ„â€¦gnij koszty z innych moduÄąâ€šÄ‚Ĺ‚w. System nie dubluje pozycji.
+            Zaciągnij koszty z innych modułów. System nie dubluje pozycji.
           </p>
         </div>
         {budgetCategories.length === 0 && (
           <button onClick={handleCreateDefaultBudgetCategories} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            UtwÄ‚Ĺ‚rz domyÄąâ€şlne kategorie
+            Utwórz domyślne kategorie
           </button>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
         {[
           { label: 'Podwykonawcy', action: handleImportContractorsToBudget },
-          { label: 'GadÄąÄ˝ety', action: handleImportGadgetsToBudget },
+          { label: 'Gadżety', action: handleImportGadgetsToBudget },
           { label: 'Checklista', action: handleImportChecklistToBudget },
         ].map(btn => (
           <button key={btn.label} onClick={btn.action} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
@@ -8353,12 +8353,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </button>
         ))}
         <button onClick={handleImportTicketsIncomeToBudget} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}>
-          Przychody z biletÄ‚Ĺ‚w
+          Przychody z biletów
         </button>
       </div>
     </div>
 
-    {/* KARTY KATEGORII BUDÄąÂ»ETOWYCH */}
+    {/* KARTY KATEGORII BUDŻETOWYCH */}
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
       {categorySummaries.map((category: any) => (
         <div key={category.id} className={`rounded-[24px] border p-5 shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -8368,7 +8368,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h5 className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{category.name}</h5>
             </div>
             <div className="flex gap-1.5 shrink-0">
-              <button onClick={() => { setBudgetTransferForm({ currency: 'PLN', from_category_id: category.id }); setIsBudgetTransferModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900'}`} title="PrzenieÄąâ€ş z tej kategorii"><ArrowRightLeft size={14}/></button>
+              <button onClick={() => { setBudgetTransferForm({ currency: 'PLN', from_category_id: category.id }); setIsBudgetTransferModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900'}`} title="Przenieś z tej kategorii"><ArrowRightLeft size={14}/></button>
               <button onClick={() => { setBudgetCategoryForm(category); setIsEditingBudgetCategory(true); setIsBudgetCategoryModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><Edit3 size={14}/></button>
             </div>
           </div>
@@ -8377,13 +8377,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Plan</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.planned_budget)}</span></div>
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Wydano</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.used_budget)}</span></div>
 
-            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>ZapÄąâ€šacono</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(category.paid_amount)}</span></div>
-            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Do zapÄąâ€šaty</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(category.unpaid_amount)}</span></div>
+            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Zapłacono</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(category.paid_amount)}</span></div>
+            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Do zapłaty</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(category.unpaid_amount)}</span></div>
           </div>
 
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
             <span className={`text-[10px] font-black uppercase tracking-wider ${category.remaining_budget < 0 ? 'text-red-500' : (isDarkMode ? 'text-emerald-400' : 'text-emerald-700')}`}>
-              {category.remaining_budget < 0 ? 'Przekroczono:' : 'ZostaÄąâ€šo:'} {formatMoney(Math.abs(category.remaining_budget))}
+              {category.remaining_budget < 0 ? 'Przekroczono:' : 'Zostało:'} {formatMoney(Math.abs(category.remaining_budget))}
             </span>
             <span className={`text-[10px] font-black ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{category.item_count} poz.</span>
           </div>
@@ -8395,11 +8395,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* TABELA POZYCJI BUDÄąÂ»ETU */}
+    {/* TABELA POZYCJI BUDŻETU */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className={`p-5 md:p-6 border-b space-y-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Filter size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Pozycje budÄąÄ˝etu
+          <Filter size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Pozycje budżetu
         </h4>
         <div className="flex flex-wrap gap-2">
           <div className="relative">
@@ -8417,7 +8417,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <option value="all">Typy</option><option value="expense">Wydatki</option><option value="income">Przychody</option>
           </select>
           <select className={`border rounded-xl px-3 py-2 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={budgetFilterPaymentStatus} onChange={e => setBudgetFilterPaymentStatus(e.target.value)}>
-            <option value="all">Statusy pÄąâ€šatnoÄąâ€şci</option>
+            <option value="all">Statusy płatności</option>
             {['planned','advance_paid','partially_paid','paid','overdue'].map(v => <option key={v} value={v}>{v}</option>)}
           </select>
         </div>
@@ -8425,7 +8425,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className={`text-[9px] uppercase tracking-wider font-black border-b ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
-            <tr>{['Pozycja','Kategoria','ÄąÄ…rÄ‚Ĺ‚dÄąâ€šo','Typ','Netto','VAT','Brutto','ZapÄąâ€šacono','Do zapÄąâ€šaty','Termin','Status','Akcje'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
+            <tr>{['Pozycja','Kategoria','Źródło','Typ','Netto','VAT','Brutto','Zapłacono','Do zapłaty','Termin','Status','Akcje'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredBudgetItems.map((item: any) => {
@@ -8443,7 +8443,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <tr key={item.id} className={`transition-colors ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
                   <td className="p-4 min-w-[220px]">
                     <p className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
-                    <p className={`text-[10px] mt-0.5 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.description || 'Ă˘â‚¬â€ť'}</p>
+                    <p className={`text-[10px] mt-0.5 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.description || '-'}</p>
                   </td>
                   <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{item.category}</td>
                   <td className={`p-4 text-[10px] font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.source_type}</td>
@@ -8453,7 +8453,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{formatMoney(item.gross_amount, item.currency)}</td>
                   <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(item.paid_amount, item.currency)}</td>
                   <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(due, item.currency)}</td>
-                  <td className={`p-4 text-[10px] font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.due_date || 'Ă˘â‚¬â€ť'}</td>
+                  <td className={`p-4 text-[10px] font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.due_date || '-'}</td>
                   <td className="p-4"><span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${badge}`}>{item.payment_status || 'planned'}</span></td>
                   <td className="p-4">
                     <div className="flex justify-end gap-1.5 min-w-[100px]">
@@ -8465,7 +8465,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </tr>
               )
             })}
-            {filteredBudgetItems.length === 0 && <tr><td colSpan={12} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak pozycji budÄąÄ˝etu.</td></tr>}
+            {filteredBudgetItems.length === 0 && <tr><td colSpan={12} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak pozycji budżetu.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -8473,7 +8473,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ostatnie pÄąâ€šatnoÄąâ€şci</h4>
+        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ostatnie płatności</h4>
         <div className="space-y-3">
           {budgetPayments.slice(0,8).map((p: any) => {
             const item = budgetItems.find((i: any) => i.id === p.budget_item_id);
@@ -8485,17 +8485,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
                 <div className="text-right shrink-0">
                   <span className={`block font-black text-sm tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{formatMoney(p.amount, p.currency)}</span>
-                  <span className={`text-[9px] uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{p.payment_method || 'Ă˘â‚¬â€ť'}</span>
+                  <span className={`text-[9px] uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{p.payment_method || '-'}</span>
                 </div>
               </div>
             )
           })}
-          {budgetPayments.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak zarejestrowanych pÄąâ€šatnoÄąâ€şci.</p>}
+          {budgetPayments.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak zarejestrowanych płatności.</p>}
         </div>
       </div>
 
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>PrzesuniĂ„â„˘cia Äąâ€şrodkÄ‚Ĺ‚w</h4>
+        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Przesunięcia środków</h4>
         <div className="space-y-3">
           {budgetTransfers.slice(0,8).map((t: any) => {
             const from = budgetCategories.find((c: any) => c.id === t.from_category_id);
@@ -8504,9 +8504,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div key={t.id} className={`flex items-center justify-between gap-3 border-b pb-3 text-xs ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                 <div className="min-w-0">
                   <span className={`font-black flex items-center gap-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    <span className="truncate max-w-[100px] sm:max-w-none">{from?.name || 'Ă˘â‚¬â€ť'}</span>
+                    <span className="truncate max-w-[100px] sm:max-w-none">{from?.name || '-'}</span>
                     <ArrowRightLeft size={10} className="shrink-0 mx-1 opacity-50" />
-                    <span className="truncate max-w-[100px] sm:max-w-none">{to?.name || 'Ă˘â‚¬â€ť'}</span>
+                    <span className="truncate max-w-[100px] sm:max-w-none">{to?.name || '-'}</span>
                   </span>
                   <span className={`text-[10px] mt-1 block truncate ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{t.reason || 'Brak powoda'}</span>
                 </div>
@@ -8514,21 +8514,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             )
           })}
-          {budgetTransfers.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak przesuniĂ„â„˘Ă„â€ˇ budÄąÄ˝etowych.</p>}
+          {budgetTransfers.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak przesunięć budżetowych.</p>}
         </div>
       </div>
     </div>
   </div>
 )}
 
-{/* MODAL POZYCJI BUDÄąÂ»ETU */}
+{/* MODAL POZYCJI BUDŻETU */}
 {activeTab === 'finanse' && isBudgetItemModalOpen && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
     <div className={`rounded-[32px] max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           {isEditingBudgetItem ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-          {isEditingBudgetItem ? 'Edytuj pozycjĂ„â„˘ budÄąÄ˝etu' : 'Dodaj pozycjĂ„â„˘ budÄąÄ˝etu'}
+          {isEditingBudgetItem ? 'Edytuj pozycję budżetu' : 'Dodaj pozycję budżetu'}
         </h3>
         <button onClick={() => setIsBudgetItemModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8540,7 +8540,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.type || 'expense'} onChange={e => setBudgetItemForm({ ...budgetItemForm, type: e.target.value })}>
               <option value="expense">Wydatek</option>
-              <option value="income">PrzychÄ‚Ĺ‚d</option>
+              <option value="income">Przychód</option>
             </select>
           </div>
           <div>
@@ -8551,7 +8551,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </select>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ÄąÄ…rÄ‚Ĺ‚dÄąâ€šo</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Źródło</label>
             <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. manual" value={budgetItemForm.source_type || 'manual'} onChange={e => setBudgetItemForm({ ...budgetItemForm, source_type: e.target.value })}/>
           </div>
           <div>
@@ -8561,12 +8561,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuÄąâ€š *</label>
-          <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="KrÄ‚Ĺ‚tka nazwa" value={budgetItemForm.title || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, title: e.target.value })}/>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł *</label>
+          <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Krótka nazwa" value={budgetItemForm.title || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, title: e.target.value })}/>
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis szczegÄ‚Ĺ‚Äąâ€šowy</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis szczegółowy</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Notatki" value={budgetItemForm.description || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, description: e.target.value })}/>
         </div>
 
@@ -8599,7 +8599,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>JuÄąÄ˝ zapÄąâ€šacono</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Już zapłacono</label>
             <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-blue-400 focus:border-blue-500 placeholder-slate-600' : 'bg-blue-50 border-blue-200 text-blue-800 focus:border-blue-500 placeholder-blue-300'}`} placeholder="0" value={budgetItemForm.paid_amount || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, paid_amount: Number(e.target.value || 0) })}/>
           </div>
           <div>
@@ -8611,16 +8611,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.advance_paid_at || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, advance_paid_at: e.target.value })}/>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin pÄąâ€šatnoÄąâ€şci</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin płatności</label>
             <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.due_date || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, due_date: e.target.value })}/>
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.payment_status || 'planned'} onChange={e => setBudgetItemForm({ ...budgetItemForm, payment_status: e.target.value })}>
               <option value="planned">Planowane</option>
-              <option value="advance_paid">Zaliczka opÄąâ€šacona</option>
-              <option value="partially_paid">CzĂ„â„˘Äąâ€şciowo opÄąâ€šacone</option>
-              <option value="paid">OpÄąâ€šacone caÄąâ€šoÄąâ€şĂ„â€ˇ</option>
+              <option value="advance_paid">Zaliczka opłacona</option>
+              <option value="partially_paid">Częściowo opłacone</option>
+              <option value="paid">Opłacone całość</option>
               <option value="overdue">Po terminie</option>
             </select>
           </div>
@@ -8628,9 +8628,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>WiĂ„â€¦zanie z dostawcĂ„â€¦</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wiązanie z dostawcą</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.contractor_id || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, contractor_id: e.target.value || null })}>
-              <option value="">Wybierz PodwykonawcĂ„â„˘ (opcja)</option>
+              <option value="">Wybierz Podwykonawcę (opcja)</option>
               {contractors.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
@@ -8645,7 +8645,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnĂ„â„˘trzne</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnętrzne</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Dodatkowe informacje..." value={budgetItemForm.notes || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, notes: e.target.value })}/>
         </div>
 
@@ -8666,7 +8666,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </label>
 
         <button type="submit" disabled={updating} className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          {updating ? 'Zapisywanie...' : 'Zapisz PozycjĂ„â„˘ BudÄąÄ˝etu'}
+          {updating ? 'Zapisywanie...' : 'Zapisz Pozycję Budżetu'}
         </button>
       </form>
     </div>
@@ -8680,7 +8680,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          {isEditingBudgetCategory ? 'Edytuj KategoriĂ„â„˘' : 'Dodaj KategoriĂ„â„˘'}
+          {isEditingBudgetCategory ? 'Edytuj Kategorię' : 'Dodaj Kategorię'}
         </h3>
         <button onClick={() => setIsBudgetCategoryModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8697,11 +8697,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>BudÄąÄ˝et Planowany</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Budżet Planowany</label>
             <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="0" value={budgetCategoryForm.planned_budget || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, planned_budget: Number(e.target.value || 0) })}/>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KolejnoÄąâ€şĂ„â€ˇ / Sortowanie</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kolejność / Sortowanie</label>
             <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="0" value={budgetCategoryForm.sort_order || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, sort_order: Number(e.target.value || 0) })}/>
           </div>
         </div>
@@ -8715,17 +8715,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki (widoczne dla zespoÄąâ€šu)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki (widoczne dla zespołu)</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Informacje..." value={budgetCategoryForm.notes || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, notes: e.target.value })}/>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button type="submit" disabled={updating} className={`flex-1 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-            Zapisz KategoriĂ„â„˘
+            Zapisz Kategorię
           </button>
           {isEditingBudgetCategory && (
             <button type="button" onClick={() => handleDeleteBudgetCategory(budgetCategoryForm.id)} className={`px-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}>
-              UsuÄąâ€ž
+              Usuń
             </button>
           )}
         </div>
@@ -8734,17 +8734,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-{/* MODAL PÄąÂATNOÄąĹˇCI */}
+{/* MODAL PŁATNOŚCI */}
 {activeTab === 'finanse' && isBudgetPaymentModalOpen && selectedBudgetItem && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
     <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-start mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <div>
           <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <CreditCard size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Dodaj PÄąâ€šatnoÄąâ€şĂ„â€ˇ
+            <CreditCard size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Dodaj Płatność
           </h3>
           <p className={`text-xs font-bold mt-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Do zapÄąâ€šaty: <span className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{formatMoney(Math.max(Number(selectedBudgetItem.gross_amount || 0) - Number(selectedBudgetItem.paid_amount || 0), 0), selectedBudgetItem.currency)}</span> w ramach "{selectedBudgetItem.title}"
+            Do zapłaty: <span className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{formatMoney(Math.max(Number(selectedBudgetItem.gross_amount || 0) - Number(selectedBudgetItem.paid_amount || 0), 0), selectedBudgetItem.currency)}</span> w ramach "{selectedBudgetItem.title}"
           </p>
         </div>
         <button onClick={() => setIsBudgetPaymentModalOpen(false)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -8763,13 +8763,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data PÄąâ€šatnoÄąâ€şci</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data Płatności</label>
           <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetPaymentForm.paid_at || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, paid_at: e.target.value })}/>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Metoda PÄąâ€šatnoÄąâ€şci</label>
-            <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. Przelew, Karta, GotÄ‚Ĺ‚wka" value={budgetPaymentForm.payment_method || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, payment_method: e.target.value })}/>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Metoda Płatności</label>
+            <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. Przelew, Karta, Gotówka" value={budgetPaymentForm.payment_method || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, payment_method: e.target.value })}/>
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Identyfikator (Referencja)</label>
@@ -8778,10 +8778,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodatkowe Notatki</label>
-          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Uwagi dla ksiĂ„â„˘gowoÄąâ€şci..." value={budgetPaymentForm.notes || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, notes: e.target.value })}/>
+          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Uwagi dla księgowości..." value={budgetPaymentForm.notes || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, notes: e.target.value })}/>
         </div>
         <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          ZatwierdÄąĹź PÄąâ€šatnoÄąâ€şĂ„â€ˇ
+          Zatwierdź Płatność
         </button>
       </form>
     </div>
@@ -8794,7 +8794,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <ArrowRightLeft size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> PrzenieÄąâ€ş ÄąĹˇrodki
+          <ArrowRightLeft size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Przenieś Środki
         </h3>
         <button onClick={() => setIsBudgetTransferModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8828,11 +8828,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>PowÄ‚Ĺ‚d / Cel relokacji</label>
-          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. AI Eco-Budget zasugerowaÄąâ€šo inwestycjĂ„â„˘ w roÄąâ€şlinny catering..." value={budgetTransferForm.reason || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, reason: e.target.value })}/>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Powód / Cel relokacji</label>
+          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. AI Eco-Budget zasugerowało inwestycję w roślinny catering..." value={budgetTransferForm.reason || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, reason: e.target.value })}/>
         </div>
         <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          ZatwierdÄąĹź RelokacjĂ„â„˘
+          Zatwierdź Relokację
         </button>
       </form>
     </div>
@@ -8846,15 +8846,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'dostawcy' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGÄąÂÄ‚â€śWEK SEKCJI */}
+    {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Briefcase size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/>
-          Baza PodwykonawcÄ‚Ĺ‚w
+          Baza Podwykonawców
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzĂ„â€¦dzaj firmami, umowami, przypisuj ich do moduÄąâ€šÄ‚Ĺ‚w (transport, prelegenci) i wliczaj do budÄąÄ˝etu.
+          Zarządzaj firmami, umowami, przypisuj ich do modułów (transport, prelegenci) i wliczaj do budżetu.
         </p>
       </div>
 
@@ -8868,7 +8868,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Dodaj wykonawcĂ„â„˘
+          <Plus size={14} /> Dodaj wykonawcę
         </button>
       </div>
     </div>
@@ -8889,16 +8889,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{contractors.length}</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">W budÄąÄ˝ecie (Brutto)</p><BadgeDollarSign size={16} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{totalGross.toLocaleString('pl-PL')} zÄąâ€š</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">W budżecie (Brutto)</p><BadgeDollarSign size={16} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{totalGross.toLocaleString('pl-PL')} zł</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">ZapÄąâ€šacono</p><CheckCircle2 size={16} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{paid.toLocaleString('pl-PL')} zÄąâ€š</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Zapłacono</p><CheckCircle2 size={16} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{paid.toLocaleString('pl-PL')} zł</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">PozostaÄąâ€šo do spÄąâ€šaty</p><Clock size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{unpaid.toLocaleString('pl-PL')} zÄąâ€š</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Pozostało do spłaty</p><Clock size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{unpaid.toLocaleString('pl-PL')} zł</p>
           </div>
         </div>
       )
@@ -8907,7 +8907,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* LISTA Z WYSZUKIWANIEM I DETALAMI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
 
-      {/* Pasek narzĂ„â„˘dziowy / Filtry */}
+      {/* Pasek narzędziowy / Filtry */}
       <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row justify-between xl:items-center gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
         <div className="flex flex-wrap gap-2">
           <button
@@ -8968,14 +8968,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredContractors.length === 0 ? (
-              <tr><td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wynikÄ‚Ĺ‚w do wyÄąâ€şwietlenia.</td></tr>
+              <tr><td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wyników do wyświetlenia.</td></tr>
             ) : (
               filteredContractors.map(contractor => {
                 const isExpanded = expandedContractorId === contractor.id;
 
                 return (
                   <React.Fragment key={contractor.id}>
-                    {/* Wiersz z podsumowaniem (Klikalny by rozwinĂ„â€¦Ă„â€ˇ szczegÄ‚Ĺ‚Äąâ€šy) */}
+                    {/* Wiersz z podsumowaniem (Klikalny by rozwinąć szczegóły) */}
                     <tr
                       className={`transition-colors cursor-pointer group ${
                         isExpanded
@@ -8986,7 +8986,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     >
                       <td className="p-4 pl-6 min-w-[200px]">
                         <p className={`font-black text-sm truncate max-w-xs md:max-w-md ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{contractor.name}</p>
-                        <p className={`text-[10px] font-mono mt-0.5 truncate ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>NIP: {contractor.tax_id || 'Ă˘â‚¬â€ť'}</p>
+                        <p className={`text-[10px] font-mono mt-0.5 truncate ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>NIP: {contractor.tax_id || '-'}</p>
                       </td>
                       <td className="p-4 min-w-[120px]">
                         <p className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
@@ -8994,11 +8994,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             ? `${Number(contractor.gross_amount).toLocaleString('pl-PL')} ${contractor.currency || 'PLN'}`
                             : contractor.amount
                               ? `${Number(contractor.amount).toLocaleString('pl-PL')} ${contractor.currency || 'PLN'}`
-                              : 'Ă˘â‚¬â€ť'}
+                              : '-'}
                         </p>
                         {contractor.include_in_budget === false && (
                           <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mt-1 inline-block ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                            Poza budÄąÄ˝etem
+                            Poza budżetem
                           </span>
                         )}
                       </td>
@@ -9007,8 +9007,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-white text-slate-800 border-slate-200 shadow-sm'}`}>
                             {contractor.operational_status || contractor.status || 'NOWY'}
                           </span>
-                          {contractor.payment_status === 'paid' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-700'}`}>OpÄąâ€šacone</span>}
-                          {contractor.payment_status === 'overdue' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700'}`}>ZalegÄąâ€še</span>}
+                          {contractor.payment_status === 'paid' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-700'}`}>Opłacone</span>}
+                          {contractor.payment_status === 'overdue' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700'}`}>Zaległe</span>}
                           {contractor.contract_status === 'signed' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>Umowa OK</span>}
                         </div>
                       </td>
@@ -9024,7 +9024,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <td className="p-4 pr-6 text-right">
                         <div className="flex justify-end gap-1">
                           <button
-                            title={isExpanded ? 'ZwiÄąâ€ž szczegÄ‚Ĺ‚Äąâ€šy' : 'PokaÄąÄ˝ szczegÄ‚Ĺ‚Äąâ€šy'}
+                            title={isExpanded ? 'Zwiń szczegóły' : 'Pokaż szczegóły'}
                             className={`p-2 rounded-lg transition-all ${isExpanded ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-900') : (isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700')}`}
                           >
                             <ChevronDown size={18} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -9033,7 +9033,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </td>
                     </tr>
 
-                    {/* SZUFLADKA ZE SZCZEGÄ‚â€śÄąÂAMI (Quick View) */}
+                    {/* SZUFLADKA ZE SZCZEGÓŁAMI (Quick View) */}
                     {isExpanded && (
                       <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
                         <td colSpan={5} className="p-0 border-t-0">
@@ -9046,23 +9046,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                 <div className={`grid grid-cols-2 gap-3 p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                                   <div>
                                     <span className={`block text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Kontakt</span>
-                                    <p className={`text-xs font-bold mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{contractor.contact_person || 'Ă˘â‚¬â€ť'}</p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{contractor.phone || 'Ă˘â‚¬â€ť'}</p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{contractor.email || 'Ă˘â‚¬â€ť'}</p>
+                                    <p className={`text-xs font-bold mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{contractor.contact_person || '-'}</p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{contractor.phone || '-'}</p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{contractor.email || '-'}</p>
                                   </div>
                                   <div>
                                     <span className={`block text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Firma</span>
-                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>REGON: {contractor.regon || 'Ă˘â‚¬â€ť'}</p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>KRS: {contractor.krs || 'Ă˘â‚¬â€ť'}</p>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>REGON: {contractor.regon || '-'}</p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>KRS: {contractor.krs || '-'}</p>
                                     <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                      Adres: {contractor.address || 'Ă˘â‚¬â€ť'}
+                                      Adres: {contractor.address || '-'}
                                     </p>
                                   </div>
                                 </div>
 
                                 {contractor.service_scope && (
                                   <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zakres usÄąâ€šugi</span>
+                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zakres usługi</span>
                                     <p className={`text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{contractor.service_scope}</p>
                                   </div>
                                 )}
@@ -9070,19 +9070,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                               {/* Kolumna 2: Finanse, Dokumenty i Akcje */}
                               <div className="flex-1 space-y-4">
-                                <h4 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Finanse & PowiĂ„â€¦zania</h4>
+                                <h4 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Finanse & Powiązania</h4>
                                 <div className={`grid grid-cols-2 gap-3 p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                                   <div>
                                     <span className={`block text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Koszty</span>
-                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Netto: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.net_amount ? `${Number(contractor.net_amount).toLocaleString('pl-PL')} zÄąâ€š` : 'Ă˘â‚¬â€ť'}</strong></p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zaliczka: <strong className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{contractor.advance_amount ? `${Number(contractor.advance_amount).toLocaleString('pl-PL')} zÄąâ€š` : '0 zÄąâ€š'}</strong></p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.budget_category || 'Ă˘â‚¬â€ť'}</strong></p>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Netto: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.net_amount ? `${Number(contractor.net_amount).toLocaleString('pl-PL')} zł` : '-'}</strong></p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zaliczka: <strong className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{contractor.advance_amount ? `${Number(contractor.advance_amount).toLocaleString('pl-PL')} zł` : '0 zł'}</strong></p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.budget_category || '-'}</strong></p>
                                   </div>
                                   <div>
-                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>PowiĂ„â€¦zania</span>
-                                    {contractor.fleet_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Ä‘ĹşĹˇâ€” ModuÄąâ€š Floty</span>}
-                                    {contractor.speaker_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Ä‘ĹşĹ˝Â¤ Prelegent</span>}
-                                    {contractor.partner_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Ä‘ĹşÂ¤ĹĄ Sponsor/Partner</span>}
+                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Powiązania</span>
+                                    {contractor.fleet_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Moduł Floty</span>}
+                                    {contractor.speaker_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Prelegent</span>}
+                                    {contractor.partner_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Sponsor/Partner</span>}
                                     {!contractor.fleet_id && !contractor.speaker_id && !contractor.partner_id && <p className={`text-xs italic ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Brak</p>}
                                   </div>
                                 </div>
@@ -9109,7 +9109,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                             {contractor.notes && (
                               <div className={`mt-4 p-4 rounded-2xl border ${isDarkMode ? 'bg-amber-900/10 border-amber-900/30' : 'bg-amber-50/50 border-amber-200/50'}`}>
-                                <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-amber-500' : 'text-amber-700'}`}>Notatka WewnĂ„â„˘trzna</span>
+                                <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-amber-500' : 'text-amber-700'}`}>Notatka Wewnętrzna</span>
                                 <p className={`text-xs font-medium ${isDarkMode ? 'text-amber-400/80' : 'text-amber-900/80'}`}>{contractor.notes}</p>
                               </div>
                             )}
@@ -9119,13 +9119,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                 onClick={() => { setContractorForm(contractor); setIsEditingContractor(true); setIsContractorModalOpen(true); }}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-blue-400 border border-slate-700' : 'bg-white text-blue-700 border border-slate-200'}`}
                               >
-                                <Edit3 size={14} /> Edytuj peÄąâ€šne dane
+                                <Edit3 size={14} /> Edytuj pełne dane
                               </button>
                               <button
                                 onClick={() => handleDeleteContractor(contractor.id)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-red-900/20 text-red-400 border border-red-900/30' : 'bg-red-50 text-red-600 border border-red-100'}`}
                               >
-                                <Trash2 size={14} /> UsuÄąâ€ž
+                                <Trash2 size={14} /> Usuń
                               </button>
                             </div>
                           </div>
@@ -9141,14 +9141,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* MODAL EDYCJI / DODAWANIA - PEÄąÂNY DARK MODE */}
+    {/* MODAL EDYCJI / DODAWANIA - PEŁNY DARK MODE */}
     {isContractorModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {isEditingContractor ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-              {isEditingContractor ? 'Edytuj podwykonawcĂ„â„˘' : 'Dodaj podwykonawcĂ„â„˘'}
+              {isEditingContractor ? 'Edytuj podwykonawcę' : 'Dodaj podwykonawcę'}
             </h3>
             <button onClick={() => setIsContractorModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
               <X size={20} />
@@ -9162,7 +9162,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Dane Firmowe</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa firmy / imiĂ„â„˘ i nazwisko *</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa firmy / imię i nazwisko *</label>
                   <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.name || ''} onChange={e => setContractorForm({...contractorForm, name: e.target.value})} />
                 </div>
                 <div>
@@ -9209,13 +9209,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            {/* Zakres UsÄąâ€šugi */}
+            {/* Zakres Usługi */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Zakres usÄąâ€šugi i BudÄąÄ˝et</h4>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Zakres usługi i Budżet</h4>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usÄąâ€šugodawcy</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usługodawcy</label>
                   <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_type || ''} onChange={e => setContractorForm({...contractorForm, service_type: e.target.value, budget_category: contractorForm.budget_category || e.target.value})}>
                     <option value="">Wybierz...</option>
                     <option value="catering">Catering</option>
@@ -9229,13 +9229,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <option value="printing">Drukarnia</option>
                     <option value="venue_hotel">Hotel / obiekt</option>
                     <option value="marketing">Marketing</option>
-                    <option value="cleaning">SprzĂ„â€¦tanie</option>
+                    <option value="cleaning">Sprzątanie</option>
                     <option value="insurance">Ubezpieczenie</option>
                     <option value="other">Inne</option>
                   </select>
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria budÄąÄ˝etowa</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria budżetowa</label>
                   <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.budget_category || ''} onChange={e => setContractorForm({...contractorForm, budget_category: e.target.value})} placeholder="np. transport, scena, catering" />
                 </div>
 
@@ -9246,7 +9246,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }`}>
                   <div>
                     <p className={`font-black text-sm ${contractorForm.include_in_budget !== false ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      Wliczaj do budÄąÄ˝etu
+                      Wliczaj do budżetu
                     </p>
                   </div>
                   <input type="checkbox" checked={contractorForm.include_in_budget !== false} onChange={e => setContractorForm({...contractorForm, include_in_budget: e.target.checked})} className="sr-only"/>
@@ -9257,13 +9257,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
 
               <div className="mt-5">
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DokÄąâ€šadny opis usÄąâ€šugi (Zakres)</label>
-                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_scope || ''} onChange={e => setContractorForm({...contractorForm, service_scope: e.target.value})} placeholder="Co dokÄąâ€šadnie dostarcza/realizuje ten podwykonawca..." />
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dokładny opis usługi (Zakres)</label>
+                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_scope || ''} onChange={e => setContractorForm({...contractorForm, service_scope: e.target.value})} placeholder="Co dokładnie dostarcza/realizuje ten podwykonawca..." />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-200 dark:border-slate-700/50">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota ogÄ‚Ĺ‚lna (wynagrodzenie)</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota ogólna (wynagrodzenie)</label>
                   <div className="flex gap-2">
                     <input type="number" step="0.01" className={`flex-1 border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.amount || ''} onChange={e => setContractorForm({...contractorForm, amount: parseFloat(e.target.value)})} />
                     <select className={`w-28 border rounded-xl px-3 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={contractorForm.currency || 'PLN'} onChange={e => setContractorForm({...contractorForm, currency: e.target.value})}>
@@ -9279,7 +9279,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
               </div>
 
-              {/* Pola budÄąÄ˝etowe ukryte w module "Finanse & Umowy" */}
+              {/* Pola budżetowe ukryte w module "Finanse & Umowy" */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota Netto</label>
@@ -9301,25 +9301,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-amber-400 focus:border-amber-500' : 'bg-amber-50 border-amber-200 text-amber-800 focus:border-amber-500'}`} value={contractorForm.advance_amount || ''} onChange={e => setContractorForm({...contractorForm, advance_amount: Number(e.target.value || 0)})} />
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin pÄąâ€šatnoÄąâ€şci</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin płatności</label>
                   <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.payment_due_date || ''} onChange={e => setContractorForm({...contractorForm, payment_due_date: e.target.value})} />
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status pÄąâ€šatnoÄąâ€şci</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status płatności</label>
                   <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.payment_status || 'unpaid'} onChange={e => setContractorForm({...contractorForm, payment_status: e.target.value})}>
-                    <option value="unpaid">NieopÄąâ€šacone</option>
-                    <option value="advance_paid">Zaliczka zapÄąâ€šacona</option>
-                    <option value="paid">OpÄąâ€šacone w caÄąâ€šoÄąâ€şci</option>
+                    <option value="unpaid">Nieopłacone</option>
+                    <option value="advance_paid">Zaliczka zapłacona</option>
+                    <option value="paid">Opłacone w całości</option>
                     <option value="overdue">Po terminie</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* PowiĂ„â€¦zania, Umowy, Pliki */}
+            {/* Powiązania, Umowy, Pliki */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
-                <Link size={16} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}/> Tagi, PowiĂ„â€¦zania i Pliki
+                <Link size={16} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}/> Tagi, Powiązania i Pliki
               </h4>
 
               <div className="mb-5">
@@ -9362,14 +9362,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Przypisany pojazd</label>
                   <select className={`w-full border rounded-xl px-3 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.fleet_id || ''} onChange={e => setContractorForm({...contractorForm, fleet_id: e.target.value || null})}>
-                    <option value="">Ă˘â‚¬â€ť brak Ă˘â‚¬â€ť</option>
+                    <option value="">- brak -</option>
                     {fleet.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Przypisany prelegent</label>
                   <select className={`w-full border rounded-xl px-3 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.speaker_id || ''} onChange={e => setContractorForm({...contractorForm, speaker_id: e.target.value || null})}>
-                    <option value="">Ă˘â‚¬â€ť brak Ă˘â‚¬â€ť</option>
+                    <option value="">- brak -</option>
                     {partners.filter(p => p.type === 'speaker').map(s => (
                       <option key={s.id} value={s.id}>{s.first_name} {s.last_name}</option>
                     ))}
@@ -9378,7 +9378,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Przypisany sponsor</label>
                   <select className={`w-full border rounded-xl px-3 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.partner_id || ''} onChange={e => setContractorForm({...contractorForm, partner_id: e.target.value || null})}>
-                    <option value="">Ă˘â‚¬â€ť brak Ă˘â‚¬â€ť</option>
+                    <option value="">- brak -</option>
                     {partners.filter(p => p.type === 'sponsor').map(p => (
                       <option key={p.id} value={p.id}>{p.sponsor_name}</option>
                     ))}
@@ -9391,8 +9391,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status operacyjny</label>
                   <select className={`w-full border rounded-xl px-4 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.operational_status || contractorForm.status || 'new_contact'} onChange={e => setContractorForm({...contractorForm, operational_status: e.target.value, status: e.target.value})}>
                     <option value="new_contact">Nowy kontakt</option>
-                    <option value="inquiry_sent">Zapytanie wysÄąâ€šane</option>
-                    <option value="waiting_quote">Oczekuje na wycenĂ„â„˘</option>
+                    <option value="inquiry_sent">Zapytanie wysłane</option>
+                    <option value="waiting_quote">Oczekuje na wycenę</option>
                     <option value="quote_received">Wycena otrzymana</option>
                     <option value="negotiation">Negocjacje</option>
                     <option value="accepted">Zaakceptowany</option>
@@ -9407,7 +9407,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <select className={`w-full border rounded-xl px-4 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.contract_status || 'none'} onChange={e => setContractorForm({...contractorForm, contract_status: e.target.value})}>
                     <option value="none">Brak umowy</option>
                     <option value="draft">Projekt umowy</option>
-                    <option value="sent">WysÄąâ€šana do podpisu</option>
+                    <option value="sent">Wysłana do podpisu</option>
                     <option value="signed">Podpisana</option>
                     <option value="cancelled">Anulowana</option>
                   </select>
@@ -9447,7 +9447,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   )}
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnĂ„â„˘trzne</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnętrzne</label>
                   <textarea rows={3} className={`w-full border rounded-xl px-4 py-2.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.notes || ''} onChange={e => setContractorForm({...contractorForm, notes: e.target.value})} placeholder="Uwagi i ustalenia..." />
                 </div>
               </div>
@@ -9458,7 +9458,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
             >
-              {updating ? 'Zapisywanie...' : (isEditingContractor ? 'Zapisz zmiany w profilu' : 'Dodaj podwykonawcĂ„â„˘')}
+              {updating ? 'Zapisywanie...' : (isEditingContractor ? 'Zapisz zmiany w profilu' : 'Dodaj podwykonawcę')}
             </button>
           </form>
         </div>
@@ -9483,7 +9483,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Zadania recepcji i opiekuna pacjenta
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          TwÄ‚Ĺ‚rz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
+          Twórz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
         </p>
       </div>
 
@@ -9520,12 +9520,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Asystent Organizacyjny
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Stan zadaÄąâ€ž operacyjnych
+            Stan zadań operacyjnych
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadaÄąâ€ž otwartych</strong>.
+            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadań otwartych</strong>.
             W tym <strong className={isDarkMode ? 'text-rose-400' : 'text-rose-600'}>{checklistItems.filter((item: any) => String(item.priority || '').toLowerCase() === 'high' && !item.is_done).length}</strong> oznaczonych jako pilne (priorytet wysoki).
-            System AI z czasem pomoÄąÄ˝e generowaĂ„â€ˇ powtarzalne listy np. dla dostawcÄ‚Ĺ‚w.
+            System AI z czasem pomoże generować powtarzalne listy np. dla dostawców.
           </p>
         </div>
       </div>
@@ -9559,7 +9559,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
               <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Progres ZadaÄąâ€ž</p>
+                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Progres Zadań</p>
                 <CheckCircle2 size={14} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
               </div>
               <p className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{percent}%</p>
@@ -9574,7 +9574,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <Wallet size={14} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} />
               </div>
               <p className={`mt-3 text-xl md:text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                {estimatedCost.toLocaleString('pl-PL')} <span className="text-sm">zÄąâ€š</span>
+                {estimatedCost.toLocaleString('pl-PL')} <span className="text-sm">zł</span>
               </p>
             </div>
           </>
@@ -9588,7 +9588,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <ClipboardList size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
         <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Brak list operacyjnych</p>
         <p className={`text-sm mt-2 font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Dodaj pierwszĂ„â€¦ listĂ„â„˘, np. Ă˘â‚¬ĹľZakupy przed eventemĂ˘â‚¬ĹĄ lub Ă˘â‚¬ĹľLista rzeczy do spakowaniaĂ˘â‚¬ĹĄ.
+          Dodaj pierwszą listę, np. „Zakupy przed eventem” lub „Lista rzeczy do spakowania”.
         </p>
       </div>
     ) : (
@@ -9603,7 +9603,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               key={group.id}
               className={`rounded-[24px] md:rounded-[28px] border shadow-sm overflow-hidden transition-all duration-300 ${isDarkMode ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-slate-300'}`}
             >
-              {/* NAGÄąÂÄ‚â€śWEK KAFELKA */}
+              {/* NAGŁÓWEK KAFELKA */}
               <div
                 className={`p-5 cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-900/80 border-b border-slate-800' : 'hover:bg-slate-50 border-b border-slate-100'}`}
                 onClick={() => toggleChecklistGroupOpen(group)}
@@ -9624,7 +9624,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         </h4>
 
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          {items.length} zadaÄąâ€ž
+                          {items.length} zadań
                         </span>
 
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${percent === 100 ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
@@ -9704,12 +9704,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
               </div>
 
-              {/* ROZWIJANA ZAWARTOÄąĹˇĂ„â€  LISTY */}
+              {/* ROZWIJANA ZAWARTOŚĆ LISTY */}
               {group.is_open && (
                 <div className={`p-4 md:p-5 ${isDarkMode ? 'bg-slate-900/40' : 'bg-slate-50/50'}`}>
                   {items.length === 0 ? (
                     <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                      Brak zadaÄąâ€ž w tej liÄąâ€şcie. Dodaj pierwszy podpunkt.
+                      Brak zadań w tej liście. Dodaj pierwszy podpunkt.
                     </div>
                   ) : (
                     <div className="space-y-2.5">
@@ -9785,7 +9785,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                                 {Number(item.estimated_cost || 0) > 0 && (
                                   <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                    <Wallet size={10} /> {Number(item.estimated_cost).toLocaleString('pl-PL')} zÄąâ€š
+                                    <Wallet size={10} /> {Number(item.estimated_cost).toLocaleString('pl-PL')} zł
                                   </span>
                                 )}
                               </div>
@@ -9834,10 +9834,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div>
               <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <ClipboardList size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                {isEditingChecklistGroup ? 'Edytuj listĂ„â„˘' : 'Nowa lista'}
+                {isEditingChecklistGroup ? 'Edytuj listę' : 'Nowa lista'}
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                StwÄ‚Ĺ‚rz katalog, np. Ă˘â‚¬ĹľLista zakupÄ‚Ĺ‚wĂ˘â‚¬ĹĄ albo Ă˘â‚¬ĹľDo zdzwonieniaĂ˘â‚¬ĹĄ.
+                Stwórz katalog, np. „Lista zakupów” albo „Do zdzwonienia”.
               </p>
             </div>
 
@@ -9852,20 +9852,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <form onSubmit={handleSaveChecklistGroup} className="space-y-5">
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                TytuÄąâ€š listy *
+                Tytuł listy *
               </label>
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={checklistGroupForm.title || ''}
                 onChange={e => setChecklistGroupForm({ ...checklistGroupForm, title: e.target.value })}
-                placeholder="np. OÄąâ€şwietlenie sceny - braki"
+                placeholder="np. Oświetlenie sceny - braki"
               />
             </div>
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                KrÄ‚Ĺ‚tki opis
+                Krótki opis
               </label>
               <textarea
                 rows={2}
@@ -9886,15 +9886,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={checklistGroupForm.category || 'general'}
                   onChange={e => setChecklistGroupForm({ ...checklistGroupForm, category: e.target.value })}
                 >
-                  <option value="general">OgÄ‚Ĺ‚lne</option>
+                  <option value="general">Ogólne</option>
                   <option value="shopping">Zakupy</option>
                   <option value="calls">Do zdzwonienia</option>
                   <option value="suppliers">Dostawcy</option>
-                  <option value="decor">WystrÄ‚Ĺ‚j / dekoracje</option>
+                  <option value="decor">Wystrój / dekoracje</option>
                   <option value="catering">Catering</option>
                   <option value="transport">Transport</option>
                   <option value="documents">Dokumenty</option>
-                  <option value="event_day">DzieÄąâ€ž eventu</option>
+                  <option value="event_day">Dzień eventu</option>
                 </select>
               </div>
 
@@ -9923,7 +9923,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
             >
-              {updating ? 'Zapisywanie...' : 'Zapisz listĂ„â„˘'}
+              {updating ? 'Zapisywanie...' : 'Zapisz listę'}
             </button>
           </form>
         </div>
@@ -9941,7 +9941,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {isEditingChecklistItem ? 'Edytuj zadanie' : 'Nowe zadanie'}
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Podpunkt z moÄąÄ˝liwoÄąâ€şciĂ„â€¦ przypisania osoby i oszacowania kosztu.
+                Podpunkt z możliwością przypisania osoby i oszacowania kosztu.
               </p>
             </div>
 
@@ -9963,13 +9963,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={checklistItemForm.title || ''}
                 onChange={e => setChecklistItemForm({ ...checklistItemForm, title: e.target.value })}
-                placeholder="np. PotwierdziĂ„â€ˇ dostawĂ„â„˘ sceny"
+                placeholder="np. Potwierdzić dostawę sceny"
               />
             </div>
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                SzczegÄ‚Ĺ‚Äąâ€šy / Notatka
+                Szczegóły / Notatka
               </label>
               <textarea
                 rows={2}
@@ -9983,7 +9983,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 sectionKey="checklist"
                 fieldKey="task_note"
                 currentValue={checklistItemForm.notes || ''}
-                placeholder="Napisz instrukcjĂ„â„˘ dla podwykonawcy..."
+                placeholder="Napisz instrukcję dla podwykonawcy..."
                 onApply={(text) => setChecklistItemForm({ ...checklistItemForm, notes: text })}
               />
             </div>
@@ -9998,7 +9998,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={checklistItemForm.group_id || activeChecklistGroupId || ''}
                   onChange={e => setChecklistItemForm({ ...checklistItemForm, group_id: e.target.value })}
                 >
-                  <option value="">Wybierz listĂ„â„˘</option>
+                  <option value="">Wybierz listę</option>
                   {checklistGroups.map(group => (
                     <option key={group.id} value={group.id}>
                       {group.title}
@@ -10049,7 +10049,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szacowany koszt (dla uÄąâ€šatwienia budÄąÄ˝etu)
+                Szacowany koszt (dla ułatwienia budżetu)
               </label>
               <input
                 type="number"
@@ -10113,15 +10113,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'bilety' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGÄąÂÄ‚â€śWEK SEKCJI */}
+    {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Ticket size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Rejestracja & PÄąâ€šatnoÄąâ€şci
+          Rejestracja & Płatności
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzĂ„â€¦dzaj dostĂ„â„˘pami, kontroluj wpÄąâ€šaty i importuj wyciĂ„â€¦gi bankowe.
+          Zarządzaj dostępami, kontroluj wpłaty i importuj wyciągi bankowe.
         </p>
       </div>
 
@@ -10143,10 +10143,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* METRYKI BAZOWE */}
     <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4">
       {[
-        { label: 'ZgÄąâ€šoszenia', value: applications.length, icon: Users, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
+        { label: 'Zgłoszenia', value: applications.length, icon: Users, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
         { label: 'Aktywni', value: ticketMetrics.active, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
-        { label: 'NieopÄąâ€šacone', value: ticketMetrics.waitingPayment, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-        { label: 'OpÄąâ€šacone', value: ticketMetrics.paid, icon: Wallet, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
+        { label: 'Nieopłacone', value: ticketMetrics.waitingPayment, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+        { label: 'Opłacone', value: ticketMetrics.paid, icon: Wallet, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
         { label: 'Rezerwa', value: ticketMetrics.waitlist, icon: AlertTriangle, color: isDarkMode ? 'text-rose-400' : 'text-rose-600' },
         { label: 'Limit', value: event?.registration_limit ? `${ticketMetrics.active}/${event.registration_limit}` : 'Brak', icon: Percent, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' },
       ].map((kpi: any) => (
@@ -10178,7 +10178,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Ustawienia rejestracji
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Tryb zapisÄ‚Ĺ‚w, limit miejsc i komunikaty dla uczestnikÄ‚Ĺ‚w.
+            Tryb zapisów, limit miejsc i komunikaty dla uczestników.
           </p>
         </div>
         <button
@@ -10196,7 +10196,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tryb rejestracji</label>
           <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={editForm?.registration_mode || 'free'} onChange={e => setEditForm({ ...editForm, registration_mode: e.target.value })}>
             <option value="free">Darmowa</option>
-            <option value="paid">PÄąâ€šatna</option>
+            <option value="paid">Płatna</option>
             <option value="mixed">Mieszana</option>
             <option value="approval">Wymaga Akceptacji</option>
           </select>
@@ -10210,15 +10210,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={editForm?.registration_count_limit_mode || 'active_only'} onChange={e => setEditForm({ ...editForm, registration_count_limit_mode: e.target.value })}>
             <option value="active_only">Tylko Aktywni</option>
             <option value="signup">Wszyscy zapisani</option>
-            <option value="paid_only">Tylko OpÄąâ€šaceni</option>
+            <option value="paid_only">Tylko Opłaceni</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         {[
-          ['registration_is_open', 'Rejestracja otwarta', 'Przyjmuj zgÄąâ€šoszenia'],
-          ['registration_auto_activate_free', 'Auto-aktywuj darmowe', 'Bez rĂ„â„˘cznej weryfikacji'],
+          ['registration_is_open', 'Rejestracja otwarta', 'Przyjmuj zgłoszenia'],
+          ['registration_auto_activate_free', 'Auto-aktywuj darmowe', 'Bez ręcznej weryfikacji'],
           ['registration_close_when_full', 'Zamknij po limicie', 'Zablokuj zapisy automatycznie'],
         ].map(([key, title, desc]) => {
           const isChecked = editForm?.[key] !== false;
@@ -10256,32 +10256,32 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DomyÄąâ€şlny link pÄąâ€šatnoÄąâ€şci (Opcjonalny)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślny link płatności (Opcjonalny)</label>
           <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="https://..." value={editForm?.payment_default_url || ''} onChange={e => setEditForm({ ...editForm, payment_default_url: e.target.value })} />
         </div>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka wewnĂ„â„˘trzna / skrÄ‚Ĺ‚t</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka wewnętrzna / skrót</label>
           <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Ukryte notatki" value={editForm?.tickets_notes || ''} onChange={e => setEditForm({ ...editForm, tickets_notes: e.target.value })} />
         </div>
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Komunikat po zapisie / sukcesie</label>
-          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="DziĂ„â„˘kujemy za rejestracjĂ„â„˘..." value={editForm?.payment_success_message || ''} onChange={e => setEditForm({ ...editForm, payment_success_message: e.target.value })} />
+          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Dziękujemy za rejestrację..." value={editForm?.payment_success_message || ''} onChange={e => setEditForm({ ...editForm, payment_success_message: e.target.value })} />
         </div>
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Komunikat dla listy rezerwowej</label>
-          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Brak miejsc. Trafiasz na listĂ„â„˘ oczekujĂ„â€¦cych." value={editForm?.waitlist_message || ''} onChange={e => setEditForm({ ...editForm, waitlist_message: e.target.value })} />
+          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Brak miejsc. Trafiasz na listę oczekujących." value={editForm?.waitlist_message || ''} onChange={e => setEditForm({ ...editForm, waitlist_message: e.target.value })} />
         </div>
       </div>
     </div>
 
-    {/* TYPY BILETÄ‚â€śW (PAKIETY) */}
+    {/* TYPY BILETÓW (PAKIETY) */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex items-center gap-3 mb-6">
         <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
           <Ticket size={20} />
         </div>
         <h4 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Typy biletÄ‚Ĺ‚w (Pakiety)
+          Typy biletów (Pakiety)
         </h4>
       </div>
 
@@ -10306,11 +10306,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </p>
 
                 <div className={`mt-5 grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] font-bold uppercase tracking-wider p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">Limit miejsc</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.limit || 'Ă˘ÂĹľ'}</span></div>
+                  <div><span className="opacity-60 block text-[8px] mb-0.5">Limit miejsc</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.limit || '∞'}</span></div>
                   <div><span className="opacity-60 block text-[8px] mb-0.5">Przypisani</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{assigned.length}</span></div>
                   <div><span className="opacity-60 block text-[8px] mb-0.5">Aktywni</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{active.length}</span></div>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">PÄąâ€šatnoÄąâ€şĂ„â€ˇ</span><span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.requires_payment ? 'Wymagana' : 'Brak'}</span></div>
-                  <span className="col-span-2 mt-1">Match/Darowizna: {tier.min_match_amount || 0} - {tier.max_match_amount || 'Ă˘ÂĹľ'}</span>
+                  <div><span className="opacity-60 block text-[8px] mb-0.5">Płatność</span><span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.requires_payment ? 'Wymagana' : 'Brak'}</span></div>
+                  <span className="col-span-2 mt-1">Match/Darowizna: {tier.min_match_amount || 0} - {tier.max_match_amount || '∞'}</span>
                 </div>
 
                 {tier.payment_url && (
@@ -10333,7 +10333,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </button>
                 </div>
                 <button onClick={() => handleToggleTicketTier(tier)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${tier.is_active === false ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50 hover:bg-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100') : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200')}`}>
-                  {tier.is_active === false ? 'Aktywuj' : 'WyÄąâ€šĂ„â€¦cz'}
+                  {tier.is_active === false ? 'Aktywuj' : 'Wyłącz'}
                 </button>
               </div>
             </div>
@@ -10341,28 +10341,28 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         })}
         {tiers.length === 0 && (
           <div className={`md:col-span-2 xl:col-span-3 p-12 text-center border-2 border-dashed rounded-2xl font-bold text-sm ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak typÄ‚Ĺ‚w biletÄ‚Ĺ‚w.
+            Brak typów biletów.
           </div>
         )}
       </div>
     </div>
 
-    {/* LISTA ZGÄąÂOSZEÄąÂ I IMPORT BANKOWY (Odzyskana Tabela!) */}
+    {/* LISTA ZGŁOSZEŃ I IMPORT BANKOWY (Odzyskana Tabela!) */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
 
       {/* HEADER TABELI Z PRZYCISKIEM IMPORTU */}
       <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-5 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <div>
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Receipt size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Lista ZgÄąâ€šoszeÄąâ€ž i PÄąâ€šatnoÄąâ€şci
+            <Receipt size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Lista Zgłoszeń i Płatności
           </h4>
           <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            ZarzĂ„â€¦dzaj rĂ„â„˘cznie statusem lub zaimportuj wyciĂ„â€¦g bankowy, aby system automatycznie oznaczyÄąâ€š goÄąâ€şci jako opÄąâ€šaconych.
+            Zarządzaj ręcznie statusem lub zaimportuj wyciąg bankowy, aby system automatycznie oznaczył gości jako opłaconych.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Ukryty input do importu plikÄ‚Ĺ‚w */}
+          {/* Ukryty input do importu plików */}
           <input
             type="file"
             id="bank-statement-upload"
@@ -10377,7 +10377,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
           >
             {updating ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
-            Importuj WyciĂ„â€¦g Bankowy
+            Importuj Wyciąg Bankowy
           </button>
         </div>
       </div>
@@ -10394,14 +10394,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           />
         </div>
         <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketPaymentFilter} onChange={e => setTicketPaymentFilter(e.target.value)}>
-          <option value="all">PÄąâ€šatnoÄąâ€şci: Wszystkie</option>
-          <option value="unpaid">NieopÄąâ€šacone</option>
-          <option value="paid">OpÄąâ€šacone</option>
-          <option value="not_required">Brak OpÄąâ€šaty</option>
+          <option value="all">Płatności: Wszystkie</option>
+          <option value="unpaid">Nieopłacone</option>
+          <option value="paid">Opłacone</option>
+          <option value="not_required">Brak Opłaty</option>
         </select>
         <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketAccessFilter} onChange={e => setTicketAccessFilter(e.target.value)}>
-          <option value="all">DostĂ„â„˘p: Wszystkie</option>
-          <option value="pending">OczekujĂ„â€¦ce</option>
+          <option value="all">Dostęp: Wszystkie</option>
+          <option value="pending">Oczekujące</option>
           <option value="active">Aktywne</option>
           <option value="waitlist">Rezerwowe</option>
           <option value="cancelled">Anulowane</option>
@@ -10412,29 +10412,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </select>
       </div>
 
-      {/* TABELA ZGÄąÂOSZEÄąÂ */}
+      {/* TABELA ZGŁOSZEŃ */}
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className={`text-[9px] font-black uppercase tracking-widest border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
             <tr>
               <th className="p-4 pl-6">Uczestnik</th>
               <th className="p-4">Bilet / Firma</th>
-              <th className="p-4">Kwota & PÄąâ€šatnoÄąâ€şĂ„â€ˇ</th>
-              <th className="p-4">DostĂ„â„˘p</th>
-              <th className="p-4 pr-6 text-right">ZarzĂ„â€¦dzanie ZgÄąâ€šoszeniem</th>
+              <th className="p-4">Kwota & Płatność</th>
+              <th className="p-4">Dostęp</th>
+              <th className="p-4 pr-6 text-right">Zarządzanie Zgłoszeniem</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredTicketApplications.length === 0 ? (
               <tr>
                 <td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Brak zgÄąâ€šoszeÄąâ€ž dla wybranych filtrÄ‚Ĺ‚w.
+                  Brak zgłoszeń dla wybranych filtrów.
                 </td>
               </tr>
             ) : filteredTicketApplications.map((app: any) => {
               const tier = getTicketTierForApplication(app)
 
-              // Kolory dla piguÄąâ€šek statusÄ‚Ĺ‚w
+              // Kolory dla pigułek statusów
               const getAccessColor = (status: string) => {
                 if (status === 'active') return isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
                 if (status === 'waitlist') return isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200';
@@ -10470,13 +10470,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       {Number(app.ticket_paid_amount || 0).toLocaleString('pl-PL')} <span className="text-[10px] font-bold text-slate-500">/ {Number(app.ticket_expected_amount || 0).toLocaleString('pl-PL')} {tier?.currency || 'PLN'}</span>
                     </p>
                     <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${app.payment_status === 'paid' ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
-                      {app.payment_status === 'paid' ? 'OpÄąâ€šacone' : app.payment_status === 'unpaid' ? 'NieopÄąâ€šacone' : 'Bez opÄąâ€šaty'}
+                      {app.payment_status === 'paid' ? 'Opłacone' : app.payment_status === 'unpaid' ? 'Nieopłacone' : 'Bez opłaty'}
                     </span>
                   </td>
 
                   <td className="p-4">
                     <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${getAccessColor(app.access_status)}`}>
-                      {app.access_status === 'active' ? 'Aktywny' : app.access_status === 'waitlist' ? 'Rezerwowa' : app.access_status === 'cancelled' ? 'Anulowany' : 'OczekujĂ„â€¦cy'}
+                      {app.access_status === 'active' ? 'Aktywny' : app.access_status === 'waitlist' ? 'Rezerwowa' : app.access_status === 'cancelled' ? 'Anulowany' : 'Oczekujący'}
                     </span>
                   </td>
 
@@ -10486,7 +10486,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       {app.payment_status !== 'paid' && app.ticket_expected_amount > 0 && (
                         <button
                           onClick={() => markTicketPaid(app)}
-                          title="Oznacz jako opÄąâ€šacone"
+                          title="Oznacz jako opłacone"
                           className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40 border border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
                         >
                           <Wallet size={16} />
@@ -10496,7 +10496,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       {app.access_status !== 'active' && (
                         <button
                           onClick={() => activateTicketParticipant(app)}
-                          title="Aktywuj dostĂ„â„˘p"
+                          title="Aktywuj dostęp"
                           className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 border border-blue-800/50' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
                         >
                           <CheckCircle2 size={16} />
@@ -10505,13 +10505,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                       <button
                         onClick={() => { setTicketApplicationForm(app); setIsTicketApplicationModalOpen(true) }}
-                        title="Edytuj szczegÄ‚Ĺ‚Äąâ€šy"
+                        title="Edytuj szczegóły"
                         className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`}
                       >
                         <Edit3 size={16} />
                       </button>
 
-                      {/* Dropdown na pozostaÄąâ€še rzadsze akcje */}
+                      {/* Dropdown na pozostałe rzadsze akcje */}
                       <details className="relative">
                         <summary className={`list-none cursor-pointer p-2 rounded-xl transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white border-slate-700 hover:border-slate-600' : 'bg-white text-slate-500 hover:text-slate-900 border-slate-200 hover:border-slate-300'}`}>
                           <MoreHorizontal size={16} />
@@ -10562,7 +10562,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KrÄ‚Ĺ‚tki opis korzyÄąâ€şci (dla goÄąâ€şcia)</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krótki opis korzyści (dla gościa)</label>
               <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Co obejmuje bilet?" value={ticketTierForm.description || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, description: e.target.value })} />
             </div>
 
@@ -10573,10 +10573,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Limit szt.</label>
-                <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Ă˘ÂĹľ" value={ticketTierForm.limit || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, limit: e.target.value ? Number(e.target.value) : null })} />
+                <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="∞" value={ticketTierForm.limit || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, limit: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div className="col-span-2 md:col-span-2">
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>WideÄąâ€ški kwotowe (darowizny)</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Widełki kwotowe (darowizny)</label>
                 <div className="flex items-center gap-2">
                   <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Min" value={ticketTierForm.min_match_amount || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, min_match_amount: e.target.value ? Number(e.target.value) : null })} />
                   <span className={`font-black ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>-</span>
@@ -10584,25 +10584,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
               </div>
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KolejnoÄąâ€şĂ„â€ˇ</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kolejność</label>
                 <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="0" value={ticketTierForm.sort_order || 0} onChange={e => setTicketTierForm({ ...ticketTierForm, sort_order: Number(e.target.value || 0) })} />
               </div>
             </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZewnĂ„â„˘trzny Link PÄąâ€šatnoÄąâ€şci (np. PayU, Przelewy24)</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zewnętrzny Link Płatności (np. PayU, Przelewy24)</label>
               <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="https://..." value={ticketTierForm.payment_url || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, payment_url: e.target.value })} />
             </div>
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
               {[
-                ['is_active', 'W sprzedaÄąÄ˝y'],
-                ['requires_payment', 'Wymaga opÄąâ€šacenia'],
+                ['is_active', 'W sprzedaży'],
+                ['requires_payment', 'Wymaga opłacenia'],
                 ['auto_activate_after_signup', 'Auto-aktywacja'],
-                ['access_streaming', 'DostĂ„â„˘p Live'],
+                ['access_streaming', 'Dostęp Live'],
                 ['access_vip_zone', 'VIP zone'],
                 ['includes_catering', 'Catering w cenie'],
-                ['includes_gadget', 'GadÄąÄ˝et w cenie'],
+                ['includes_gadget', 'Gadżet w cenie'],
               ].map(([key, label]) => {
                 const isChecked = ticketTierForm[key] === true || (['is_active', 'includes_catering', 'includes_gadget'].includes(key) && ticketTierForm[key] !== false);
                 return (
@@ -10631,7 +10631,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     )}
 
-    {/* MODAL: EDYCJA ZGÄąÂOSZENIA (ZarzĂ„â€¦dzanie Pojedynczym Uczestnikiem) */}
+    {/* MODAL: EDYCJA ZGŁOSZENIA (Zarządzanie Pojedynczym Uczestnikiem) */}
     {isTicketApplicationModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -10639,7 +10639,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div>
               <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                Edycja ZgÄąâ€šoszenia / Biletu
+                Edycja Zgłoszenia / Biletu
               </h3>
               <p className={`text-xs mt-1.5 font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                 Uczestnik: {ticketApplicationForm.first_name} {ticketApplicationForm.last_name} ({ticketApplicationForm.company_name || 'Brak firmy'})
@@ -10652,7 +10652,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <form onSubmit={handleSaveApplicationTicket} className="space-y-6">
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZmieÄąâ€ž Typ Biletu / Pakiet z Cennika</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zmień Typ Biletu / Pakiet z Cennika</label>
               <select
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
                 value={ticketApplicationForm.ticket_tier_id || ''}
@@ -10666,35 +10666,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   })
                 }}
               >
-                <option value="">Niestandardowy (RĂ„â„˘czny)</option>
-                {tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name} Ă˘â‚¬â€ť {Number(tier.price || 0).toLocaleString('pl-PL')} {tier.currency || 'PLN'}</option>)}
+                <option value="">Niestandardowy (Ręczny)</option>
+                {tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name} - {Number(tier.price || 0).toLocaleString('pl-PL')} {tier.currency || 'PLN'}</option>)}
               </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ Biletu (Tekst na wejÄąâ€şciÄ‚Ĺ‚wce)</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ Biletu (Tekst na wejściówce)</label>
                 <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Typ biletu" value={ticketApplicationForm.ticket_type || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_type: e.target.value })} />
               </div>
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>Oczekiwana PÄąâ€šatnoÄąâ€şĂ„â€ˇ</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>Oczekiwana Płatność</label>
                 <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-black outline-none transition-all ${isDarkMode ? 'bg-amber-900/10 border-amber-900/50 text-amber-400 focus:border-amber-500' : 'bg-amber-50 border-amber-200 text-amber-800 focus:border-amber-500'}`} placeholder="0.00" value={ticketApplicationForm.ticket_expected_amount || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_expected_amount: Number(e.target.value || 0) })} />
               </div>
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>WpÄąâ€šacono RzeczywiÄąâ€şcie</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Wpłacono Rzeczywiście</label>
                 <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-black outline-none transition-all ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/50 text-emerald-400 focus:border-emerald-500' : 'bg-emerald-50 border-emerald-200 text-emerald-800 focus:border-emerald-500'}`} placeholder="0.00" value={ticketApplicationForm.ticket_paid_amount || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_paid_amount: Number(e.target.value || 0) })} />
               </div>
             </div>
 
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>PÄąâ€šatnoÄąâ€şĂ„â€ˇ (KsiĂ„â„˘gowoÄąâ€şĂ„â€ˇ)</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Płatność (Księgowość)</label>
                 <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.payment_status || 'not_required'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, payment_status: e.target.value })}>
                   <option value="not_required">Nie Wymaga</option>
-                  <option value="unpaid">NieopÄąâ€šacone</option>
-                  <option value="paid">OpÄąâ€šacone</option>
-                  <option value="manual">ObsÄąâ€šuga RĂ„â„˘czna</option>
-                  <option value="refunded">ZwrÄ‚Ĺ‚cone</option>
+                  <option value="unpaid">Nieopłacone</option>
+                  <option value="paid">Opłacone</option>
+                  <option value="manual">Obsługa Ręczna</option>
+                  <option value="refunded">Zwrócone</option>
                 </select>
               </div>
               <div>
@@ -10702,20 +10702,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.ticket_status || 'new'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_status: e.target.value })}>
                   <option value="new">Nowy</option>
                   <option value="free">Darmowy Zapis</option>
-                  <option value="waiting_payment">Czeka na wpÄąâ€šatĂ„â„˘</option>
+                  <option value="waiting_payment">Czeka na wpłatę</option>
                   <option value="paid">Wykupiony</option>
                   <option value="waitlist">Rezerwowy</option>
                   <option value="cancelled">Anulowany</option>
                 </select>
               </div>
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DostĂ„â„˘p Operacyjny</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dostęp Operacyjny</label>
                 <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.access_status || 'pending'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, access_status: e.target.value })}>
                   <option value="pending">Weryfikacja</option>
-                  <option value="active">PeÄąâ€šny DostĂ„â„˘p (Aktywny)</option>
+                  <option value="active">Pełny Dostęp (Aktywny)</option>
                   <option value="waitlist">Lista Rezerwowa</option>
                   <option value="blocked">Zablokowany</option>
-                  <option value="cancelled">ZrezygnowaÄąâ€š</option>
+                  <option value="cancelled">Zrezygnował</option>
                 </select>
               </div>
             </div>
@@ -10727,13 +10727,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             {'notes' in ticketApplicationForm && (
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka WewnĂ„â„˘trzna</label>
-                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Tylko dla organizatorÄ‚Ĺ‚w..." value={ticketApplicationForm.notes || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, notes: e.target.value })} />
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka Wewnętrzna</label>
+                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Tylko dla organizatorów..." value={ticketApplicationForm.notes || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, notes: e.target.value })} />
               </div>
             )}
 
             <button type="submit" disabled={updating} className={`w-full mt-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}>
-              {updating ? 'Zapisywanie...' : 'ZatwierdÄąĹź Ustawienia ZgÄąâ€šoszenia'}
+              {updating ? 'Zapisywanie...' : 'Zatwierdź Ustawienia Zgłoszenia'}
             </button>
           </form>
         </div>
@@ -10747,11 +10747,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* =========================================================================== */}
 {activeTab === 'minutowka' && (() => {
 
-  // 1. AGREGACJA WSZYSTKICH WYDARZEÄąÂ Z CAÄąÂEGO PLANNERA
+  // 1. AGREGACJA WSZYSTKICH WYDARZEŃ Z CAŁEGO PLANNERA
   const aggregatedEvents = (() => {
     const allEvents: any[] = [];
 
-    // Z MinutÄ‚Ĺ‚wki
+    // Z Minutówki
     runOfShow.forEach((task: any) => {
       if (task.date) {
         allEvents.push({
@@ -10759,7 +10759,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           date: task.date,
           time: task.time,
           title: task.task,
-          source: 'MinutÄ‚Ĺ‚wka',
+          source: 'Minutówka',
           isCritical: task.isCritical,
           color: task.isCritical ? 'bg-red-500' : 'bg-[#253a2a]'
         });
@@ -10784,16 +10784,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       }
     });
 
-    // Z FinansÄ‚Ĺ‚w (PÄąâ€šatnoÄąâ€şci dla podwykonawcÄ‚Ĺ‚w)
+    // Z Finansów (Płatności dla podwykonawców)
     contractors.forEach((contractor: any) => {
       if (contractor.payment_due_date && contractor.payment_status !== 'paid') {
         allEvents.push({
           id: `payment-${contractor.id}`,
           date: contractor.payment_due_date,
-          time: '12:00', // DomyÄąâ€şlna godzina dla terminÄ‚Ĺ‚w pÄąâ€šatnoÄąâ€şci
-          title: `PÄąâ€šatnoÄąâ€şĂ„â€ˇ: ${contractor.name} (${contractor.gross_amount || contractor.amount} PLN)`,
+          time: '12:00', // Domyślna godzina dla terminów płatności
+          title: `Płatność: ${contractor.name} (${contractor.gross_amount || contractor.amount} PLN)`,
           source: 'Finanse',
-          isCritical: true, // PÄąâ€šatnoÄąâ€şci traktujemy jako waÄąÄ˝ne
+          isCritical: true, // Płatności traktujemy jako ważne
           color: 'bg-amber-500'
         });
       }
@@ -10809,7 +10809,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  // Zabezpieczenie, aby poniedziaÄąâ€šek byÄąâ€š pierwszym dniem (0 to niedziela w JS)
+  // Zabezpieczenie, aby poniedziałek był pierwszym dniem (0 to niedziela w JS)
   const offsetDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   const nextMonth = () => {
@@ -10822,9 +10822,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     else setOrganizerCurrentMonth(currentMonth - 1);
   };
 
-  const monthNames = ['StyczeÄąâ€ž', 'Luty', 'Marzec', 'KwiecieÄąâ€ž', 'Maj', 'Czerwiec', 'Lipiec', 'SierpieÄąâ€ž', 'WrzesieÄąâ€ž', 'PaÄąĹździernik', 'Listopad', 'GrudzieÄąâ€ž'];
+  const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
 
-  // Wydarzenia dla klikniĂ„â„˘tego dnia w kalendarzu
+  // Wydarzenia dla klikniętego dnia w kalendarzu
   const selectedDateEvents = aggregatedEvents.filter(e => e.date === selectedCalendarDate);
 
   return (
@@ -10844,8 +10844,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Centrum Dowodzenia Eventu
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            OÄąâ€ş czasu Twojego wydarzenia. Dodawaj zadania (minutÄ‚Ĺ‚wkĂ„â„˘), a system automatycznie Äąâ€şciĂ„â€¦gnie tutaj rÄ‚Ĺ‚wnieÄąÄ˝
-            terminy pÄąâ€šatnoÄąâ€şci do podwykonawcÄ‚Ĺ‚w oraz sesje z agendy. PeÄąâ€šna kontrola w jednym kalendarzu.
+            Oś czasu Twojego wydarzenia. Dodawaj zadania (minutówkę), a system automatycznie ściągnie tutaj również
+            terminy płatności do podwykonawców oraz sesje z agendy. Pełna kontrola w jednym kalendarzu.
           </p>
         </div>
 
@@ -10860,12 +10860,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </section>
 
-      {/* 2. STATYSTYKI GÄąÂÄ‚â€śWNE */}
+      {/* 2. STATYSTYKI GŁÓWNE */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: 'Wszystkie Zdarzenia', value: aggregatedEvents.length, icon: Calendar, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
-          { label: 'OczekujĂ„â€¦ce PÄąâ€šatnoÄąâ€şci', value: aggregatedEvents.filter(e => e.source === 'Finanse').length, icon: Wallet, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-          { label: 'Zadania MinutÄ‚Ĺ‚wki', value: runOfShow.length, icon: ClipboardList, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
+          { label: 'Oczekujące Płatności', value: aggregatedEvents.filter(e => e.source === 'Finanse').length, icon: Wallet, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+          { label: 'Zadania Minutówki', value: runOfShow.length, icon: ClipboardList, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
           { label: 'Punkty Agendy', value: sessions.length, icon: Clock, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' }
         ].map((item: any) => (
           <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -10909,20 +10909,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="mt-3 space-y-2">
                   {aggregatedEvents.filter(e => e.source === 'Finanse').length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-amber-500 mt-0.5">Ă˘â‚¬Ë</span>
-                      Masz oczekujĂ„â€¦ce terminy pÄąâ€šatnoÄąâ€şci do podwykonawcÄ‚Ĺ‚w. Upewnij siĂ„â„˘, ÄąÄ˝e budÄąÄ˝et jest zabezpieczony na te daty.
+                      <span className="text-amber-500 mt-0.5">/</span>
+                      Masz oczekujące terminy płatności do podwykonawców. Upewnij się, że budżet jest zabezpieczony na te daty.
                     </p>
                   )}
                   {aggregatedEvents.length === 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-indigo-500 mt-0.5">Ă˘â‚¬Ë</span>
-                      TwÄ‚Ĺ‚j kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogÄąâ€šo zaczĂ„â€¦Ă„â€ˇ Äąâ€şledziĂ„â€ˇ obÄąâ€šoÄąÄ˝enie pracĂ„â€¦ przed eventem.
+                      <span className="text-indigo-500 mt-0.5">/</span>
+                      Twój kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogło zacząć śledzić obłożenie pracą przed eventem.
                     </p>
                   )}
                   {aggregatedEvents.filter(e => e.isCritical).length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-red-500 mt-0.5">Ă˘â‚¬Ë</span>
-                      W kalendarzu znajdujĂ„â€¦ siĂ„â„˘ punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
+                      <span className="text-red-500 mt-0.5">/</span>
+                      W kalendarzu znajdują się punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
                     </p>
                   )}
                 </div>
@@ -10943,25 +10943,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div className="grid grid-cols-7 gap-1 md:gap-2 text-center mb-2">
-              {['Pn', 'Wt', 'ÄąĹˇr', 'Cz', 'Pt', 'Sb', 'Nd'].map(d => (
+              {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map(d => (
                 <div key={d} className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{d}</div>
               ))}
             </div>
 
             <div className="grid grid-cols-7 gap-1 md:gap-2">
-              {/* Puste dni na poczĂ„â€¦tku miesiĂ„â€¦ca */}
+              {/* Puste dni na początku miesiąca */}
               {Array.from({ length: offsetDays }).map((_, i) => (
                 <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0"></div>
               ))}
 
-              {/* Dni miesiĂ„â€¦ca */}
+              {/* Dni miesiąca */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isSelected = selectedCalendarDate === formattedDate;
                 const isToday = todayIso === formattedDate;
 
-                // Szukamy zdarzeÄąâ€ž na dany dzieÄąâ€ž (do oznaczenia kropek)
+                // Szukamy zdarzeń na dany dzień (do oznaczenia kropek)
                 const dayEvents = aggregatedEvents.filter(e => e.date === formattedDate);
                 const hasCritical = dayEvents.some(e => e.isCritical);
                 const hasFinance = dayEvents.some(e => e.source === 'Finanse');
@@ -10981,7 +10981,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   >
                     <span className="text-xs md:text-sm font-black">{day}</span>
 
-                    {/* WskaÄąĹźniki zdarzeÄąâ€ž pod numerem dnia */}
+                    {/* Wskaźniki zdarzeń pod numerem dnia */}
                     {dayEvents.length > 0 && (
                       <div className="absolute bottom-1.5 flex gap-0.5">
                         {hasCritical && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
@@ -11003,7 +11003,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-1">
                 {selectedDateEvents.length === 0 ? (
                   <p className={`text-xs font-medium italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Brak zaplanowanych zadaÄąâ€ž, pÄąâ€šatnoÄąâ€şci i agendy na ten dzieÄąâ€ž.
+                    Brak zaplanowanych zadań, płatności i agendy na ten dzień.
                   </p>
                 ) : (
                   selectedDateEvents.map((ev: any) => (
@@ -11024,7 +11024,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
 
-        {/* PRAWA KOLUMNA: DODAWANIE MINUTÄ‚â€śWKI I LISTA */}
+        {/* PRAWA KOLUMNA: DODAWANIE MINUTÓWKI I LISTA */}
         <div className="xl:col-span-7 space-y-6">
 
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -11034,7 +11034,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div>
                 <h4 className={`font-black text-sm uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Dodaj Zadanie Operacyjne (MinutÄ‚Ĺ‚wka)
+                  Dodaj Zadanie Operacyjne (Minutówka)
                 </h4>
               </div>
             </div>
@@ -11067,7 +11067,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <textarea
                   rows={2}
                   className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  placeholder="Np. odbiÄ‚Ĺ‚r dekoracji, briefing ekipy AV..."
+                  placeholder="Np. odbiór dekoracji, briefing ekipy AV..."
                   value={newRosTask.task}
                   onChange={e => setNewRosTask({ ...newRosTask, task: e.target.value })}
                 />
@@ -11090,7 +11090,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <input
                     type="text"
                     className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    placeholder="np. Foyer GÄąâ€šÄ‚Ĺ‚wne"
+                    placeholder="np. Foyer Główne"
                     value={newRosTask.location}
                     onChange={e => setNewRosTask({ ...newRosTask, location: e.target.value })}
                   />
@@ -11135,16 +11135,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </div>
 
-          {/* LISTA ZADAÄąÂ W MINUTÄ‚â€śWCE */}
+          {/* LISTA ZADAŃ W MINUTÓWCE */}
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
             <h4 className={`font-black text-sm uppercase tracking-wider mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Lista MinutÄ‚Ĺ‚wki ({runOfShow.length})
+              Lista Minutówki ({runOfShow.length})
             </h4>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
               {runOfShow.length === 0 ? (
                 <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                  Brak punktÄ‚Ĺ‚w w minutÄ‚Ĺ‚wce operacyjnej.
+                  Brak punktów w minutówce operacyjnej.
                 </div>
               ) : (
                 runOfShow
@@ -11183,7 +11183,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center flex-wrap gap-2 mb-1.5">
                               <span className={`text-[10px] font-black uppercase tracking-widest ${task.status === 'done' ? (isDarkMode ? 'text-slate-500' : 'text-slate-400') : (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900')}`}>
-                                {task.time || 'Ă˘â‚¬â€ť'}
+                                {task.time || '-'}
                               </span>
                               <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
                                 {formatPlannerDate(task.date || event?.event_date)}
@@ -11242,13 +11242,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'stoly' && (() => {
   const objectTypes = [
     { type: 'stage', label: 'Scena', category: 'zone', shape: 'rectangle', color: '#253a2a' },
-    { type: 'podium', label: 'MÄ‚Ĺ‚wnica', category: 'object', shape: 'rectangle', color: '#334155' },
-    { type: 'chairs', label: 'KrzesÄąâ€ša', category: 'furniture', shape: 'rectangle', color: '#64748b' },
-    { type: 'table', label: 'StÄ‚Ĺ‚Äąâ€š', category: 'furniture', shape: 'rectangle', color: '#8b5e34' },
+    { type: 'podium', label: 'Mównica', category: 'object', shape: 'rectangle', color: '#334155' },
+    { type: 'chairs', label: 'Krzesła', category: 'furniture', shape: 'rectangle', color: '#64748b' },
+    { type: 'table', label: 'Stół', category: 'furniture', shape: 'rectangle', color: '#8b5e34' },
     { type: 'buffet', label: 'Bufet', category: 'catering', shape: 'rectangle', color: '#d97706' },
     { type: 'bar', label: 'Bar', category: 'catering', shape: 'rectangle', color: '#7c3aed' },
     { type: 'dj', label: 'DJ / muzyka', category: 'tech', shape: 'rectangle', color: '#111827' },
-    { type: 'photo_wall', label: 'ÄąĹˇcianka foto', category: 'promo', shape: 'rectangle', color: '#db2777' },
+    { type: 'photo_wall', label: 'Ścianka foto', category: 'promo', shape: 'rectangle', color: '#db2777' },
     { type: 'vip_zone', label: 'Strefa VIP', category: 'zone', shape: 'rounded', color: '#e8ce7a' },
     { type: 'sponsor_booth', label: 'Stoisko sponsora', category: 'sponsor', shape: 'rectangle', color: '#2563eb' },
     { type: 'kids_zone', label: 'Strefa dzieci', category: 'attraction', shape: 'rounded', color: '#22c55e' },
@@ -11278,11 +11278,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   const hasVip = spaceObjects.some((obj: any) => obj.object_type === 'vip_zone')
 
   const layoutWarnings = [
-    !hasRegistration ? 'Brak punktu rejestracji / wejÄąâ€şcia.' : null,
-    !hasStage ? 'Brak sceny lub mÄ‚Ĺ‚wnicy, jeÄąâ€şli wydarzenie ma czĂ„â„˘Äąâ€şĂ„â€ˇ oficjalnĂ„â€¦.' : null,
+    !hasRegistration ? 'Brak punktu rejestracji / wejścia.' : null,
+    !hasStage ? 'Brak sceny lub mównicy, jeśli wydarzenie ma część oficjalną.' : null,
     !hasCatering ? 'Brak oznaczonego bufetu / baru / strefy cateringu.' : null,
-    !hasVip ? 'Brak strefy VIP, jeÄąâ€şli wydarzenie przewiduje goÄąâ€şci specjalnych.' : null,
-    criticalObjects.length > 0 ? `${criticalObjects.length} elementÄ‚Ĺ‚w oznaczonych jako krytyczne.` : null,
+    !hasVip ? 'Brak strefy VIP, jeśli wydarzenie przewiduje gości specjalnych.' : null,
+    criticalObjects.length > 0 ? `${criticalObjects.length} elementów oznaczonych jako krytyczne.` : null,
   ].filter(Boolean)
 
   return (
@@ -11305,19 +11305,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </h3>
 
             <p className="text-sm md:text-base text-white/65 mt-3 max-w-3xl leading-relaxed">
-              Zaplanuj salĂ„â„˘, plener, scenĂ„â„˘, catering, strefy, atrakcje, sponsorÄ‚Ĺ‚w, podwykonawcÄ‚Ĺ‚w i osoby funkcyjne.
-              To nie jest juÄąÄ˝ tylko plan stoÄąâ€šÄ‚Ĺ‚w Ă˘â‚¬â€ť to operacyjna mapa caÄąâ€šego wydarzenia.
+              Zaplanuj salę, plener, scenę, catering, strefy, atrakcje, sponsorów, podwykonawców i osoby funkcyjne.
+              To nie jest już tylko plan stołów - to operacyjna mapa całego wydarzenia.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => showNotification('AI Layout Planner zostanie podÄąâ€šĂ„â€¦czony w kolejnym etapie.', 'info')}
+              onClick={() => showNotification('AI Layout Planner zostanie podłączony w kolejnym etapie.', 'info')}
               className="px-5 py-3 bg-white/10 hover:bg-white/15 text-white rounded-2xl text-xs font-black flex items-center gap-2 transition-colors border border-white/15"
             >
               <Sparkles size={15} />
-              Zaproponuj ukÄąâ€šad AI
+              Zaproponuj układ AI
             </button>
 
             <button
@@ -11326,7 +11326,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className="px-5 py-3 bg-[#e8ce7a] hover:bg-[#f1d986] text-[#253a2a] rounded-2xl text-xs font-black flex items-center gap-2 transition-colors shadow-lg"
             >
               <Save size={15} />
-              OdÄąâ€şwieÄąÄ˝ plan
+              Odśwież plan
             </button>
           </div>
         </div>
@@ -11368,7 +11368,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               Wymiary przestrzeni
             </h4>
             <p className="text-xs text-slate-500 font-medium">
-              Wpisz przybliÄąÄ˝one wymiary sali, namiotu albo przestrzeni plenerowej.
+              Wpisz przybliżone wymiary sali, namiotu albo przestrzeni plenerowej.
             </p>
           </div>
 
@@ -11398,7 +11398,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">DÄąâ€š. m</label>
+              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dł. m</label>
               <input
                 type="number"
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[#253a2a]"
@@ -11408,7 +11408,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">TÄąâ€šo</label>
+              <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Tło</label>
               <input
                 type="color"
                 className="w-full h-[38px] bg-slate-50 border border-slate-300 rounded-xl px-2 py-1"
@@ -11445,7 +11445,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </h4>
 
             <p className="text-xs text-slate-500 font-medium mb-5">
-              Wybierz typ, nazwij element i dodaj go na mapĂ„â„˘.
+              Wybierz typ, nazwij element i dodaj go na mapę.
             </p>
 
             <div className="space-y-3">
@@ -11482,7 +11482,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 <input
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-[#253a2a]"
-                  placeholder="Np. Scena gÄąâ€šÄ‚Ĺ‚wna, Bufet, DJ, Stoisko A..."
+                  placeholder="Np. Scena główna, Bufet, DJ, Stoisko A..."
                   value={newSpaceObject.label}
                   onChange={(e) => setNewSpaceObject({ ...newSpaceObject, label: e.target.value })}
                 />
@@ -11529,14 +11529,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 onClick={addSpaceObject}
                 className="w-full py-3.5 bg-[#253a2a] hover:bg-[#1a291e] text-[#e8ce7a] rounded-xl font-black text-xs uppercase shadow-md transition-colors disabled:opacity-50"
               >
-                {spaceSaving ? 'Dodawanie...' : 'Dodaj na mapĂ„â„˘'}
+                {spaceSaving ? 'Dodawanie...' : 'Dodaj na mapę'}
               </button>
             </div>
           </div>
 
           <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-5">
             <h4 className="font-black text-slate-900 text-sm uppercase mb-4">
-              Biblioteka elementÄ‚Ĺ‚w
+              Biblioteka elementów
             </h4>
 
             <div className="grid grid-cols-2 gap-2">
@@ -11567,7 +11567,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
 
-        {/* ÄąĹˇRODEK: MAPA */}
+        {/* ŚRODEK: MAPA */}
         <div className="xl:col-span-6">
           <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -11576,12 +11576,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   Mapa przestrzeni
                 </h4>
                 <p className="text-xs text-slate-500 font-medium">
-                  Kliknij element, ÄąÄ˝eby go edytowaĂ„â€ˇ. PozycjĂ„â„˘ zmienisz z panelu po prawej.
+                  Kliknij element, żeby go edytować. Pozycję zmienisz z panelu po prawej.
                 </p>
               </div>
 
               <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
-                {spaceLayout?.width_m || 20}m Ä‚â€” {spaceLayout?.height_m || 12}m
+                {spaceLayout?.width_m || 20}m × {spaceLayout?.height_m || 12}m
               </span>
             </div>
 
@@ -11663,12 +11663,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
 
-        {/* PRAWY PANEL: WÄąÂAÄąĹˇCIWOÄąĹˇCI I KONTROLA */}
+        {/* PRAWY PANEL: WŁAŚCIWOŚCI I KONTROLA */}
         <div className="xl:col-span-3 space-y-6">
 
           <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-5">
             <h4 className="font-black text-slate-900 text-sm uppercase mb-4">
-              WÄąâ€šaÄąâ€şciwoÄąâ€şci elementu
+              Właściwości elementu
             </h4>
 
             {!selectedObject ? (
@@ -11749,7 +11749,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
-                    ObrÄ‚Ĺ‚t
+                    Obrót
                   </label>
                   <input
                     type="range"
@@ -11804,7 +11804,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   className="w-full px-4 py-3 rounded-xl text-xs font-black uppercase bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
                 >
                   <Trash2 size={14} />
-                  UsuÄąâ€ž element
+                  Usuń element
                 </button>
               </div>
             )}
@@ -11814,14 +11814,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle size={18} className="text-[#e8ce7a]" />
               <h4 className="font-black text-sm uppercase">
-                Kontrola ukÄąâ€šadu
+                Kontrola układu
               </h4>
             </div>
 
             <div className="space-y-3">
               {layoutWarnings.length === 0 ? (
                 <p className="text-sm text-white/65 font-medium">
-                  UkÄąâ€šad wyglĂ„â€¦da dobrze. Brak podstawowych ostrzeÄąÄ˝eÄąâ€ž.
+                  Układ wygląda dobrze. Brak podstawowych ostrzeżeń.
                 </p>
               ) : (
                 layoutWarnings.map((warning: any, index: number) => (
@@ -11839,16 +11839,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles size={16} className="text-[#253a2a]" />
               <h4 className="font-black text-slate-900 text-sm uppercase">
-                AI pÄ‚Ĺ‚ÄąĹźniej sprawdzi
+                AI później sprawdzi
               </h4>
             </div>
 
             <div className="space-y-2 text-xs text-slate-600 font-medium leading-relaxed">
-              <p>Ă˘â‚¬Ë Czy catering nie jest za daleko od zaplecza.</p>
-              <p>Ă˘â‚¬Ë Czy scena ma technikĂ„â„˘ i przejÄąâ€şcie dla obsÄąâ€šugi.</p>
-              <p>Ă˘â‚¬Ë Czy strefa dzieci jest oddzielona od DJ-a i ruchu aut.</p>
-              <p>Ă˘â‚¬Ë Czy sponsorzy sĂ„â€¦ w miejscach o duÄąÄ˝ym przepÄąâ€šywie osÄ‚Ĺ‚b.</p>
-              <p>Ă˘â‚¬Ë Czy VIP, media i prelegenci majĂ„â€¦ logiczne strefy.</p>
+              <p>/ Czy catering nie jest za daleko od zaplecza.</p>
+              <p>/ Czy scena ma technikę i przejście dla obsługi.</p>
+              <p>/ Czy strefa dzieci jest oddzielona od DJ-a i ruchu aut.</p>
+              <p>/ Czy sponsorzy są w miejscach o dużym przepływie osób.</p>
+              <p>/ Czy VIP, media i prelegenci mają logiczne strefy.</p>
             </div>
           </div>
         </div>
@@ -11865,7 +11865,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'eko' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* HERO - GÄąÂÄ‚â€śWNY PANEL AI (ZMNIEJSZONY) */}
+    {/* HERO - GŁÓWNY PANEL AI (ZMNIEJSZONY) */}
     <section className="relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-5 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-colors duration-200 border-slate-800 bg-gradient-to-br from-slate-950 via-[#0f172a] to-[#253a2a]">
       <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#e8ce7a]/10 blur-3xl pointer-events-none" />
       <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -11876,10 +11876,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Silnik Analityczny AI
         </span>
         <h2 className="mt-3 text-2xl md:text-3xl font-black tracking-tight text-white leading-tight">
-          Centrum ZrÄ‚Ĺ‚wnowaÄąÄ˝onego Eventu (GOZ)
+          Centrum Zrównoważonego Eventu (GOZ)
         </h2>
         <p className="mt-2 text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
-          System na bieÄąÄ˝Ă„â€¦co analizuje logistykĂ„â„˘, catering i materiaÄąâ€šy, wyliczajĂ„â€¦c szacunkowy Äąâ€şlad Äąâ€şrodowiskowy oraz generujĂ„â€¦c rekomendacje obniÄąÄ˝ajĂ„â€¦ce koszty i marnotrawstwo.
+          System na bieżąco analizuje logistykę, catering i materiały, wyliczając szacunkowy ślad środowiskowy oraz generując rekomendacje obniżające koszty i marnotrawstwo.
         </p>
       </div>
 
@@ -11895,20 +11895,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className="w-full xl:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#e8ce7a] px-5 py-3 text-[11px] font-black uppercase tracking-wider text-[#0f172a] shadow-lg transition-all hover:bg-[#d8bd65] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <RefreshCw size={14} className={ecoAiLoading ? 'animate-spin' : ''} />
-          {ecoAiLoading ? 'Przeliczanie...' : 'WymuÄąâ€ş analizĂ„â„˘'}
+          {ecoAiLoading ? 'Przeliczanie...' : 'Wymuś analizę'}
         </button>
       </div>
     </section>
 
-    {/* METRYKI GÄąÂÄ‚â€śWNE */}
+    {/* METRYKI GŁÓWNE */}
     <section className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
       {[
         { label: 'Wynik GOZ', value: `${displayedEcoAnalysis.circularityScore}%`, icon: Leaf, isGood: displayedEcoAnalysis.circularityScore >= 60 },
-        { label: 'UnikniĂ„â„˘te wydruki', value: displayedEcoAnalysis.avoidedPrintsCount.toLocaleString('pl-PL'), icon: FileText, isGood: true },
-        { label: 'OszczĂ„â„˘dzony papier', value: `${displayedEcoAnalysis.paperSavedKg.toFixed(1)} kg`, icon: Recycle, isGood: true },
+        { label: 'Uniknięte wydruki', value: displayedEcoAnalysis.avoidedPrintsCount.toLocaleString('pl-PL'), icon: FileText, isGood: true },
+        { label: 'Oszczędzony papier', value: `${displayedEcoAnalysis.paperSavedKg.toFixed(1)} kg`, icon: Recycle, isGood: true },
         { label: 'Ryzyko food waste', value: `${displayedEcoAnalysis.foodWastePortionsRisk} porcji`, icon: UtensilsCrossed, isGood: displayedEcoAnalysis.foodWastePortionsRisk < 5 },
-        { label: 'NadwyÄąÄ˝ka gadÄąÄ˝etÄ‚Ĺ‚w', value: `${displayedEcoAnalysis.gadgetOverstockCount} szt.`, icon: Gift, isGood: displayedEcoAnalysis.gadgetOverstockCount < 10 },
-        { label: 'OszczĂ„â„˘dnoÄąâ€şci', value: `${displayedEcoAnalysis.estimatedCostSavings.toLocaleString('pl-PL')} zÄąâ€š`, icon: Wallet, isGood: true }
+        { label: 'Nadwyżka gadżetów', value: `${displayedEcoAnalysis.gadgetOverstockCount} szt.`, icon: Gift, isGood: displayedEcoAnalysis.gadgetOverstockCount < 10 },
+        { label: 'Oszczędności', value: `${displayedEcoAnalysis.estimatedCostSavings.toLocaleString('pl-PL')} zł`, icon: Wallet, isGood: true }
       ].map((item: any) => (
         <div
           key={item.label}
@@ -11930,17 +11930,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </section>
 
-    {/* ÄąĹˇLAD WĂ„ÂGLOWY I ÄąÄ…RÄ‚â€śDÄąÂA */}
+    {/* ŚLAD WĘGLOWY I ŹRÓDŁA */}
     <section className="grid grid-cols-1 xl:grid-cols-5 gap-4 md:gap-6">
-      {/* ÄąĹˇlad wĂ„â„˘glowy LIVE */}
+      {/* Ślad węglowy LIVE */}
       <div className={`xl:col-span-2 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm overflow-hidden flex flex-col justify-between ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Globe size={16} className="text-emerald-500" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">ÄąĹˇlad WĂ„â„˘glowy LIVE</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Ślad Węglowy LIVE</p>
           </div>
           <h3 className={`text-3xl md:text-4xl font-black mt-2 tracking-tight truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            {displayedEcoAnalysis.totalCo2Saved.toFixed(1)} <span className="text-xl md:text-2xl text-slate-400">kg COĂ˘â€šâ€š</span>
+            {displayedEcoAnalysis.totalCo2Saved.toFixed(1)} <span className="text-xl md:text-2xl text-slate-400">kg CO2</span>
           </h3>
         </div>
 
@@ -11956,10 +11956,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      {/* ÄąÄ…rÄ‚Ĺ‚dÄąâ€ša wyliczeÄąâ€ž */}
+      {/* Źródła wyliczeń */}
       <div className={`xl:col-span-3 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Z czego wynika oszczĂ„â„˘dnoÄąâ€şĂ„â€ˇ?
+          Z czego wynika oszczędność?
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[180px] md:max-h-[220px] overflow-y-auto custom-scrollbar pr-2">
           {displayedEcoAnalysis.sources.map((source: any, index: number) => {
@@ -11985,14 +11985,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </section>
 
-    {/* REKOMENDACJE AI (PeÄąâ€šna szerokoÄąâ€şĂ„â€ˇ w poziomie) */}
+    {/* REKOMENDACJE AI (Pełna szerokość w poziomie) */}
     <section className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 shrink-0">
             <Sparkles size={12} /> Sugestie AI
           </span>
-          <h3 className={`text-base md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Co poprawiĂ„â€ˇ przed eventem?</h3>
+          <h3 className={`text-base md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Co poprawić przed eventem?</h3>
         </div>
       </div>
 
@@ -12000,7 +12000,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className={`rounded-2xl border p-6 text-center ${isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-emerald-50 border-emerald-200'}`}>
           <BadgeCheck size={32} className="mx-auto text-emerald-500 mb-3" />
           <p className="font-black text-emerald-600 dark:text-emerald-400">Brak krytycznych rekomendacji.</p>
-          <p className={`text-xs mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Aktualne dane wyglĂ„â€¦dajĂ„â€¦ stabilnie. UzupeÄąâ€šniaj dane operacyjne na bieÄąÄ˝Ă„â€¦co.</p>
+          <p className={`text-xs mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Aktualne dane wyglądają stabilnie. Uzupełniaj dane operacyjne na bieżąco.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -12033,17 +12033,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       )}
     </section>
 
-    {/* MODEL ReSOLVE (PeÄąâ€šna szerokoÄąâ€şĂ„â€ˇ pozioma) */}
+    {/* MODEL ReSOLVE (Pełna szerokość pozioma) */}
     <section className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>ZgodnoÄąâ€şĂ„â€ˇ z modelem gospodarki (GOZ)</p>
+          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zgodność z modelem gospodarki (GOZ)</p>
           <h3 className={`text-lg md:text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             Model ReSOLVE
           </h3>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>ÄąÂĂ„â€¦czny wynik:</span>
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Łączny wynik:</span>
           <span className={`rounded-xl px-4 py-2 text-sm font-black tabular-nums border ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
             {displayedEcoAnalysis.circularityScore}%
           </span>
@@ -12071,14 +12071,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </section>
 
-    {/* Dwie Kolumny: ANALIZA OBSZARÄ‚â€śW + SCENARIUSZE */}
+    {/* Dwie Kolumny: ANALIZA OBSZARÓW + SCENARIUSZE */}
     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-      {/* Analiza ObszarÄ‚Ĺ‚w */}
+      {/* Analiza Obszarów */}
       <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <div className="mb-5">
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Analiza ObszarÄ‚Ĺ‚w</p>
-          <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>GOZ wedÄąâ€šug moduÄąâ€šÄ‚Ĺ‚w</h3>
+          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Analiza Obszarów</p>
+          <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>GOZ według modułów</h3>
         </div>
 
         <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[350px]">
@@ -12118,11 +12118,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div key={scenario.label} className={`rounded-2xl border p-4 md:p-5 ${isOpt ? (isDarkMode ? 'bg-blue-900/10 border-blue-800/50' : 'bg-blue-50/50 border-blue-200') : (isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
                 <div className="flex justify-between items-center mb-4">
                   <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${isOpt ? 'text-blue-500' : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`}>{scenario.label}</p>
-                  <p className={`text-lg md:text-xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{scenario.co2.toFixed(1)} <span className="text-[10px] text-slate-500 font-bold uppercase">kg COĂ˘â€šâ€š</span></p>
+                  <p className={`text-lg md:text-xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{scenario.co2.toFixed(1)} <span className="text-[10px] text-slate-500 font-bold uppercase">kg CO2</span></p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>WpÄąâ€šyw na budÄąÄ˝et</p>
+                    <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Wpływ na budżet</p>
                     <p className={`text-sm font-black mt-1 ${isOpt ? 'text-emerald-500' : 'text-amber-500'}`}>{scenario.cost}</p>
                   </div>
                   <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
@@ -12139,7 +12139,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* Nota prawna / info */}
     <div className={`rounded-2xl border p-4 text-[9px] md:text-[10px] font-medium text-center uppercase tracking-widest ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-      Wyniki generowane przez moduÄąâ€š AI Eco Engine majĂ„â€¦ charakter szacunkowy. Nie zastĂ„â„˘pujĂ„â€¦ peÄąâ€šnego certyfikowanego audytu Äąâ€şrodowiskowego, ale stanowiĂ„â€¦ podstawĂ„â„˘ do raportowania ESG.
+      Wyniki generowane przez moduł AI Eco Engine mają charakter szacunkowy. Nie zastępują pełnego certyfikowanego audytu środowiskowego, ale stanowią podstawę do raportowania ESG.
     </div>
 
   </div>
@@ -12149,7 +12149,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'eventpass' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    {/* NAGÄąÂÄ‚â€śWEK */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -12157,7 +12157,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Identyfikacja pacjenta i check-in QR
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzĂ„â€¦dzaj kodami QR pacjentÄ‚Ĺ‚w, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunÄ‚Ĺ‚w.
+          Zarządzaj kodami QR pacjentów, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunów.
         </p>
       </div>
 
@@ -12171,7 +12171,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
-          <RefreshCw size={14} /> OdÄąâ€şwieÄąÄ˝
+          <RefreshCw size={14} /> Odśwież
         </button>
 
         <button
@@ -12197,7 +12197,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         ['QR wygenerowane', patientQrMetrics.qrGenerated, QrCode],
         ['Check-in wizyt', patientQrMetrics.checkedIn, ScanLine],
         ['Identyfikatory wydane', patientQrMetrics.idsIssued, BadgeCheck],
-        ['Wizyty zamkniĂ„â„˘te', patientQrMetrics.visitsClosed, CheckCircle2],
+        ['Wizyty zamknięte', patientQrMetrics.visitsClosed, CheckCircle2],
         ['Role personelu', staffAccessList.length, ShieldCheck],
       ].map(([label, value, Icon]: any) => (
         <div key={label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -12227,7 +12227,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Raport check-in LIVE
         </h4>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Statusy pacjentÄ‚Ĺ‚w na podstawie QR, check-inu i dziaÄąâ€šaÄąâ€ž personelu.
+          Statusy pacjentów na podstawie QR, check-inu i działań personelu.
         </p>
       </div>
 
@@ -12236,7 +12236,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           { label: 'QR aktywne', value: patientQrMetrics.qrGenerated, total: patientQrMetrics.totalPatients, color: 'bg-blue-500' },
           { label: 'Check-in', value: patientQrMetrics.checkedIn, total: patientQrMetrics.qrGenerated, color: 'bg-emerald-500' },
           { label: 'ID wydane', value: patientQrMetrics.idsIssued, total: patientQrMetrics.qrGenerated, color: 'bg-indigo-500' },
-          { label: 'ZamkniĂ„â„˘te wizyty', value: patientQrMetrics.visitsClosed, total: patientQrMetrics.idsIssued, color: 'bg-slate-500' },
+          { label: 'Zamknięte wizyty', value: patientQrMetrics.visitsClosed, total: patientQrMetrics.idsIssued, color: 'bg-slate-500' },
         ].map(({ label, value, total, color }: any) => {
           const percent = Number(total || 0) > 0 ? Math.min(Math.round((Number(value || 0) / Number(total || 1)) * 100), 100) : 0
           return (
@@ -12256,7 +12256,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* LISTA PACJENTÄ‚â€śW */}
+    {/* LISTA PACJENTÓW */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <div className="relative flex-1 min-w-[200px]">
@@ -12279,14 +12279,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <option value="qr">Z QR</option>
           <option value="checked_in">Po check-in</option>
           <option value="id_issued">Z wydanym ID</option>
-          <option value="closed">ZamkniĂ„â„˘te wizyty</option>
+          <option value="closed">Zamknięte wizyty</option>
         </select>
       </div>
 
       <div className="space-y-4 p-4 md:p-5">
         {filteredPatientRows.length === 0 ? (
           <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            Brak pacjentÄ‚Ĺ‚w pasujĂ„â€¦cych do filtrÄ‚Ĺ‚w.
+            Brak pacjentów pasujących do filtrów.
           </div>
         ) : filteredPatientRows.map(({ patient, unit }: any) => {
           const isExpanded = expandedPatientIds[patient.id] === true
@@ -12316,7 +12316,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                     {unit?.wristband_returned && (
                       <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        Wizyta zamkniĂ„â„˘ta
+                        Wizyta zamknięta
                       </span>
                     )}
                   </div>
@@ -12358,7 +12358,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         }}
                         className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                       >
-                        <Eye size={14} /> PodglĂ„â€¦d QR
+                        <Eye size={14} /> Podgląd QR
                       </button>
 
                       <button
@@ -12409,7 +12409,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </button>
 
                       <button onClick={() => handleReturnWristband(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                        <CheckCircle2 size={12}/> Zamknij wizytĂ„â„˘
+                        <CheckCircle2 size={12}/> Zamknij wizytę
                       </button>
 
                       <button onClick={() => handleResetUnitStatus(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-red-900/20 border-red-800/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}`}>
@@ -12431,10 +12431,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="min-w-0">
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-            Role personelu i dostĂ„â„˘p QR
+            Role personelu i dostęp QR
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            TwÄ‚Ĺ‚rz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
+            Twórz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
           </p>
         </div>
 
@@ -12449,14 +12449,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14}/> Dodaj rolĂ„â„˘
+          <Plus size={14}/> Dodaj rolę
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {staffAccessList.length === 0 ? (
           <div className={`col-span-full p-10 text-center font-bold text-sm border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak zdefiniowanych rÄ‚Ĺ‚l personelu QR.
+            Brak zdefiniowanych ról personelu QR.
           </div>
         ) : staffAccessList.map((staff: any) => {
           const staffPassUrl = staff.access_token ? getStaffPassUrl(staff.access_token) : ''
@@ -12465,10 +12465,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             staff.can_entry_checkin && 'Check-in wizyty',
             staff.can_meal_redemption && 'Dokumenty',
             staff.can_gadget_redemption && 'Pakiet pacjenta',
-            staff.can_transport_checkin && 'ÄąĹˇcieÄąÄ˝ka pacjenta',
+            staff.can_transport_checkin && 'Ścieżka pacjenta',
             staff.can_wristband_issue && 'Wydanie identyfikatora',
-            staff.can_wristband_return && 'ZamkniĂ„â„˘cie wizyty',
-          ].filter(Boolean).join(' Ă˘â‚¬Ë ')
+            staff.can_wristband_return && 'Zamknięcie wizyty',
+          ].filter(Boolean).join(' / ')
 
           return (
             <div key={staff.id} className={`rounded-2xl border p-5 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
@@ -12478,13 +12478,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{getClinicStaffRoleLabel(staff.role)}</p>
                 </div>
                 <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${staff.is_active !== false ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')}`}>
-                  {staff.is_active !== false ? 'Aktywny' : 'WyÄąâ€šĂ„â€¦czony'}
+                  {staff.is_active !== false ? 'Aktywny' : 'Wyłączony'}
                 </span>
               </div>
 
               <div className="mt-3">
                 <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Uprawnienia QR</p>
-                <p className={`text-[10px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{permissions || 'Brak uprawnieÄąâ€ž'}</p>
+                <p className={`text-[10px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{permissions || 'Brak uprawnień'}</p>
               </div>
 
               <div className={`mt-5 p-4 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
@@ -12498,14 +12498,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(staffPassUrl)
-                          showNotification('Link dla obsÄąâ€šugi skopiowany', 'success')
+                          showNotification('Link dla obsługi skopiowany', 'success')
                         }}
                         className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
                       >
                         <Copy size={14}/> Kopiuj Link
                       </button>
                       <a href={staffPassUrl} target="_blank" rel="noopener noreferrer" className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 border ${isDarkMode ? 'bg-[#e8ce7a]/10 border-[#e8ce7a]/30 text-[#e8ce7a] hover:bg-[#e8ce7a]/20' : 'bg-slate-900 border-slate-900 text-[#e8ce7a] hover:bg-black'}`}>
-                        <ExternalLink size={14}/> OtwÄ‚Ĺ‚rz
+                        <ExternalLink size={14}/> Otwórz
                       </a>
                     </div>
                   </>
@@ -12529,7 +12529,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {selectedAttendeeUnit.display_name}
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Karta i kod QR pacjenta do wydruku lub wysyÄąâ€ški rĂ„â„˘cznej.
+                Karta i kod QR pacjenta do wydruku lub wysyłki ręcznej.
               </p>
             </div>
             <button onClick={() => setSelectedAttendeeUnit(null)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -12579,7 +12579,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               ['Typ', selectedAttendeeUnit.unit_type],
               ['Pacjent ID', selectedAttendeeUnit.patient_id || 'Brak'],
               ['ID identyfikatora', selectedAttendeeUnit.wristband_code || 'Brak'],
-              ['Status wizyty', selectedAttendeeUnit.checked_in ? 'Po check-in' : 'OczekujĂ„â€¦cy'],
+              ['Status wizyty', selectedAttendeeUnit.checked_in ? 'Po check-in' : 'Oczekujący'],
             ].map(([label, value]) => (
               <div key={label} className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
                 <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{label}</p>
@@ -12599,7 +12599,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       {consents.length === 0 ? (
         <p className={`text-xs mt-3 font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Brak podpisanych zgÄ‚Ĺ‚d dla tego pacjenta.
+          Brak podpisanych zgód dla tego pacjenta.
         </p>
       ) : (
         <div className="mt-4 space-y-2">
@@ -12621,7 +12621,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   rel="noopener noreferrer"
                   className={`shrink-0 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                 >
-                  OtwÄ‚Ĺ‚rz
+                  Otwórz
                 </a>
               )}
             </div>
@@ -12637,7 +12637,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     )}
 
-    {/* MODAL: DODAWANIE OBSÄąÂUGI */}
+    {/* MODAL: DODAWANIE OBSŁUGI */}
     {isStaffAccessModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -12648,7 +12648,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 Nowa rola personelu
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                StwÄ‚Ĺ‚rz limitowany panel QR zaleÄąÄ˝ny od roli osoby skanujĂ„â€¦cej.
+                Stwórz limitowany panel QR zależny od roli osoby skanującej.
               </p>
             </div>
             <button onClick={() => setIsStaffAccessModalOpen(false)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -12662,7 +12662,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                placeholder="np. Recepcja gÄąâ€šÄ‚Ĺ‚wna"
+                placeholder="np. Recepcja główna"
                 value={staffAccessForm.name || ''}
                 onChange={e => setStaffAccessForm({ ...staffAccessForm, name: e.target.value })}
               />
@@ -12689,9 +12689,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   ['can_entry_checkin', 'Check-in wizyty'],
                   ['can_meal_redemption', 'Dokumenty'],
                   ['can_gadget_redemption', 'Pakiet pacjenta'],
-                  ['can_transport_checkin', 'ÄąĹˇcieÄąÄ˝ka pacjenta'],
+                  ['can_transport_checkin', 'Ścieżka pacjenta'],
                   ['can_wristband_issue', 'Wydanie ID'],
-                  ['can_wristband_return', 'ZamkniĂ„â„˘cie wizyty'],
+                  ['can_wristband_return', 'Zamknięcie wizyty'],
                 ].map(([key, label]) => (
                   <label key={key} className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                     !!staffAccessForm[key]
@@ -12716,7 +12716,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-              UtwÄ‚Ĺ‚rz dostĂ„â„˘p
+              Utwórz dostęp
             </button>
           </form>
         </div>
@@ -12738,29 +12738,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       {[
         {
           label: 'Zaopatrzenie barowe',
-          value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osÄ‚Ĺ‚b`,
+          value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osób`,
           sub: 'Wymaga zakupu alkoholu',
           icon: <Truck size={16} />,
           color: 'from-purple-600 to-purple-800'
         },
         {
           label: 'Diety specjalne',
-          value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osÄ‚Ĺ‚b`,
-          sub: 'Wymaga osobnych oznaczeÄąâ€ž',
+          value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osób`,
+          sub: 'Wymaga osobnych oznaczeń',
           icon: <UtensilsCrossed size={16} />,
           color: 'from-amber-500 to-amber-700'
         },
         {
           label: 'Rooming list',
-          value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osÄ‚Ĺ‚b`,
+          value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osób`,
           sub: 'Rezerwacje potwierdzone',
           icon: <Bed size={16} />,
           color: 'from-blue-600 to-blue-800'
         },
         {
           label: 'Zapotrzebowanie na shuttle',
-          value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osÄ‚Ĺ‚b`,
-          sub: 'Flota do zamÄ‚Ĺ‚wienia',
+          value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osób`,
+          sub: 'Flota do zamówienia',
           icon: <Bus size={16} />,
           color: 'from-emerald-600 to-emerald-800'
         },
@@ -12780,19 +12780,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* === 2. ANALITYKA ZASOBÄ‚â€śW === */}
+    {/* === 2. ANALITYKA ZASOBÓW === */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* ObÄąâ€šoÄąÄ˝enie noclegowe */}
+      {/* Obłożenie noclegowe */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-2 mb-4">
           <Bed size={18} className="text-[#253a2a]" />
-          <h3 className="font-black text-slate-800">Live Ă˘â‚¬â€ś ObÄąâ€šoÄąÄ˝enie noclegowe</h3>
+          <h3 className="font-black text-slate-800">Live - Obłożenie noclegowe</h3>
         </div>
         <div className="space-y-5">
           {[
-            { label: 'Pokoje 1-osobowe', current: approvedApps.filter(a => a.accommodation === 'PokÄ‚Ĺ‚j 1-os').length, total: 30 },
-            { label: 'Pokoje 2-osobowe', current: approvedApps.filter(a => a.accommodation === 'PokÄ‚Ĺ‚j 2-os').length, total: 20 },
+            { label: 'Pokoje 1-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 1-os').length, total: 30 },
+            { label: 'Pokoje 2-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 2-os').length, total: 20 },
           ].map((item, idx) => (
             <div key={idx}>
               <div className="flex justify-between text-xs font-bold mb-1">
@@ -12810,7 +12810,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 />
               </div>
               {item.current > item.total && (
-                <p className="text-[10px] text-red-500 font-bold mt-1">Ă˘ĹˇÂ ÄŹÂ¸Ĺą Przekroczono limit</p>
+                <p className="text-[10px] text-red-500 font-bold mt-1">Uwaga: Przekroczono limit</p>
               )}
             </div>
           ))}
@@ -12826,7 +12826,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="space-y-3">
           {[
             { label: 'Wino czerwone', key: 'wino_czerwone', color: 'bg-red-700' },
-            { label: 'Wino biaÄąâ€še', key: 'wino_biale', color: 'bg-amber-300' },
+            { label: 'Wino białe', key: 'wino_biale', color: 'bg-amber-300' },
             { label: 'Piwo', key: 'piwo', color: 'bg-yellow-600' },
             { label: 'Bezalkoholowe', key: 'none', color: 'bg-slate-400' },
           ].map((item) => {
@@ -12860,7 +12860,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Registry Operations Control
           </h3>
           <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
-            ZarzĂ„â€¦dzanie detalami logistycznymi goÄąâ€şci zaakceptowanych
+            Zarządzanie detalami logistycznymi gości zaakceptowanych
           </p>
         </div>
         <div className="flex gap-2">
@@ -12880,7 +12880,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500">
-              <th className="p-4">GoÄąâ€şĂ„â€ˇ / Firma</th>
+              <th className="p-4">Gość / Firma</th>
               <th className="p-4 text-center">RSVP</th>
               <th className="p-4">Dieta / Alergie</th>
               <th className="p-4">Bar & Nocleg</th>
@@ -12932,14 +12932,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] font-black text-slate-400 uppercase w-8">Bar:</span>
                         <span className="text-xs font-bold text-slate-800">
-                          {app.alcohol_preference === 'wino_czerwone' ? 'Ä‘ĹşĹ¤Â· Red' :
-                           app.alcohol_preference === 'wino_biale' ? 'Ä‘ĹşÄ„â€š White' :
-                           app.alcohol_preference === 'piwo' ? 'Ä‘ĹşĹ¤Ĺź Beer' : 'Ä‘ĹşĹˇÂ« None'}
+                          {app.alcohol_preference === 'wino_czerwone' ? ' Red' :
+                           app.alcohol_preference === 'wino_biale' ? ' White' :
+                           app.alcohol_preference === 'piwo' ? ' Beer' : ' None'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] font-black text-slate-400 uppercase w-8">Room:</span>
-                        <span className="text-xs font-bold text-slate-800">{app.accommodation || 'Ă˘â‚¬â€ť'}</span>
+                        <span className="text-xs font-bold text-slate-800">{app.accommodation || '-'}</span>
                       </div>
                     </div>
                   </td>
@@ -12950,7 +12950,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </span>
                       {app.transport_address && (
                         <p className="text-[9px] text-slate-400 truncate max-w-[180px] mt-0.5">
-                          Ä‘Ĺşâ€śĹ¤ {app.transport_address}
+                           {app.transport_address}
                         </p>
                       )}
                     </div>
@@ -12981,7 +12981,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* 1. STATUS KOMUNIKACJI - METRYKI */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">DostarczalnoÄąâ€şĂ„â€ˇ</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dostarczalność</p>
         <p className="text-xl font-black text-emerald-600 uppercase">99.8%</p>
         <div className="w-full bg-slate-100 h-1 mt-2 rounded-full overflow-hidden">
           <div className="bg-emerald-500 h-full w-[99%]"></div>
@@ -12993,7 +12993,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <p className="text-[10px] text-slate-400 font-bold">Wymaga pilnego kontaktu</p>
       </div>
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">WysÄąâ€šane powiadomienia</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Wysłane powiadomienia</p>
         <p className="text-xl font-black text-slate-900">{approvedApps.length * 2} <span className="text-xs text-slate-400 font-bold">Logi systemowe</span></p>
       </div>
     </div>
@@ -13003,10 +13003,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-[#e8ce7a]">AI-ready</p>
           <h3 className="mt-1 font-black text-lg flex items-center gap-2">
-            <Sparkles size={18} /> AI asystent wiadomoÄąâ€şci
+            <Sparkles size={18} /> AI asystent wiadomości
           </h3>
           <p className="mt-2 text-xs text-white/70 font-medium">
-            W przyszÄąâ€šym kroku wygeneruje treÄąâ€şci SMS, e-maili, zaleceÄąâ€ž i follow-upÄ‚Ĺ‚w na podstawie statusÄ‚Ĺ‚w pacjentÄ‚Ĺ‚w, wizyt i segmentÄ‚Ĺ‚w opieki.
+            W przyszłym kroku wygeneruje treści SMS, e-maili, zaleceń i follow-upów na podstawie statusów pacjentów, wizyt i segmentów opieki.
           </p>
         </div>
         <span className="rounded-full bg-white/10 px-3 py-1 text-[9px] font-black uppercase text-[#e8ce7a]">
@@ -13015,40 +13015,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* 2. CENTRUM WYSYÄąÂKI */}
+    {/* 2. CENTRUM WYSYŁKI */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* KANAÄąÂ: EMAIL MASOWY */}
+      {/* KANAŁ: EMAIL MASOWY */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-900 text-white flex items-center gap-3">
           <div className="p-2 bg-white/10 rounded-lg"><Mail size={18} className="text-[#e8ce7a]"/></div>
           <div>
             <h3 className="font-black text-sm uppercase">Global Broadcast</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">WysyÄąâ€ška do wszystkich zatwierdzonych ({approvedApps.length})</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">Wysyłka do wszystkich zatwierdzonych ({approvedApps.length})</p>
           </div>
         </div>
         <div className="p-6 space-y-4 bg-slate-50 flex-1">
           <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Temat wiadomoÄąâ€şci</label>
-            <input className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#253a2a]" placeholder="np. WaÄąÄ˝ne informacje organizacyjne - Event ANM" />
+            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Temat wiadomości</label>
+            <input className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#253a2a]" placeholder="np. Ważne informacje organizacyjne - Event ANM" />
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">TreÄąâ€şĂ„â€ˇ (Markdown/HTML)</label>
-            <textarea className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none focus:border-[#253a2a]" rows={6} placeholder="Szanowni PaÄąâ€žstwo..." />
+            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Treść (Markdown/HTML)</label>
+            <textarea className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none focus:border-[#253a2a]" rows={6} placeholder="Szanowni Państwo..." />
           </div>
           <button className="w-full py-4 bg-[#253a2a] hover:bg-black text-white rounded-xl font-black text-xs uppercase shadow-lg transition-all flex items-center justify-center gap-2">
-            <Send size={14} className="text-[#e8ce7a]"/> WyÄąâ€şlij komunikat zbiorczy
+            <Send size={14} className="text-[#e8ce7a]"/> Wyślij komunikat zbiorczy
           </button>
         </div>
       </div>
 
-      {/* KANAÄąÂ: AUTOMATYKA FOLLOW-UP */}
+      {/* KANAŁ: AUTOMATYKA FOLLOW-UP */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-50 border-b border-slate-200 flex items-center gap-3 text-slate-900">
           <div className="p-2 bg-amber-100 rounded-lg text-amber-700"><Zap size={18}/></div>
           <div>
             <h3 className="font-black text-sm uppercase">Smart Reminders</h3>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Automatyczne dogonienie brakujĂ„â€¦cych danych</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Automatyczne dogonienie brakujących danych</p>
           </div>
         </div>
         <div className="p-6 flex flex-col justify-between flex-1">
@@ -13057,7 +13057,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <AlertTriangle size={14}/> Segmentacja: brak follow-upu
             </h4>
             <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-              System wykryÄąâ€š <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentÄ‚Ĺ‚w</strong>, ktÄ‚Ĺ‚rzy wymagajĂ„â€¦ potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
+              System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentów</strong>, którzy wymagają potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
             </p>
           </div>
 
@@ -13076,13 +13076,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">Email follow-up z linkiem pacjenta</span>
               </div>
               <button className="text-[10px] font-black text-white bg-[#253a2a] px-3 py-1 rounded-lg uppercase shadow-sm hover:scale-105 transition-all">
-                WyÄąâ€şlij teraz
+                Wyślij teraz
               </button>
             </div>
           </div>
 
           <p className="text-[9px] text-slate-400 text-center mt-6 font-bold uppercase tracking-widest">
-            Logi wysyÄąâ€ški: Ostatni reminder 2h temu
+            Logi wysyłki: Ostatni reminder 2h temu
           </p>
         </div>
       </div>
@@ -13093,10 +13093,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 {/* ---------------------------------------------------------------
-  DomyÄąâ€şlny placeholder dla nieistniejĂ„â€¦cych zakÄąâ€šadek
+  Domyślny placeholder dla nieistniejących zakładek
   --------------------------------------------------------------- */}
     {!['rekrutacja', 'logistyka', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'gadgets', 'stoly', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
-  <PlaceholderView icon={FileText} title="ModuÄąâ€š w przygotowaniu" desc="Pracujemy nad wdroÄąÄ˝eniem tej funkcjonalnoÄąâ€şci." />
+  <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
 )}
    </div>
 
@@ -13105,18 +13105,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </main>
 
 
-{/* edycja goÄąâ€şci */}
+{/* edycja gości */}
 
       {editingGuest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl border border-slate-200 flex flex-col">
             <div className="p-5 md:p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
-              <div><h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2"><Edit3 size={20} className="text-[#253a2a]"/> Edytuj ZgÄąâ€šoszenie</h3><p className="text-xs text-slate-500 font-medium">{editingGuest.first_name} {editingGuest.last_name}</p></div>
+              <div><h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2"><Edit3 size={20} className="text-[#253a2a]"/> Edytuj Zgłoszenie</h3><p className="text-xs text-slate-500 font-medium">{editingGuest.first_name} {editingGuest.last_name}</p></div>
               <button onClick={() => setEditingGuest(null)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors"><X size={20} /></button>
             </div>
             <form onSubmit={saveGuestChanges} className="p-5 md:p-6 space-y-6 bg-slate-50">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Dane Osobowe</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">ImiĂ„â„˘</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.first_name} onChange={e => setEditingGuest({...editingGuest, first_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nazwisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.last_name} onChange={e => setEditingGuest({...editingGuest, last_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Firma</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.company_name} onChange={e => setEditingGuest({...editingGuest, company_name: e.target.value})} /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Stanowisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.position} onChange={e => setEditingGuest({...editingGuest, position: e.target.value})} /></div></div></div>
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Wybory i Preferencje (RSVP)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Status RSVP</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.rsvp_status || 'oczekuje'} onChange={e => setEditingGuest({...editingGuest, rsvp_status: e.target.value})}><option value="oczekuje">Oczekuje / Brak</option><option value="potwierdzone">Potwierdzone</option><option value="odrzucone">ZrezygnowaÄąâ€š</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dieta</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.diet || ''} onChange={e => setEditingGuest({...editingGuest, diet: e.target.value})} placeholder="np. Wege, Bez glutenu" /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Alkohol</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.alcohol_preference || ''} onChange={e => setEditingGuest({...editingGuest, alcohol_preference: e.target.value})}><option value="">Wybierz...</option><option value="wino_czerwone">Wino Czerwone</option><option value="wino_biale">Wino BiaÄąâ€še</option><option value="piwo">Piwo</option><option value="tylko_bezalkoholowe">Tylko Bezalkoholowe</option><option value="none">Brak alkoholu</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">SÄąâ€šodycze</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.sweets_preference || ''} onChange={e => setEditingGuest({...editingGuest, sweets_preference: e.target.value})}><option value="">Wybierz...</option><option value="czekolada">Czekolada</option><option value="owoce">Owoce</option><option value="ciasta">Ciasta</option><option value="wszystko">Wszystko</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Transport</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.transport || ''} onChange={e => setEditingGuest({...editingGuest, transport: e.target.value})}><option value="">Wybierz...</option><option value="WÄąâ€šasny dojazd">WÄąâ€šasny dojazd</option><option value="Carpooling">Carpooling (Szukam miejsca)</option><option value="Carpooling_driver">Carpooling (OferujĂ„â„˘ miejsce)</option><option value="Transfer">Transfer Organizatora</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nocleg</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.accommodation || ''} onChange={e => setEditingGuest({...editingGuest, accommodation: e.target.value})}><option value="">Wybierz...</option><option value="Brak">Brak</option><option value="PokÄ‚Ĺ‚j 1-os">PokÄ‚Ĺ‚j 1-osobowy</option><option value="PokÄ‚Ĺ‚j 2-os">PokÄ‚Ĺ‚j 2-osobowy</option></select></div></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dodatkowe uwagi (Alargie itp.)</label><textarea rows={2} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none resize-none focus:border-[#253a2a]" value={editingGuest.extra_notes || ''} onChange={e => setEditingGuest({...editingGuest, extra_notes: e.target.value})} placeholder="np. uczulenie na orzechy..." /></div></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Dane Osobowe</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Imię</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.first_name} onChange={e => setEditingGuest({...editingGuest, first_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nazwisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.last_name} onChange={e => setEditingGuest({...editingGuest, last_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Firma</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.company_name} onChange={e => setEditingGuest({...editingGuest, company_name: e.target.value})} /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Stanowisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.position} onChange={e => setEditingGuest({...editingGuest, position: e.target.value})} /></div></div></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Wybory i Preferencje (RSVP)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Status RSVP</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.rsvp_status || 'oczekuje'} onChange={e => setEditingGuest({...editingGuest, rsvp_status: e.target.value})}><option value="oczekuje">Oczekuje / Brak</option><option value="potwierdzone">Potwierdzone</option><option value="odrzucone">Zrezygnował</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dieta</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.diet || ''} onChange={e => setEditingGuest({...editingGuest, diet: e.target.value})} placeholder="np. Wege, Bez glutenu" /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Alkohol</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.alcohol_preference || ''} onChange={e => setEditingGuest({...editingGuest, alcohol_preference: e.target.value})}><option value="">Wybierz...</option><option value="wino_czerwone">Wino Czerwone</option><option value="wino_biale">Wino Białe</option><option value="piwo">Piwo</option><option value="tylko_bezalkoholowe">Tylko Bezalkoholowe</option><option value="none">Brak alkoholu</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Słodycze</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.sweets_preference || ''} onChange={e => setEditingGuest({...editingGuest, sweets_preference: e.target.value})}><option value="">Wybierz...</option><option value="czekolada">Czekolada</option><option value="owoce">Owoce</option><option value="ciasta">Ciasta</option><option value="wszystko">Wszystko</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Transport</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.transport || ''} onChange={e => setEditingGuest({...editingGuest, transport: e.target.value})}><option value="">Wybierz...</option><option value="Własny dojazd">Własny dojazd</option><option value="Carpooling">Carpooling (Szukam miejsca)</option><option value="Carpooling_driver">Carpooling (Oferuję miejsce)</option><option value="Transfer">Transfer Organizatora</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nocleg</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.accommodation || ''} onChange={e => setEditingGuest({...editingGuest, accommodation: e.target.value})}><option value="">Wybierz...</option><option value="Brak">Brak</option><option value="Pokój 1-os">Pokój 1-osobowy</option><option value="Pokój 2-os">Pokój 2-osobowy</option></select></div></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dodatkowe uwagi (Alergie itp.)</label><textarea rows={2} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none resize-none focus:border-[#253a2a]" value={editingGuest.extra_notes || ''} onChange={e => setEditingGuest({...editingGuest, extra_notes: e.target.value})} placeholder="np. uczulenie na orzechy..." /></div></div>
               <div className="flex gap-3 pt-2"><button type="button" onClick={() => setEditingGuest(null)} className="flex-1 py-3.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-black text-sm transition-colors hover:bg-slate-50">Anuluj</button><button type="submit" disabled={updating} className="flex-1 py-3.5 bg-[#253a2a] hover:bg-[#1a291e] text-[#e8ce7a] rounded-xl font-black text-sm shadow-md transition-colors">{updating ? 'Zapisywanie...' : 'Zapisz Zmiany'}</button></div>
             </form>
           </div>
@@ -13161,8 +13161,8 @@ const LiveCarbonFootprint = ({ event, applications }: { event: any, applications
   const totalSaved = paperSaved + postersSaved + carTransportSaved + mealWasteSaved + plasticSaved
   return (
     <div className="bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-300 rounded-[24px] md:rounded-[32px] p-4 md:p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-4"><div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-md"><Leaf size={20} className="text-white" /></div><div><h3 className="font-black text-emerald-950 text-sm md:text-lg">ÄąĹˇlad WĂ„â„˘glowy LIVE</h3><p className="text-[10px] md:text-xs font-bold text-emerald-700">Kalkulator COĂ˘â€šâ€š</p></div></div>
-      <div className="bg-white rounded-2xl p-3 md:p-5 mb-3 border border-emerald-200 text-center shadow-sm"><p className="text-[10px] text-slate-600 font-black mb-1 uppercase tracking-widest">OszczĂ„â„˘dnoÄąâ€şĂ„â€ˇ COĂ˘â€šâ€š</p><p className="text-2xl md:text-3xl font-black text-emerald-700">{totalSaved.toFixed(1)} kg</p><div className="grid grid-cols-2 gap-2 mt-3"><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved * 0.06)}</p><p className="text-[9px] font-bold text-emerald-700 uppercase">drzew</p></div><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved / 0.2)} km</p><p className="text-[9px] font-bold text-emerald-700 uppercase">jazdy</p></div></div></div>
+      <div className="flex items-center gap-2 mb-4"><div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-md"><Leaf size={20} className="text-white" /></div><div><h3 className="font-black text-emerald-950 text-sm md:text-lg">Ślad Węglowy LIVE</h3><p className="text-[10px] md:text-xs font-bold text-emerald-700">Kalkulator CO2</p></div></div>
+      <div className="bg-white rounded-2xl p-3 md:p-5 mb-3 border border-emerald-200 text-center shadow-sm"><p className="text-[10px] text-slate-600 font-black mb-1 uppercase tracking-widest">Oszczędność CO2</p><p className="text-2xl md:text-3xl font-black text-emerald-700">{totalSaved.toFixed(1)} kg</p><div className="grid grid-cols-2 gap-2 mt-3"><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved * 0.06)}</p><p className="text-[9px] font-bold text-emerald-700 uppercase">drzew</p></div><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved / 0.2)} km</p><p className="text-[9px] font-bold text-emerald-700 uppercase">jazdy</p></div></div></div>
       <div className="space-y-2"><SavingsItem icon={<Globe size={12} />} title="Cyfrowe zaproszenia" value={`${paperSaved.toFixed(1)} kg`} description={`${approvedGuests.length} szt.`} /><SavingsItem icon={<Truck size={12} />} title="Transport" value={`${carTransportSaved.toFixed(1)} kg`} description="Carpooling" /><SavingsItem icon={<Recycle size={12} />} title="Plastik" value={`${plasticSaved.toFixed(1)} kg`} description="Eliminacja" /></div>
     </div>
   )
@@ -13174,23 +13174,23 @@ const EcoCertificate = ({ event, metrics }: { event: any, metrics: any }) => {
   return (
     <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm p-4 md:p-6">
       <div className="flex items-center justify-between mb-4"><h3 className="font-black text-slate-900 flex items-center gap-2 text-sm md:text-base"><Award size={18} className="text-[#253a2a]"/> Certyfikat Eko ANM</h3><button className="px-3 py-1.5 bg-[#253a2a] text-[#e8ce7a] rounded-xl text-[10px] font-black uppercase transition-colors hover:bg-[#1a291e]">PDF</button></div>
-      <div className="bg-gradient-to-br from-slate-100 to-emerald-50 rounded-2xl p-4 border border-emerald-200 text-center shadow-inner"><Leaf size={28} className="text-[#253a2a] mx-auto mb-3" /><h4 className="font-black text-slate-900 mb-2 text-sm uppercase">Wydarzenie Przyjazne ÄąĹˇrodowisku</h4><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.totalCO2Saved} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">COĂ˘â€šâ€š</p></div><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.foodWastePrevented} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">Jedzenie</p></div></div><div className="bg-white rounded-xl p-2 inline-block border border-slate-200 shadow-sm"><QRCode value={qrValue} size={60} level="M" /></div><p className="text-[9px] font-mono font-bold text-slate-500 mt-3 bg-slate-100 inline-block px-2 py-1 rounded">ID: {certificateId}</p></div>
+      <div className="bg-gradient-to-br from-slate-100 to-emerald-50 rounded-2xl p-4 border border-emerald-200 text-center shadow-inner"><Leaf size={28} className="text-[#253a2a] mx-auto mb-3" /><h4 className="font-black text-slate-900 mb-2 text-sm uppercase">Wydarzenie Przyjazne Środowisku</h4><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.totalCO2Saved} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">CO2</p></div><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.foodWastePrevented} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">Jedzenie</p></div></div><div className="bg-white rounded-xl p-2 inline-block border border-slate-200 shadow-sm"><QRCode value={qrValue} size={60} level="M" /></div><p className="text-[9px] font-mono font-bold text-slate-500 mt-3 bg-slate-100 inline-block px-2 py-1 rounded">ID: {certificateId}</p></div>
     </div>
   )
 }
 
 const CircularSuppliersPanel = () => {
   const [suppliers, setSuppliers] = useState([
-    { id: 1, name: "Eko Catering Zielony", category: "Catering", score: 85, practices: ["Lokalne", "BIO", "Zero waste"], co2Reduction: 45, price: "Äąâ€şrednia", selected: false },
-    { id: 2, name: "Green Transport", category: "Transport", score: 92, practices: ["Elektryki", "Carpooling"], co2Reduction: 78, price: "wyÄąÄ˝sza", selected: false },
-    { id: 3, name: "Bio Dekoracje", category: "Dekoracje", score: 78, practices: ["Recykling", "Sezonowe"], co2Reduction: 60, price: "niÄąÄ˝sza", selected: false }
+    { id: 1, name: "Eko Catering Zielony", category: "Catering", score: 85, practices: ["Lokalne", "BIO", "Zero waste"], co2Reduction: 45, price: "średnia", selected: false },
+    { id: 2, name: "Green Transport", category: "Transport", score: 92, practices: ["Elektryki", "Carpooling"], co2Reduction: 78, price: "wyższa", selected: false },
+    { id: 3, name: "Bio Dekoracje", category: "Dekoracje", score: 78, practices: ["Recykling", "Sezonowe"], co2Reduction: 60, price: "niższa", selected: false }
   ])
   const toggleSupplier = (id: number) => setSuppliers(suppliers.map(s => s.id === id ? { ...s, selected: !s.selected } : s))
   const selectedCount = suppliers.filter(s => s.selected).length
   return (
     <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm p-4 md:p-6">
       <div className="flex justify-between items-center mb-4"><h3 className="font-black text-slate-900 text-sm md:text-base flex items-center gap-2"><Recycle size={18} className="text-[#253a2a]"/> Dostawcy Cyrkularni</h3>{selectedCount > 0 && <span className="text-[10px] bg-[#253a2a] text-[#e8ce7a] px-2 py-1 rounded-lg font-black shadow-sm">Wybrano {selectedCount}</span>}</div>
-      <div className="space-y-3">{suppliers.map(s => (<div key={s.id} onClick={() => toggleSupplier(s.id)} className={`border-2 rounded-2xl p-3 cursor-pointer transition-all ${s.selected ? 'border-[#253a2a] bg-emerald-50/50' : 'border-slate-200 hover:border-[#253a2a]'}`}><div className="flex justify-between items-center"><div><h4 className="font-black text-slate-900 text-sm">{s.name}</h4><p className="text-[10px] font-bold text-slate-600 mt-0.5">{s.category} Ă˘â‚¬Ë {s.price}</p></div><div className="flex items-center gap-2"><span className="text-xs font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">GOZ {s.score}%</span><div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${s.selected ? 'bg-[#253a2a] border-[#253a2a]' : 'border-slate-300 bg-white'}`}>{s.selected && <CheckCircle2 size={12} className="text-white" />}</div></div></div><div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-slate-100/50">{s.practices.map((p, i) => <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-black text-slate-700 border border-slate-200 shadow-sm">{p}</span>)}</div></div>))}</div>
+      <div className="space-y-3">{suppliers.map(s => (<div key={s.id} onClick={() => toggleSupplier(s.id)} className={`border-2 rounded-2xl p-3 cursor-pointer transition-all ${s.selected ? 'border-[#253a2a] bg-emerald-50/50' : 'border-slate-200 hover:border-[#253a2a]'}`}><div className="flex justify-between items-center"><div><h4 className="font-black text-slate-900 text-sm">{s.name}</h4><p className="text-[10px] font-bold text-slate-600 mt-0.5">{s.category} / {s.price}</p></div><div className="flex items-center gap-2"><span className="text-xs font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">GOZ {s.score}%</span><div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${s.selected ? 'bg-[#253a2a] border-[#253a2a]' : 'border-slate-300 bg-white'}`}>{s.selected && <CheckCircle2 size={12} className="text-white" />}</div></div></div><div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-slate-100/50">{s.practices.map((p, i) => <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-black text-slate-700 border border-slate-200 shadow-sm">{p}</span>)}</div></div>))}</div>
     </div>
   )
 }
@@ -13199,7 +13199,7 @@ const CircularSuppliersPanel = () => {
 
 const TransportOptimizer = ({ applications }: { applications: Guest[] }) => {
   const confirmed = applications.filter(a => a.rsvp_status === 'potwierdzone')
-  const needTransport = confirmed.filter(a => a.transport && a.transport !== 'WÄąâ€šasny dojazd' && a.transport_address)
+  const needTransport = confirmed.filter(a => a.transport && a.transport !== 'Własny dojazd' && a.transport_address)
   const totalNeedTransport = needTransport.length
   return (
     <div className="bg-white rounded-[32px] border border-slate-300 shadow-sm p-6">
