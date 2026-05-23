@@ -500,8 +500,6 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
 }, [fleet, carpoolingAds]);
 // --- STANY DLA ZAKŁADKI DOKUMENTACJI ---
   const [templateSearch, setTemplateSearch] = useState('')
-  const [activeTemplateSendId, setActiveTemplateSendId] = useState<string | null>(null)
-  const [selectedPatientForTemplate, setSelectedPatientForTemplate] = useState<string>('')
   const [isEditingConsentTemplate, setIsEditingConsentTemplate] = useState(false)
 // ==========================================
   // STANY prelegenci
@@ -581,6 +579,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [todayPatientSearch, setTodayPatientSearch] = useState('')
   const [allPatientSearch, setAllPatientSearch] = useState('')
   const [expandedPatientDocs, setExpandedPatientDocs] = useState<string | null>(null)
+  const [expandedPatientSendId, setExpandedPatientSendId] = useState<string | null>(null)
+  const [selectedTemplatesForPatientSend, setSelectedTemplatesForPatientSend] = useState<string[]>([])
 
 
   // --- STANY DLA NOWEJ REJESTRACJI PACJENTÓW ---
@@ -874,6 +874,68 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       hasMissingQuestionnaire: questionnaires.length === 0,
       hasPendingQuestionnaire: pendingQuestionnaires.length > 0
     }
+  }
+
+  const getTemplateTypeLabel = (template: any) => {
+    if (template.document_type === 'questionnaire') return 'Wywiad'
+    if (template.document_type === 'rodo') return 'RODO'
+    if (template.document_type === 'info') return 'Zalecenia / info'
+    return 'Zgoda'
+  }
+
+  const togglePatientTemplateSelection = (templateId: string) => {
+    setSelectedTemplatesForPatientSend(prev =>
+      prev.includes(templateId)
+        ? prev.filter(id => id !== templateId)
+        : [...prev, templateId]
+    )
+  }
+
+  const openPatientTemplateSender = (patientId: string) => {
+    setExpandedPatientSendId(prev => prev === patientId ? null : patientId)
+    setSelectedTemplatesForPatientSend([])
+  }
+
+  const handleSendSelectedTemplatesToPatient = async (patientId: string) => {
+    if (selectedTemplatesForPatientSend.length === 0) {
+      return showNotification('Wybierz przynajmniej jeden dokument do wysłania.', 'error')
+    }
+
+    setUpdating(true)
+    try {
+      const rows = selectedTemplatesForPatientSend.map(templateId => ({
+        event_id: id,
+        patient_id: patientId,
+        template_id: templateId,
+        status: 'pending'
+      }))
+
+      const { error } = await supabase.from('patient_consents').insert(rows)
+      if (error) throw error
+
+      showNotification(`Wysłano ${rows.length} dokumentów do Portalu Pacjenta.`, 'success')
+      setExpandedPatientSendId(null)
+      setSelectedTemplatesForPatientSend([])
+      await loadPatientConsents()
+    } catch (err: any) {
+      showNotification('Błąd wysyłki dokumentów: ' + err.message, 'error')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const handleMarkConsentSigned = async (consentId: string) => {
+    const { error } = await supabase
+      .from('patient_consents')
+      .update({
+        status: 'signed',
+        signed_at: new Date().toISOString()
+      })
+      .eq('id', consentId)
+
+    if (error) return showNotification('Błąd ręcznego potwierdzenia: ' + error.message, 'error')
+    await loadPatientConsents()
+    showNotification('Dokument oznaczony jako potwierdzony.', 'success')
   }
 
   const loadHelpDocuments = useCallback(async () => {
@@ -6165,10 +6227,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                         <div className="flex gap-2 shrink-0">
                           <button
-                            onClick={() => showNotification('Wybierz szablon z prawej kolumny i użyj opcji wysyłki do pacjenta.', 'info')}
+                            onClick={() => openPatientTemplateSender(patient.id)}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                           >
-                            Wyslij zgode z panelu szablonow
+                            Wyślij dokumenty
                           </button>
                           <button
                             onClick={() => setExpandedPatientDocs(isExpanded ? null : rowKey)}
@@ -6179,6 +6241,63 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           </button>
                         </div>
                       </div>
+
+                      {expandedPatientSendId === patient.id && (
+                        <div className={`px-5 pb-5 animate-in slide-in-from-top-2 ${isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/50'}`}>
+                          <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                              <div>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  Wybierz dokumenty do wysłania
+                                </p>
+                                <p className={`text-[10px] mt-1 font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                                  Każdy wybrany dokument pojawi się u pacjenta jako do podpisu.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleSendSelectedTemplatesToPatient(patient.id)}
+                                disabled={updating || selectedTemplatesForPatientSend.length === 0}
+                                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                              >
+                                {updating ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                                Wyślij wybrane ({selectedTemplatesForPatientSend.length})
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                              {consentTemplates.length === 0 ? (
+                                <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                  Brak szablonów dokumentów w bazie.
+                                </p>
+                              ) : consentTemplates.map((template: any) => {
+                                const checked = selectedTemplatesForPatientSend.includes(template.id)
+                                return (
+                                  <label
+                                    key={template.id}
+                                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                      checked
+                                        ? (isDarkMode ? 'bg-blue-900/20 border-blue-700 text-white' : 'bg-blue-50 border-blue-300 text-slate-900')
+                                        : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300')
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => togglePatientTemplateSelection(template.id)}
+                                      className="mt-0.5"
+                                    />
+                                    <span className="min-w-0">
+                                      <span className="block text-[9px] font-black uppercase tracking-widest opacity-70">{getTemplateTypeLabel(template)}</span>
+                                      <span className="block text-xs font-black truncate">{template.title}</span>
+                                    </span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {isExpanded && (
                         <div className={`p-5 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'}`}>
@@ -6219,11 +6338,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                     </p>
                                   </div>
                                 </div>
-                                {consent.file_url && (
-                                  <a href={consent.file_url} target="_blank" rel="noopener noreferrer" className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`} title="Pobierz PDF">
-                                    <Download size={14}/>
-                                  </a>
-                                )}
+                                <div className="flex gap-1 shrink-0">
+                                  {!isConsentConfirmed(consent) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMarkConsentSigned(consent.id)}
+                                      className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                                    >
+                                      Potwierdź ręcznie
+                                    </button>
+                                  )}
+                                  {consent.file_url && (
+                                    <a href={consent.file_url} target="_blank" rel="noopener noreferrer" className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`} title="Pobierz PDF">
+                                      <Download size={14}/>
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                               )
                             })}
@@ -6321,6 +6451,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             </span>
                           </td>
                           <td className="p-4 pr-6 text-right">
+                            <button
+                              onClick={() => openPatientTemplateSender(patient.id)}
+                              className={`mr-2 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${expandedPatientSendId === patient.id ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]') : (isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
+                            >
+                              Wyślij
+                            </button>
                             <button 
                               onClick={() => setExpandedPatientDocs(isExpanded ? null : patient.id)}
                               className={`p-2 rounded-lg transition-all border ${isExpanded ? (isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-900') : (isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800')}`}
@@ -6329,6 +6465,67 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             </button>
                           </td>
                         </tr>
+
+                        {expandedPatientSendId === patient.id && (
+                          <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
+                            <td colSpan={5} className="p-0">
+                              <div className={`p-5 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+                                <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                                    <div>
+                                      <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        Wyślij dokumenty do Portalu Pacjenta
+                                      </p>
+                                      <p className={`text-[10px] mt-1 font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                                        Zaznacz wywiad, RODO, zalecenia lub zgodę. Wszystkie trafią jako do podpisu.
+                                      </p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSendSelectedTemplatesToPatient(patient.id)}
+                                      disabled={updating || selectedTemplatesForPatientSend.length === 0}
+                                      className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                                    >
+                                      {updating ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                                      Wyślij wybrane ({selectedTemplatesForPatientSend.length})
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                                    {consentTemplates.length === 0 ? (
+                                      <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        Brak szablonów dokumentów w bazie.
+                                      </p>
+                                    ) : consentTemplates.map((template: any) => {
+                                      const checked = selectedTemplatesForPatientSend.includes(template.id)
+                                      return (
+                                        <label
+                                          key={template.id}
+                                          className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                            checked
+                                              ? (isDarkMode ? 'bg-blue-900/20 border-blue-700 text-white' : 'bg-blue-50 border-blue-300 text-slate-900')
+                                              : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300')
+                                          }`}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => togglePatientTemplateSelection(template.id)}
+                                            className="mt-0.5"
+                                          />
+                                          <span className="min-w-0">
+                                            <span className="block text-[9px] font-black uppercase tracking-widest opacity-70">{getTemplateTypeLabel(template)}</span>
+                                            <span className="block text-xs font-black truncate">{template.title}</span>
+                                          </span>
+                                        </label>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                         
                         {/* Szufladka z pełną historią pacjenta */}
                         {isExpanded && (
@@ -6375,6 +6572,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                           </div>
                                         </div>
                                         <div className="flex gap-1 shrink-0">
+                                          {!isConsentConfirmed(consent) && (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleMarkConsentSigned(consent.id)}
+                                              className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                                            >
+                                              Potwierdź ręcznie
+                                            </button>
+                                          )}
                                           {consent.file_url && (
                                             <a href={consent.file_url} target="_blank" rel="noopener noreferrer" className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`} title="Pobierz PDF"><Download size={14}/></a>
                                           )}
@@ -6453,8 +6659,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </h6>
 
                   {groupTemplates.map((template: any) => {
-                const isSendingMode = activeTemplateSendId === template.id;
-                
                 return (
                   <div key={template.id} className={`rounded-[20px] border shadow-sm transition-all overflow-hidden ${!template.is_active ? (isDarkMode ? 'opacity-60 bg-slate-900 border-slate-800' : 'opacity-70 bg-slate-50 border-slate-200') : (isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`}>
                     
@@ -6507,74 +6711,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       )}
                     </div>
                     
-                    {/* AKCJE (DRUKUJ / WYŚLIJ) */}
+                    {/* AKCJE */}
                     <div className={`border-t flex ${isDarkMode ? 'border-slate-800/60 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
                       <button 
                         onClick={() => window.print()} 
-                        className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors border-r ${isDarkMode ? 'border-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                        className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
                         title="Wydrukuj czysty formularz (np. dla pacjenta w poczekalni)"
                       >
                         <Printer size={12}/> Drukuj Pusty
                       </button>
-                      <button 
-                        onClick={() => setActiveTemplateSendId(isSendingMode ? null : template.id)} 
-                        className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${isSendingMode ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]') : (isDarkMode ? 'text-[#e8ce7a] hover:bg-slate-800' : 'text-emerald-700 hover:bg-emerald-50')}`}
-                        title="Wyślij cyfrową wersję na urządzenie pacjenta"
-                      >
-                        <Smartphone size={12}/> Wyślij do podpisu
-                      </button>
                     </div>
-
-                    {/* WYSUWANY PANEL WYSYŁKI DO PACJENTA */}
-                    {isSendingMode && (
-                      <div className={`p-4 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-950/50' : 'border-slate-200 bg-emerald-50/30'}`}>
-                        <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                          Wybierz pacjenta (Wyślij SMS / Na portal)
-                        </label>
-                        <select
-                          className={`w-full border rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all mb-3 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                          value={selectedPatientForTemplate}
-                          onChange={(e) => setSelectedPatientForTemplate(e.target.value)}
-                        >
-                          <option value="">-- Znajdź pacjenta... --</option>
-                          {patients.map(patient => (
-                            <option key={patient.id} value={patient.id}>
-                              {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
-                            </option>
-                          ))}
-                        </select>
-                        <button 
-                          onClick={async () => {
-                            if (!selectedPatientForTemplate) return showNotification('Wybierz pacjenta z listy', 'error');
-                            setUpdating(true);
-                            try {
-                              const { error } = await supabase.from('patient_consents').insert([{
-                                event_id: id,
-                                patient_id: selectedPatientForTemplate,
-                                template_id: template.id,
-                                status: 'pending'
-                              }]);
-
-                              if (error) throw error;
-
-                              showNotification('Dokument został wysłany do Portalu Pacjenta do podpisu.', 'success');
-                              setActiveTemplateSendId(null);
-                              setSelectedPatientForTemplate('');
-                              await loadPatientConsents();
-                            } catch (err: any) {
-                              showNotification('Błąd wysyłki dokumentu: ' + err.message, 'error');
-                            } finally {
-                              setUpdating(false);
-                            }
-                          }}
-                          disabled={updating}
-                          className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 disabled:opacity-60 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
-                        >
-                          {updating && activeTemplateSendId === template.id ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12}/>}
-                          {updating && activeTemplateSendId === template.id ? 'Wysyłanie...' : 'Wyślij dokument'}
-                        </button>
-                      </div>
-                    )}
 
                   </div>
                 )
