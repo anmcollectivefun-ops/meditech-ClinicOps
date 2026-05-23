@@ -574,6 +574,19 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     setIsConsentTemplateModalOpen(true)
   }
 
+  const getConsentTemplateTitle = (consent: any) => {
+    const template = consentTemplates.find((item: any) => item.id === consent.template_id)
+    return consent.medical_consent_templates?.title
+      || template?.title
+      || consent.title
+      || `Dokument #${String(consent.id || '').slice(0, 5)}`
+  }
+
+  const getConsentDateLabel = (consent: any) => {
+    const rawDate = consent.signed_at || consent.created_at
+    return rawDate ? new Date(rawDate).toLocaleString('pl-PL') : 'brak daty'
+  }
+
   const loadHelpDocuments = useCallback(async () => {
     const { data, error } = await supabase
       .from('help_documents')
@@ -6026,10 +6039,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <ShieldCheck size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Dokumentacja i Wywiad Medyczny
+          Zarządzanie Pacjentem i Dokumentacją
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj inteligentnymi szablonami zgód, weryfikuj wywiady zdrowotne i kontroluj status prawny pacjentów przed zabiegiem.
+          Kontrola Karty 360, weryfikacja wywiadów medycznych, wysyłka zgód i zarządzanie historią leczenia.
         </p>
       </div>
 
@@ -6057,10 +6070,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Legal & Safety Guard
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            2 pacjentów wymaga uwagi przed dzisiejszym zabiegiem
+            Wykryto braki w dokumentacji na dzisiejsze wizyty
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            System wykrył brak wypełnionego <strong>Kwestionariusza Zdrowotnego</strong> u 1 osoby oraz brak <strong>Zgody na zabieg laserowy</strong> u 1 osoby. Nie dopuszczaj ich do gabinetu przed uzupełnieniem dokumentacji cyfrowej lub wgraniem podpisanego skanu.
+            System weryfikuje statusy na żywo. Część umówionych pacjentów nie uzupełniła wywiadu medycznego lub nie zaakceptowała zgody zabiegowej. Nie dopuszczaj ich do gabinetu przed uzupełnieniem dokumentacji cyfrowej.
           </p>
         </div>
       </div>
@@ -6097,16 +6110,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                </div>
             ) : (
               approvedApps
-              .filter(app => `${app.first_name} ${app.last_name}`.toLowerCase().includes(todayPatientSearch.toLowerCase()) || (app as any).pesel?.includes(todayPatientSearch))
+              .filter(app => {
+                const query = todayPatientSearch.toLowerCase()
+                const fullName = `${app.first_name || ''} ${app.last_name || ''}`.toLowerCase()
+                const pesel = String((app as any).pesel || '')
+                const phone = String((app as any).phone || '')
+                return fullName.includes(query) || pesel.includes(todayPatientSearch) || phone.includes(todayPatientSearch)
+              })
               .map(app => {
                 const isExpanded = expandedPatientDocs === app.id;
+                const patientId = (app as any).patient_id || attendeeUnits.find((unit: any) => unit.application_id === app.id)?.patient_id;
                 
                 // --- Logika Statusu: Szukamy zgód w bazie na podstawie patient_id z aplikacji ---
-                const consents = patientConsentsByPatientId[(app as any).patient_id] || [];
+                const consents = patientId ? (patientConsentsByPatientId[patientId] || []) : [];
                 // Na potrzeby dema: jeśli pacjent ma 0 zgód -> brak wywiadu. Jeśli 1 -> brakuje zgody na zabieg. Jeśli 2+ -> ok.
                 const isMissingInterview = consents.length === 0;
                 const isMissingConsent = consents.length === 1;
-                const isOk = consents.length >= 2;
 
                 return (
                   <div key={app.id} className={`rounded-[24px] border shadow-sm transition-colors overflow-hidden ${
@@ -6137,7 +6156,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             {isMissingInterview ? 'Brak wywiadu medycznego!' : isMissingConsent ? 'Oczekuje na podpis zgody zabiegowej' : 'Komplet dokumentów'}
                           </p>
                           <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Zabieg: {app.ticket_type || 'Konsultacja'} | Tel: {app.phone || 'brak'}
+                            Zabieg: {(app as any).ticket_type || (app as any).ticket_name || 'Konsultacja'} | Tel: {(app as any).phone || 'brak'}
                           </p>
                         </div>
                       </div>
@@ -6178,7 +6197,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           </h6>
                           <button 
                             onClick={() => {
-                              setScanUploadForm({ patient_id: (app as any).patient_id, template_id: '', file: null, preview: null });
+                              if (!patientId) {
+                                showNotification('Brak przypisanego ID pacjenta dla tej wizyty.', 'error');
+                                return;
+                              }
+                              setScanUploadForm({ patient_id: patientId, template_id: '', file: null, preview: null });
                               setIsScanUploadModalOpen(true);
                             }}
                             className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'}`}
@@ -6197,9 +6220,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                   <CheckCircle2 size={16} />
                                 </div>
                                 <div>
-                                  <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dokument systemowy #{String(consent.id).slice(0,5)}</p>
+                                  <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{getConsentTemplateTitle(consent)}</p>
                                   <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-600'}`}>
-                                    Status: {consent.status} | Data: {new Date(consent.created_at).toLocaleDateString('pl-PL')}
+                                    Status: {consent.status || 'zapisany'} | Data: {getConsentDateLabel(consent)}
                                   </p>
                                 </div>
                               </div>
@@ -6264,7 +6287,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </tr>
                 ) : (
                   patients
-                  .filter(p => `${p.first_name} ${p.last_name}`.toLowerCase().includes(allPatientSearch.toLowerCase()) || p.pesel?.includes(allPatientSearch) || p.phone?.includes(allPatientSearch))
+                  .filter(p => {
+                    const query = allPatientSearch.toLowerCase()
+                    const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase()
+                    const pesel = String(p.pesel || '')
+                    const phone = String(p.phone || '')
+                    return fullName.includes(query) || pesel.includes(allPatientSearch) || phone.includes(allPatientSearch)
+                  })
                   .map(patient => {
                     const isExpanded = expandedPatientDocs === patient.id;
                     const consents = patientConsentsByPatientId[patient.id] || [];
@@ -6282,7 +6311,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{patient.phone || '—'}</p>
                           </td>
                           <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                            {consents.length} podpisanych zgód
+                            {consents.length} dokumentów
                           </td>
                           <td className="p-4 text-center">
                             {hasValidInterview ? (
@@ -6338,11 +6367,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                           </div>
                                           <div>
                                             <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                                              Zgoda #{String(consent.id).slice(0,8)} 
-                                              <span className="opacity-50 ml-2 text-[10px] uppercase">({consent.status})</span>
+                                              {getConsentTemplateTitle(consent)}
+                                              <span className="opacity-50 ml-2 text-[10px] uppercase">({consent.status || 'zapisany'})</span>
                                             </p>
                                             <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                                              Podpisano / wgrano: {new Date(consent.created_at).toLocaleString('pl-PL')}
+                                              Podpisano / wgrano: {getConsentDateLabel(consent)}
                                             </p>
                                           </div>
                                         </div>
@@ -6490,19 +6519,41 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           onChange={(e) => setSelectedPatientForTemplate(e.target.value)}
                         >
                           <option value="">-- Znajdź pacjenta... --</option>
-                          {/* Tu mapujemy pacjentów z dzisiejszej listy */}
-                          <option value="1">Anna Kowalska (14:30)</option>
-                          <option value="2">Michał Nowak (15:00)</option>
+                          {patients.map(patient => (
+                            <option key={patient.id} value={patient.id}>
+                              {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
+                            </option>
+                          ))}
                         </select>
                         <button 
-                          onClick={() => {
+                          onClick={async () => {
                             if (!selectedPatientForTemplate) return showNotification('Wybierz pacjenta z listy', 'error');
-                            showNotification('Link do podpisania dokumentu został wysłany do pacjenta.', 'success');
-                            setActiveTemplateSendId(null);
+                            setUpdating(true);
+                            try {
+                              const { error } = await supabase.from('patient_consents').insert([{
+                                event_id: id,
+                                patient_id: selectedPatientForTemplate,
+                                template_id: template.id,
+                                status: 'pending'
+                              }]);
+
+                              if (error) throw error;
+
+                              showNotification('Dokument został wysłany do Portalu Pacjenta do podpisu.', 'success');
+                              setActiveTemplateSendId(null);
+                              setSelectedPatientForTemplate('');
+                              await loadPatientConsents();
+                            } catch (err: any) {
+                              showNotification('Błąd wysyłki dokumentu: ' + err.message, 'error');
+                            } finally {
+                              setUpdating(false);
+                            }
                           }}
-                          className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
+                          disabled={updating}
+                          className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 disabled:opacity-60 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
                         >
-                          <Send size={12}/> Wyślij dokument
+                          {updating && activeTemplateSendId === template.id ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12}/>}
+                          {updating && activeTemplateSendId === template.id ? 'Wysyłanie...' : 'Wyślij dokument'}
                         </button>
                       </div>
                     )}
@@ -6562,11 +6613,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               )}
             </div>
 
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault()
-              // Tutaj docelowo logika wrzucająca do Supabase Storage i insert do patient_consents
-              showNotification('Dokument pomyślnie połączony z Kartą Pacjenta!', 'success')
-              setIsScanUploadModalOpen(false)
+              if (!scanUploadForm.patient_id || !scanUploadForm.template_id) {
+                return showNotification('Wybierz pacjenta i szablon dokumentu.', 'error')
+              }
+
+              setUpdating(true)
+              try {
+                const uploadedFileUrl = await uploadFile(
+                  scanUploadForm.file,
+                  scanUploadForm.patient_id,
+                  `patient-consent-${scanUploadForm.template_id}`
+                )
+
+                const { error } = await supabase.from('patient_consents').insert([{
+                  event_id: id,
+                  patient_id: scanUploadForm.patient_id,
+                  template_id: scanUploadForm.template_id,
+                  status: 'scanned_document',
+                  file_url: uploadedFileUrl,
+                  signed_at: new Date().toISOString()
+                }])
+
+                if (error) throw error
+
+                showNotification('Dokument pomyślnie połączony z Kartą Pacjenta!', 'success')
+                await loadPatientConsents()
+                setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
+                setIsScanUploadModalOpen(false)
+              } catch (err: any) {
+                showNotification('Błąd zapisu skanu: ' + err.message, 'error')
+              } finally {
+                setUpdating(false)
+              }
             }} className="space-y-5">
 
               <div>
@@ -6580,9 +6660,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   onChange={e => setScanUploadForm({ ...scanUploadForm, patient_id: e.target.value })}
                 >
                   <option value="">-- Wyszukaj pacjenta --</option>
-                  {/* Mapowanie pacjentów (Mock dla widoku) */}
-                  <option value="1">Anna Kowalska (850212...)</option>
-                  <option value="2">Michał Nowak (900414...)</option>
+                  {patients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -6597,10 +6679,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   onChange={e => setScanUploadForm({ ...scanUploadForm, template_id: e.target.value })}
                 >
                   <option value="">-- Wybierz szablon z bazy --</option>
-                  <option value="t1">Pełny Wywiad Medyczny</option>
-                  <option value="t2">Zgoda: Laser frakcyjny CO2</option>
-                  <option value="t3">Zgoda RODO & Marketing</option>
+                  {consentTemplates.map((template: any) => (
+                    <option key={template.id} value={template.id}>{template.title}</option>
+                  ))}
                 </select>
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  3. Plik / zdjęcie dokumentu
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className={`w-full border rounded-xl px-4 py-3 text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                  onChange={e => {
+                    const file = e.target.files?.[0] || null
+                    setScanUploadForm({
+                      ...scanUploadForm,
+                      file,
+                      preview: file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+                    })
+                  }}
+                />
               </div>
 
               <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/30' : 'bg-emerald-50 border-emerald-200/50'}`}>
@@ -6614,9 +6715,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
               <button
                 type="submit"
-                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+                disabled={updating}
+                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
               >
-                Zapisz w Karcie 360
+                {updating ? 'Zapisywanie...' : 'Zapisz w Karcie 360'}
               </button>
             </form>
           </div>
