@@ -26,9 +26,6 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import QRCode from 'react-qr-code'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
@@ -154,6 +151,20 @@ const getPreviewUrl = (file: File | null, currentUrl: string | null) => {
   return currentUrl || null;
 };
 
+const isPreparationPartner = (partner: any) => {
+  const type = String(partner?.type || '').toLowerCase()
+  if (type === 'preparation' || type === 'sponsor') return true
+  if (type === 'speaker' || type === 'doctor') return false
+  return Boolean(partner?.sponsor_name || partner?.sponsor_category || partner?.logo_url) && !partner?.first_name && !partner?.last_name
+}
+
+const isDoctorPartner = (partner: any) => {
+  const type = String(partner?.type || '').toLowerCase()
+  if (type === 'speaker' || type === 'doctor') return true
+  if (type === 'preparation' || type === 'sponsor') return false
+  return Boolean(partner?.first_name || partner?.last_name || partner?.title) && !isPreparationPartner(partner)
+}
+
 
 const SortablePartnerItem = ({
   item,
@@ -166,13 +177,11 @@ const SortablePartnerItem = ({
   onDelete: (id: string) => void;
   isDarkMode?: boolean;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Lekarz bez nazwy';
-  const specialization = item.title || item.specialization || 'Specjalizacja nieuzupełniona';
+  const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || item.sponsor_name || 'Lekarz bez nazwy';
+  const specialization = item.title || item.specialization || item.sponsor_category || 'Specjalizacja nieuzupełniona';
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`p-5 transition-colors cursor-grab active:cursor-grabbing ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+    <div className={`p-5 transition-colors ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
       <div className="flex items-start gap-5">
         <div className="shrink-0">
           {item.photo_url
@@ -199,10 +208,26 @@ const SortablePartnerItem = ({
           <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID lekarza: {item.id}</p>
         </div>
         <div className="flex gap-2 shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => onEdit(item)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onEdit(item)
+            }}
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+            title="Edytuj lekarza"
+          >
             <Edit3 size={14} />
           </button>
-          <button onClick={() => onDelete(item.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete(item.id)
+            }}
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}
+            title="Usuń lekarza"
+          >
             <Trash2 size={14} />
           </button>
         </div>
@@ -247,10 +272,10 @@ const PreparationItem = ({
           <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID preparatu: {item.id}</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => onEdit(item)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+          <button type="button" onClick={(event) => { event.stopPropagation(); onEdit(item) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`} title="Edytuj preparat">
             <Edit3 size={14} />
           </button>
-          <button onClick={() => onDelete(item.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}>
+          <button type="button" onClick={(event) => { event.stopPropagation(); onDelete(item.id) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`} title="Usuń preparat">
             <Trash2 size={14} />
           </button>
         </div>
@@ -399,8 +424,6 @@ const [newFiles, setNewFiles] = useState<{
     { id: '3', time: '08:30', task: 'Odprawa recepcji, odpalenie skanerów', assignee: 'Koordynator', location: 'Recepcja', status: 'pending', isCritical: true },
     { id: '4', time: '09:45', task: 'Gotowość prowadzącego, włączenie muzyki', assignee: 'Reżyser', location: 'Backstage', status: 'pending', isCritical: true },
   ])
-  const sensors = useSensors(useSensor(PointerSensor))
-
   const [newRosTask, setNewRosTask] = useState<any>({
   date: '',
   time: '',
@@ -603,8 +626,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       return
     }
     if (data) {
-      setDoctorsList(data.filter(p => p.type === 'speaker' || p.type === 'doctor'));
-      setPreparationsList(data.filter(p => p.type === 'preparation' || p.type === 'sponsor'));
+      setDoctorsList(data.filter(isDoctorPartner));
+      setPreparationsList(data.filter(isPreparationPartner));
     }
   }
   // PAMIĘTAJ: dodaj loadPartnersCatalog() do swojego głównego useEffect() !
@@ -2060,8 +2083,8 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   }
   if (data) {
     setPartners(data)
-    setDoctorsList(data.filter((p: any) => p.type === 'speaker' || p.type === 'doctor'))
-    setPreparationsList(data.filter((p: any) => p.type === 'preparation' || p.type === 'sponsor'))
+    setDoctorsList(data.filter(isDoctorPartner))
+    setPreparationsList(data.filter(isPreparationPartner))
   }
 }, [id, supabase])
 
@@ -3211,7 +3234,7 @@ const handleSavePreparation = async (e: React.FormEvent) => {
 
     const data = {
       event_id: id,
-      type: 'preparation',
+      type: 'sponsor',
       display_order: preparationForm.display_order || 0,
       is_visible: preparationForm.is_visible !== false,
       first_name: preparationForm.sponsor_name || null,
@@ -3254,25 +3277,6 @@ const handleDeletePartner = async (id: string) => {
     await loadPartners();
     showNotification('Usunięto', 'success');
   } catch (err: any) { showNotification('Błąd usuwania: ' + (err?.message || 'nieznany błąd'), 'error'); }
-};
-
-const handlePartnerDragEnd = async (event: DragEndEvent) => {
-  const { active, over } = event;
-  if (!over || active.id === over.id) return;
-
-  const oldIndex = partners.findIndex(p => p.id === active.id);
-  const newIndex = partners.findIndex(p => p.id === over.id);
-  if (oldIndex === -1 || newIndex === -1) return;
-
-  const newOrder = [...partners];
-  const [moved] = newOrder.splice(oldIndex, 1);
-  newOrder.splice(newIndex, 0, moved);
-  const updated = newOrder.map((item, idx) => ({ ...item, display_order: idx }));
-  setPartners(updated);
-
-  for (const item of updated) {
-    await supabase.from('event_partners').update({ display_order: item.display_order }).eq('id', item.id);
-  }
 };
 
 const loadChecklist = useCallback(async () => {
@@ -4718,8 +4722,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   )
 }
 
-  const doctorProfiles = partners.filter(partner => partner.type === 'speaker' || partner.type === 'doctor')
-  const preparationProfiles = partners.filter(partner => partner.type === 'preparation' || partner.type === 'sponsor')
+  const doctorProfiles = partners.filter(isDoctorPartner)
+  const preparationProfiles = partners.filter(isPreparationPartner)
 
   const navGroups = [
     {
@@ -7641,8 +7645,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           Lekarze ({doctorProfiles.length})
         </h4>
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Przeciągnij, aby zmienić kolejność
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          Edycja i usuwanie profili
         </span>
       </div>
 
@@ -7653,32 +7657,28 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <p className="text-xs font-medium">Dodaj lekarza, zdjęcie i specjalizację, aby można było przypisywać wizyty oraz zabiegi.</p>
         </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handlePartnerDragEnd}
-        >
-          <SortableContext
-            items={doctorProfiles.map(p => p.id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-              {doctorProfiles.map((item) => (
-                <SortablePartnerItem
-                  key={item.id}
-                  item={item}
-                  isDarkMode={isDarkMode}
-                  onEdit={(partner) => {
-                    setPartnerForm(partner)
-                    setIsEditingPartner(true)
-                    setIsPartnerModalOpen(true)
-                  }}
-                  onDelete={handleDeletePartner}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+          {doctorProfiles.map((item) => (
+            <SortablePartnerItem
+              key={item.id}
+              item={item}
+              isDarkMode={isDarkMode}
+              onEdit={(partner) => {
+                const fallbackName = String(partner.sponsor_name || '').trim().split(/\s+/)
+                setPartnerForm({
+                  ...partner,
+                  first_name: partner.first_name || fallbackName[0] || '',
+                  last_name: partner.last_name || fallbackName.slice(1).join(' '),
+                  title: partner.title || partner.sponsor_category || '',
+                  photo_url: partner.photo_url || partner.logo_url || ''
+                })
+                setIsEditingPartner(true)
+                setIsPartnerModalOpen(true)
+              }}
+              onDelete={handleDeletePartner}
+            />
+          ))}
+        </div>
       )}
     </div>
 
