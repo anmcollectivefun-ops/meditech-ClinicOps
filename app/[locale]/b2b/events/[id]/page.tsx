@@ -235,7 +235,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const [activeTab, setActiveTab] = useState<TabModule>('rekrutacja')
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [openNavGroup, setOpenNavGroup] = useState('Pacjent i opieka')
+  const [openNavGroup, setOpenNavGroup] = useState('Pierwszy kontakt')
 
   const [editForm, setEditForm] = useState<any>(null)
 
@@ -4561,6 +4561,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     }
   ]
 
+  const orderedNavGroups = [navGroups[1], navGroups[0], navGroups[2]]
+
   // ==========================================================================
   // 5. RENDER GŁÓWNY nie zamykaj zamniesz wszystko
   // ==========================================================================
@@ -5406,7 +5408,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
 
               <div className={isNavCollapsed ? 'space-y-2' : 'space-y-3'}>
-                {navGroups.map(group => (
+                {orderedNavGroups.map(group => (
                   <section key={group.title}>
                     <button
                       type="button"
