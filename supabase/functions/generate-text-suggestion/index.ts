@@ -51,12 +51,14 @@ const fallbackSuggestion = ({
   mode,
   documentType,
   relatedEntityTitle,
+  additionalInstruction,
 }: Record<string, any>) => {
   const eventTitle = event?.title || 'wydarzenie'
   const location = event?.location ? ` w lokalizacji ${event.location}` : ''
   const short = String(length || '').toLowerCase().includes('krót')
   const isMedicalDocument = mode === 'medical_document' || ['medical_documents', 'medical_docs', 'patient_consents'].includes(String(sectionKey || ''))
   const procedure = relatedEntityTitle || event?.title || '[NAZWA PROCEDURY]'
+  const groundedContext = String(additionalInstruction || '').trim()
 
   let suggestion = currentValue || ''
 
@@ -202,6 +204,28 @@ const fallbackSuggestion = ({
     }
   }
 
+  if (!suggestion && sectionKey === 'doctors') {
+    const doctorName = relatedEntityTitle || '[IMIE I NAZWISKO LEKARZA]'
+    suggestion = [
+      `${doctorName} - profil specjalisty`,
+      '',
+      groundedContext || 'Uzupełnij specjalizację, zakres pracy, doświadczenie i obszary zabiegowe lekarza.',
+      '',
+      'Opis jest szkicem do weryfikacji. Nie dopisuj tytułów, certyfikatów, lat doświadczenia ani nazw procedur bez potwierdzonych danych.'
+    ].join('\n')
+  }
+
+  if (!suggestion && sectionKey === 'preparations') {
+    const preparationName = relatedEntityTitle || '[NAZWA PREPARATU]'
+    suggestion = [
+      `${preparationName} - opis preparatu`,
+      '',
+      groundedContext || 'Uzupełnij kategorię, zastosowanie i ważne uwagi dla zespołu.',
+      '',
+      'Opis jest szkicem do weryfikacji z dokumentacją producenta. Nie dopisuj składu, wskazań, certyfikatów ani obietnic efektu bez potwierdzonych danych.'
+    ].join('\n')
+  }
+
   if (!suggestion) {
     if (String(fieldKey || '').includes('title')) {
       suggestion = sectionKey === 'faq'
@@ -236,9 +260,13 @@ const fallbackSuggestion = ({
     suggestion,
     reason: isMedicalDocument
       ? 'Użyto bezpiecznego lokalnego szkieletu dokumentu medycznego. Treść jest projektem do zatwierdzenia.'
+      : ['doctors', 'preparations'].includes(String(sectionKey || ''))
+        ? 'Użyto bezpiecznego lokalnego szkicu opartego wyłącznie na danych wpisanych w formularzu.'
       : 'Użyto podstawowych danych wydarzenia i lokalnego fallbacku bez wywołania modelu AI.',
     missing_context: isMedicalDocument
       ? ['Uzupełnij nazwę procedury, przeciwwskazania, możliwe powikłania, zalecenia oraz dane placówki przed zatwierdzeniem.']
+      : ['doctors', 'preparations'].includes(String(sectionKey || ''))
+        ? ['Uzupełnij konkretne, zweryfikowane dane profilu przed publikacją.']
       : (event?.title ? [] : ['Uzupełnij tytuł wydarzenia, aby sugestie były dokładniejsze.']),
   }
 }
@@ -262,6 +290,7 @@ serve(async (req) => {
       tone = 'premium',
       length = 'średnia',
       instruction = '',
+      additionalInstruction = '',
     } = body || {}
 
     if (!eventId || !sectionKey || !fieldKey) {
@@ -322,6 +351,7 @@ serve(async (req) => {
       tone,
       length,
       instruction,
+      additionalInstruction,
       items: {},
     }
 
@@ -402,8 +432,18 @@ serve(async (req) => {
       }
     }
 
+    if (['doctors', 'preparations'].includes(sectionKey)) {
+      context.items.clinicProfiles = await safeSelect(
+        supabase,
+        'event_partners',
+        'id, type, first_name, last_name, title, company, bio, sponsor_name, sponsor_category, is_visible',
+        eventId
+      )
+    }
+
     const isMedicalDocument = mode === 'medical_document' || ['medical_documents', 'medical_docs', 'patient_consents'].includes(String(sectionKey || ''))
-    const fallback = fallbackSuggestion({ sectionKey, fieldKey, currentValue, event, tone, length, mode, documentType, relatedEntityTitle })
+    const isGroundedClinicProfile = ['doctors', 'preparations'].includes(String(sectionKey || ''))
+    const fallback = fallbackSuggestion({ sectionKey, fieldKey, currentValue, event, tone, length, mode, documentType, relatedEntityTitle, additionalInstruction })
 
     try {
       const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
@@ -436,8 +476,19 @@ serve(async (req) => {
                     'Dla RODO twórz szkic administracyjny z miejscami na dane placówki i zgody szczegółowe.',
                     'Zwróć wyłącznie JSON w kształcie: {"suggestion":"...","reason":"...","missing_context":["..."]}.',
                   ].join(' ')
+                : isGroundedClinicProfile
+                  ? [
+                      'Jesteś asystentem tworzenia krótkich, profesjonalnych opisów dla systemu ClinicOps w placówce medycznej.',
+                      'Pisz po polsku i twórz treści wyłącznie na podstawie danych przekazanych w context, currentValue oraz additionalInstruction.',
+                      'Nie wymyślaj faktów. Nie dopisuj certyfikatów, tytułów, lat doświadczenia, uczelni, producentów, składu, wskazań, przeciwwskazań, efektów klinicznych ani obietnic rezultatów, jeśli nie wynikają wprost z danych.',
+                      'Dla lekarza wolno opisać tylko podane imię i nazwisko, specjalizację/rolę, gabinet/zespół i podany opis.',
+                      'Dla preparatu wolno opisać tylko podaną nazwę, kategorię/zastosowanie i podany opis. W razie braków wskaż, że opis wymaga weryfikacji z dokumentacją producenta.',
+                      'Tekst ma być neutralny, bez diagnozowania, bez kwalifikowania pacjenta i bez medycznych obietnic.',
+                      'Jeśli brakuje danych, napisz bezpieczny szkic i wpisz braki do missing_context zamiast uzupełniać je samodzielnie.',
+                      'Zwróć wyłącznie JSON w kształcie: {"suggestion":"...","reason":"...","missing_context":["..."]}.',
+                    ].join(' ')
                 : [
-                    'Jesteś AI copywriterem i asystentem event managera w ANM Eco Planner.',
+                    'Jesteś AI copywriterem i asystentem w panelu ClinicOps.',
                     'Pomagasz tworzyć treści strony wydarzenia na podstawie danych już uzupełnionych w plannerze.',
                     'Pisz po polsku. Pisz konkretnie, nowocześnie i naturalnie.',
                     'Nie wymyślaj faktów, prelegentów, godzin, cen ani lokalizacji.',

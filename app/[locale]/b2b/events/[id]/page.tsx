@@ -885,6 +885,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     const placeholder = String(config?.placeholder || '').trim()
     const documentType = String(config?.documentType || aiTextDocumentType || 'consent')
     const treatmentName = String(config?.relatedEntityTitle || consentTemplateForm?.required_for_treatment || consentTemplateForm?.title || '').trim()
+    const relatedEntityTitle = String(config?.relatedEntityTitle || '').trim()
+    const additionalInstruction = String(config?.additionalInstruction || '').trim()
     const eventTitle = event?.title || 'wydarzenie'
     const eventLocation = event?.location ? ` w lokalizacji ${event.location}` : ''
     const short = String(aiTextLength || '').toLowerCase().includes('krót')
@@ -1042,6 +1044,28 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       ].join('\n')
     }
 
+    if (!currentValue && sectionKey === 'doctors') {
+      const doctorName = relatedEntityTitle || '[IMIE I NAZWISKO LEKARZA]'
+      return [
+        `${doctorName} - profil specjalisty`,
+        '',
+        additionalInstruction || 'Uzupełnij specjalizację, zakres pracy, doświadczenie i obszary zabiegowe lekarza.',
+        '',
+        'Opis powinien być krótki, profesjonalny i oparty wyłącznie na potwierdzonych danych. Nie dopisuj tytułów, certyfikatów ani lat doświadczenia, jeśli nie zostały podane.'
+      ].join('\n')
+    }
+
+    if (!currentValue && sectionKey === 'preparations') {
+      const preparationName = relatedEntityTitle || '[NAZWA PREPARATU]'
+      return [
+        `${preparationName} - opis preparatu`,
+        '',
+        additionalInstruction || 'Uzupełnij kategorię, zastosowanie i ważne uwagi dla zespołu.',
+        '',
+        'Opis powinien być neutralny i zgodny z dokumentacją producenta. Nie dopisuj wskazań, certyfikatów, składu ani efektów klinicznych, jeśli nie zostały podane.'
+      ].join('\n')
+    }
+
     if (currentValue) return currentValue
     if (placeholder) return placeholder
 
@@ -1090,6 +1114,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           currentValue: aiTextAssistConfig.currentValue || '',
           relatedEntityId: aiTextAssistConfig.relatedEntityId || null,
           relatedEntityTitle: aiTextAssistConfig.relatedEntityTitle || '',
+          additionalInstruction: aiTextAssistConfig.additionalInstruction || '',
           mode: aiTextAssistConfig.mode || (['medical_documents', 'medical_docs', 'patient_consents'].includes(aiTextAssistConfig.sectionKey) ? 'medical_document' : 'general'),
           documentType: aiTextDocumentType,
           tone: aiTextTone,
@@ -1158,6 +1183,7 @@ const AiTextAssistButton = ({
   currentValue,
   relatedEntityId,
   relatedEntityTitle,
+  additionalInstruction,
   placeholder,
   mode,
   documentType,
@@ -1170,6 +1196,7 @@ const AiTextAssistButton = ({
   currentValue?: string
   relatedEntityId?: string
   relatedEntityTitle?: string
+  additionalInstruction?: string
   placeholder?: string
   mode?: string
   documentType?: string
@@ -1178,7 +1205,7 @@ const AiTextAssistButton = ({
 }) => (
   <button
     type="button"
-    onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, relatedEntityTitle, placeholder, mode, documentType, onApply })}
+    onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, relatedEntityTitle, additionalInstruction, placeholder, mode, documentType, onApply })}
     className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-400/20 dark:to-purple-400/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:from-indigo-500/20 hover:to-purple-500/20"
     title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalną treść z AI'}
   >
@@ -7815,7 +7842,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     sectionKey="doctors"
                     fieldKey="bio"
                     currentValue={partnerForm.bio || ''}
-                    placeholder="Lekarz specjalizujący się w..."
+                    relatedEntityId={partnerForm.id || undefined}
+                    relatedEntityTitle={`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim()}
+                    additionalInstruction={[
+                      `Imię i nazwisko: ${`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim() || 'nie podano'}`,
+                      `Specjalizacja / rola: ${partnerForm.title || 'nie podano'}`,
+                      `Gabinet / zespół: ${partnerForm.company || 'nie podano'}`,
+                      'Napisz opis wyłącznie na podstawie tych danych i aktualnego pola bio.',
+                      'Nie wymyślaj certyfikatów, tytułów, lat doświadczenia, uczelni, nazw procedur ani efektów leczenia.'
+                    ].join('\n')}
+                    placeholder="Profesjonalny opis lekarza oparty o podane dane..."
                     onApply={(text) => setPartnerForm({ ...partnerForm, bio: text })}
                   />
                 </div>
@@ -7996,6 +8032,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 value={preparationForm.bio || ''}
                 onChange={e => setPreparationForm({ ...preparationForm, bio: e.target.value })}
                 placeholder="Krótki opis preparatu, wskazania lub uwagi dla zespołu."
+              />
+              <AiTextAssistButton
+                eventId={id}
+                sectionKey="preparations"
+                fieldKey="bio"
+                currentValue={preparationForm.bio || ''}
+                relatedEntityId={preparationForm.id || undefined}
+                relatedEntityTitle={preparationForm.sponsor_name || ''}
+                additionalInstruction={[
+                  `Nazwa preparatu: ${preparationForm.sponsor_name || 'nie podano'}`,
+                  `Kategoria / zastosowanie: ${preparationForm.sponsor_category || 'nie podano'}`,
+                  'Napisz opis wyłącznie na podstawie tych danych i aktualnego pola opisu.',
+                  'Nie wymyślaj składu, wskazań rejestracyjnych, certyfikatów, producenta, przeciwwskazań ani obietnic efektu, jeśli nie zostały podane.',
+                  'Jeżeli danych jest za mało, napisz neutralny opis roboczy i wskaż, co trzeba zweryfikować w dokumentacji producenta.'
+                ].join('\n')}
+                placeholder="Neutralny opis preparatu zgodny z podanymi danymi..."
+                onApply={(text) => setPreparationForm({ ...preparationForm, bio: text })}
               />
             </div>
 
