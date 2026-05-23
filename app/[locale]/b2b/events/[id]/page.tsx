@@ -168,30 +168,23 @@ const SortablePartnerItem = ({
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  const isSpeaker = item.type === 'speaker';
+  const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Lekarz bez nazwy';
+  const specialization = item.title || item.specialization || 'Specjalizacja nieuzupełniona';
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`p-5 transition-colors cursor-grab active:cursor-grabbing ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
       <div className="flex items-start gap-5">
         <div className="shrink-0">
-          {isSpeaker ? (
-            item.photo_url
-              ? <img src={item.photo_url} className={`w-14 h-14 rounded-full object-cover border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`} />
-              : <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-200 text-slate-400'}`}><Users size={24} /></div>
-          ) : (
-            item.logo_url
-              ? <div className={`h-14 w-24 rounded-lg flex items-center justify-center overflow-hidden border ${isDarkMode ? 'bg-white p-2 border-slate-700' : 'bg-white p-2 border-slate-200'}`}><img src={item.logo_url} className="h-full w-full object-contain" /></div>
-              : <div className={`w-24 h-14 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'}`}><ImageIcon size={20} /></div>
-          )}
+          {item.photo_url
+            ? <img src={item.photo_url} className={`w-16 h-16 rounded-2xl object-cover border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`} alt={doctorName} />
+            : <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-200 text-slate-400'}`}><Stethoscope size={24} /></div>}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase border ${
-              isSpeaker
-                ? (isDarkMode ? 'bg-indigo-900/30 text-indigo-400 border-indigo-800/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200')
-                : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+              isDarkMode ? 'bg-cyan-900/30 text-cyan-300 border-cyan-800/50' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
             }`}>
-              {isSpeaker ? 'Prelegent' : 'Sponsor'}
+              Lekarz
             </span>
             {!item.is_visible && (
               <span className={`text-[9px] px-2 py-0.5 rounded-full font-black tracking-wider uppercase border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-200 text-slate-600 border-slate-300'}`}>
@@ -200,12 +193,60 @@ const SortablePartnerItem = ({
             )}
           </div>
           <h5 className={`font-black text-base mt-1.5 truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            {isSpeaker ? `${item.first_name} ${item.last_name}` : item.sponsor_name}
+            {doctorName}
           </h5>
-          {isSpeaker && item.title && <p className={`text-xs font-medium truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.title}</p>}
-          {!isSpeaker && item.sponsor_category && <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-emerald-500' : 'text-emerald-700'}`}>{item.sponsor_category}</p>}
+          <p className={`text-xs font-medium truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{specialization}</p>
+          <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID lekarza: {item.id}</p>
         </div>
         <div className="flex gap-2 shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={() => onEdit(item)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+            <Edit3 size={14} />
+          </button>
+          <button onClick={() => onDelete(item.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}>
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PreparationItem = ({
+  item,
+  onEdit,
+  onDelete,
+  isDarkMode
+}: {
+  item: any;
+  onEdit: (item: any) => void;
+  onDelete: (id: string) => void;
+  isDarkMode?: boolean;
+}) => {
+  const preparationName = item.sponsor_name || item.name || 'Preparat bez nazwy';
+  const category = item.sponsor_category || item.category || 'Kategoria nieuzupełniona';
+  const imageUrl = item.logo_url || item.photo_url;
+
+  return (
+    <div className={`p-5 transition-colors ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+      <div className="flex items-start gap-5">
+        <div className="shrink-0">
+          {imageUrl
+            ? <img src={imageUrl} className={`w-16 h-16 rounded-2xl object-cover border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`} alt={preparationName} />
+            : <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-200 text-slate-400'}`}><ImageIcon size={24} /></div>}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase border ${
+            isDarkMode ? 'bg-emerald-900/30 text-emerald-300 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }`}>
+            Preparat
+          </span>
+          <h5 className={`font-black text-base mt-1.5 truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            {preparationName}
+          </h5>
+          <p className={`text-xs font-medium truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{category}</p>
+          <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID preparatu: {item.id}</p>
+        </div>
+        <div className="flex gap-2 shrink-0">
           <button onClick={() => onEdit(item)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
             <Edit3 size={14} />
           </button>
@@ -497,6 +538,9 @@ const [partners, setPartners] = useState<any[]>([])
 const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false)
 const [isEditingPartner, setIsEditingPartner] = useState(false)
 const [partnerForm, setPartnerForm] = useState<any>({})
+const [isPreparationModalOpen, setIsPreparationModalOpen] = useState(false)
+const [isEditingPreparation, setIsEditingPreparation] = useState(false)
+const [preparationForm, setPreparationForm] = useState<any>({})
 
 const [attendeeUnits, setAttendeeUnits] = useState<any[]>([])
 const [eventPassScans, setEventPassScans] = useState<any[]>([])
@@ -564,6 +608,110 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [treatments, setTreatments] = useState<any[]>([])
   const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
   const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '' })
+
+  // --- PRAWDZIWE STANY KATALOGU ZABIEGÓW ---
+  const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false)
+  const [isEditingTreatment, setIsEditingTreatment] = useState(false)
+  const [treatmentForm, setTreatmentForm] = useState<any>({})
+  const [selectedTemplatesForTreatment, setSelectedTemplatesForTreatment] = useState<string[]>([])
+  const [treatmentSearch, setTreatmentSearch] = useState('')
+
+  // Listy słownikowe pobierane z event_partners
+  const [doctorsList, setDoctorsList] = useState<any[]>([])
+  const [preparationsList, setPreparationsList] = useState<any[]>([])
+
+  const loadPartnersCatalog = async () => {
+    // Pobieramy prawdziwe dane lekarzy i preparatów
+    const { data } = await supabase.from('event_partners').select('*').eq('event_id', id);
+    if (data) {
+      setDoctorsList(data.filter(p => p.type === 'speaker' || p.type === 'doctor'));
+      setPreparationsList(data.filter(p => p.type === 'preparation'));
+    }
+  }
+  // PAMIĘTAJ: dodaj loadPartnersCatalog() do swojego głównego useEffect() !
+
+  const handleSaveTreatment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      let currentTreatmentId = treatmentForm.id;
+      const payload = {
+        event_id: id,
+        name: treatmentForm.name,
+        type: treatmentForm.type || 'single',
+        sessions_count: treatmentForm.sessions_count || 1,
+        doctor_id: treatmentForm.doctor_id || null,
+        preparation_id: treatmentForm.preparation_id || null,
+        room: treatmentForm.room || null,
+        treatment_category: treatmentForm.treatment_category || 'standard',
+        pre_recommendations: treatmentForm.pre_recommendations || null,
+        post_recommendations: treatmentForm.post_recommendations || null,
+        is_active: treatmentForm.is_active !== false
+      };
+
+      if (isEditingTreatment && currentTreatmentId) {
+        await supabase.from('treatments').update(payload).eq('id', currentTreatmentId);
+      } else {
+        const { data } = await supabase.from('treatments').insert([payload]).select().single();
+        currentTreatmentId = data?.id;
+      }
+
+      if (currentTreatmentId) {
+        await supabase.from('treatment_consent_templates').delete().eq('treatment_id', currentTreatmentId);
+        if (selectedTemplatesForTreatment.length > 0) {
+          const mappings = selectedTemplatesForTreatment.map(tId => ({ treatment_id: currentTreatmentId, template_id: tId }));
+          await supabase.from('treatment_consent_templates').insert(mappings);
+        }
+      }
+
+      showNotification('Zabieg zapisany w katalogu', 'success');
+      setIsTreatmentModalOpen(false);
+      setTreatmentForm({});
+      setSelectedTemplatesForTreatment([]);
+      await loadTreatmentsCatalog(); 
+    } catch (err: any) {
+      showNotification('Błąd zapisu: ' + err.message, 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleBookAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const selectedTreatment = treatments.find(t => t.id === appointmentForm.treatment_id);
+      
+      // Zapisujemy wizytę z DZIEDZICZONYM LEKARZEM z szablonu!
+      const { data: newApp } = await supabase.from('appointments').insert([{
+        patient_id: appointmentForm.patient_id,
+        event_id: id,
+        treatment_id: selectedTreatment.id,
+        treatment_name: selectedTreatment.name,
+        doctor_id: selectedTreatment.doctor_id, // Automatycznie przejmuje lekarza
+        appointment_date: appointmentForm.appointment_date,
+        status: 'scheduled'
+      }]).select().single();
+
+      // Generujemy zgody
+      const requiredTemplates = treatmentMappings.filter(m => m.treatment_id === selectedTreatment.id).map(m => m.template_id);
+      if (requiredTemplates.length > 0) {
+        const consents = requiredTemplates.map(tId => ({
+          event_id: id, patient_id: appointmentForm.patient_id, template_id: tId, appointment_id: newApp.id, status: 'pending'
+        }));
+        await supabase.from('patient_consents').insert(consents);
+      }
+
+      showNotification('Wizyta utworzona, zgody wygenerowane!', 'success');
+      setIsBookingModalOpen(false);
+      setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '' });
+      await loadAppointments();
+    } catch (err: any) {
+      showNotification('Błąd: ' + err.message, 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   // POBIERANIE KATALOGU (Dodaj to tam, gdzie masz inne funkcje ładujące np. loadPatients)
   const loadTreatmentsCatalog = async () => {
@@ -2993,30 +3141,17 @@ const handleSavePartner = async (e: React.FormEvent) => {
     }
     const data = {
       event_id: id,
-      type: partnerForm.type,
+      type: 'speaker',
       display_order: partnerForm.display_order || 0,
       is_visible: partnerForm.is_visible !== false,
+      first_name: partnerForm.first_name,
+      last_name: partnerForm.last_name,
+      title: partnerForm.title,
+      company: partnerForm.company,
+      bio: partnerForm.bio,
+      photo_url: photoUrl || partnerForm.photo_url,
+      website_url: partnerForm.website_url,
     };
-    if (partnerForm.type === 'speaker') {
-      Object.assign(data, {
-        first_name: partnerForm.first_name,
-        last_name: partnerForm.last_name,
-        title: partnerForm.title,
-        company: partnerForm.company,
-        bio: partnerForm.bio,
-        photo_url: photoUrl || partnerForm.photo_url,
-        linkedin_url: partnerForm.linkedin_url,
-        twitter_url: partnerForm.twitter_url,
-        website_url: partnerForm.website_url,
-      });
-    } else {
-      Object.assign(data, {
-        sponsor_name: partnerForm.sponsor_name,
-        logo_url: photoUrl || partnerForm.logo_url,
-        sponsor_url: partnerForm.sponsor_url,
-        sponsor_category: partnerForm.sponsor_category,
-      });
-    }
     if (isEditingPartner && partnerForm.id) {
       await supabase.from('event_partners').update(data).eq('id', partnerForm.id);
     } else {
@@ -3027,6 +3162,44 @@ const handleSavePartner = async (e: React.FormEvent) => {
     setNewFiles({ ...newFiles, partnerPhoto: null });
     showNotification('Zapisano pomyślnie', 'success');
   } catch (err) { showNotification('Błąd zapisu', 'error'); } finally { setUpdating(false); }
+};
+
+const handleSavePreparation = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setUpdating(true);
+  try {
+    let imageUrl = preparationForm.logo_url || preparationForm.photo_url || null;
+    if (newFiles.partnerPhoto) {
+      imageUrl = await uploadFile(newFiles.partnerPhoto, id, 'preparation');
+    }
+
+    const data = {
+      event_id: id,
+      type: 'preparation',
+      display_order: preparationForm.display_order || 0,
+      is_visible: preparationForm.is_visible !== false,
+      sponsor_name: preparationForm.sponsor_name,
+      sponsor_category: preparationForm.sponsor_category,
+      bio: preparationForm.bio,
+      logo_url: imageUrl,
+    };
+
+    if (isEditingPreparation && preparationForm.id) {
+      await supabase.from('event_partners').update(data).eq('id', preparationForm.id);
+    } else {
+      await supabase.from('event_partners').insert([data]);
+    }
+
+    await loadPartners();
+    setIsPreparationModalOpen(false);
+    setPreparationForm({});
+    setNewFiles({ ...newFiles, partnerPhoto: null });
+    showNotification('Preparat zapisany', 'success');
+  } catch (err) {
+    showNotification('Błąd zapisu preparatu', 'error');
+  } finally {
+    setUpdating(false);
+  }
 };
 
 const handleDeletePartner = async (id: string) => {
@@ -4600,6 +4773,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   )
 }
 
+  const doctorProfiles = partners.filter(partner => partner.type === 'speaker' || partner.type === 'doctor')
+  const preparationProfiles = partners.filter(partner => partner.type === 'preparation' || partner.type === 'sponsor')
+
   const navGroups = [
     {
       title: 'Pacjent i opieka',
@@ -4608,7 +4784,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja pacjenta', count: tiers.length },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
-        { tabId: 'prelegenci' as TabModule, icon: Mic, label: 'Lekarze / specjaliści', count: partners.filter(p => p.type === 'speaker').length },
+        { tabId: 'prelegenci' as TabModule, icon: Stethoscope, label: 'Lekarze', count: doctorProfiles.length },
         { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
         { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
@@ -6996,139 +7172,166 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 {/* ============================================================================ */}
-{/* ZABIEGI I WIZYTY (Zarządzanie Katalogiem i Rejestracja) */}
+{/* ZABIEGI I WIZYTY (Zarządzanie Katalogiem i Rejestracja) - Wersja Ostateczna */}
 {/* ============================================================================ */}
 {activeTab === 'harmonogram' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGŁÓWEK SEKCJI */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Stethoscope size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Zabiegi i Kalendarz Wizyt
+          Rejestracja Wizyt i Katalog
         </h3>
-        <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj katalogiem usług (pojedyncze i serie) oraz rejestruj pacjentów, co automatycznie wygeneruje im zgody.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2 shrink-0">
-        <button
-          onClick={() => {
-            // Tymczasowy state pod modal tworzenia katalogu
-            showNotification('Modal Katalogu Zabiegów otwarty', 'info')
-          }}
-          className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-all hover:bg-slate-50 dark:hover:bg-slate-800 ${isDarkMode ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-700'}`}
-        >
-          <Layers size={14} /> Dodaj do Katalogu
-        </button>
-        <button
-          onClick={() => setIsBookingModalOpen(true)}
-          className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-        >
-          <CalendarPlus size={14} /> Zapisz Pacjenta
-        </button>
       </div>
     </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       
-      {/* LEWA KOLUMNA: KATALOG ZABIEGÓW (Słownik dla kliniki) */}
-      <div className="lg:col-span-1 space-y-4">
-        <div className={`p-5 rounded-[24px] border shadow-sm flex items-center justify-between ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-          <h4 className={`font-black text-sm uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-            <ListChecks size={16} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}/> 
-            Katalog Usług
-          </h4>
-        </div>
-
-        {/* Makieta Katalogu Zabiegów */}
-        <div className="space-y-3">
-          {[
-            { id: 't1', name: 'Laser Frakcyjny CO2', type: 'Pojedynczy zabieg', consents: 2 },
-            { id: 't2', name: 'Seria: Depilacja Laserowa (6x)', type: 'Seria zabiegów', consents: 1 },
-            { id: 't3', name: 'Modelowanie Ust Kwasem', type: 'Pojedynczy zabieg', consents: 3 },
-          ].map(treatment => (
-            <div key={treatment.id} className={`p-4 rounded-[20px] border transition-all ${isDarkMode ? 'bg-slate-900/50 border-slate-800 hover:border-slate-700' : 'bg-slate-50 border-slate-200 hover:bg-white shadow-sm'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${treatment.type.includes('Seria') ? (isDarkMode ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
-                  {treatment.type}
-                </span>
-                <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-200 text-slate-400'}`}>
-                  <Edit3 size={14} />
-                </button>
-              </div>
-              <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{treatment.name}</h5>
-              <p className={`text-[10px] mt-2 font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                <FileSignature size={12} className="opacity-70"/> 
-                Wymaga {treatment.consents} zgód
-              </p>
+      {/* LEWA KOLUMNA: ZAPLANOWANE WIZYTY */}
+      <div className="xl:col-span-2 space-y-6">
+        <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <div>
+              <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Umówione Wizyty</h4>
             </div>
-          ))}
+            <button
+              onClick={() => setIsBookingModalOpen(true)}
+              className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+            >
+              <CalendarPlus size={14} /> Umów Pacjenta
+            </button>
+          </div>
+
+          <div className="p-5 md:p-6 space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+            {appointmentsList.length === 0 ? (
+              <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                Brak zaplanowanych wizyt.
+              </div>
+            ) : appointmentsList.map(app => {
+              // Szukamy lekarza z relacji
+              const doctor = doctorsList.find(d => d.id === app.doctor_id);
+              return (
+                <div key={app.id} className={`p-5 rounded-[24px] border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
+                      <User size={20} />
+                    </div>
+                    <div>
+                      <h5 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {app.patients?.first_name} {app.patients?.last_name}
+                      </h5>
+                      <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                        {app.treatment_name}
+                      </p>
+                      <div className={`flex items-center gap-3 text-[10px] mt-1.5 font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <span className="flex items-center gap-1"><Clock size={12} /> {new Date(app.appointment_date).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                        {doctor && <span className="flex items-center gap-1"><Stethoscope size={12} /> {doctor.first_name} {doctor.last_name}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 shrink-0 pt-3 md:pt-0">
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${app.status === 'completed' ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
+                      {app.status === 'scheduled' ? 'Zaplanowana' : 'Zakończona'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* PRAWA KOLUMNA: ZAPLANOWANE WIZYTY (Rezerwacje) */}
-      <div className="lg:col-span-2 space-y-4">
-        <div className={`p-5 rounded-[24px] border shadow-sm flex items-center justify-between ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-          <h4 className={`font-black text-sm uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-            <Calendar size={16} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}/> 
-            Umówione Wizyty
-          </h4>
-          <span className={`px-2 py-1 text-[9px] font-black rounded-lg ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-            Nadchodzące (2)
-          </span>
+      {/* PRAWA KOLUMNA: KATALOG ZABIEGÓW */}
+      <div className="xl:col-span-1 space-y-4">
+        <div className={`p-5 rounded-[24px] border shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <ListChecks size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Katalog Zabiegów
+            </h4>
+          </div>
+          
+          <div className="relative mb-4">
+            <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+            <input
+              type="text"
+              placeholder="Szukaj po nazwie zabiegu lub lekarzu..."
+              value={treatmentSearch}
+              onChange={e => setTreatmentSearch(e.target.value)}
+              className={`w-full pl-9 pr-3 py-3 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+            />
+          </div>
+
+          <button
+            onClick={() => {
+              setTreatmentForm({ is_active: true, type: 'single', sessions_count: 1, treatment_category: 'standard' })
+              setSelectedTemplatesForTreatment([])
+              setIsEditingTreatment(false)
+              setIsTreatmentModalOpen(true)
+            }}
+            className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 hover:bg-slate-800 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800'}`}
+          >
+            <Plus size={14} /> Stwórz Zabieg
+          </button>
         </div>
 
-        <div className="space-y-3">
-          {/* Makieta pojedynczej wizyty */}
-          {[
-            { id: 'app1', patient: 'Anna Nowak', treatment: 'Modelowanie Ust Kwasem', date: '25 Maj 2026, 14:30', isSeries: false, consentsReady: false },
-            { id: 'app2', patient: 'Jan Kowalski', treatment: 'Seria: Depilacja Laserowa (Zabieg 2/6)', date: '26 Maj 2026, 10:00', isSeries: true, consentsReady: true },
-          ].map(app => (
-            <div key={app.id} className={`p-5 rounded-[24px] border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                  <User size={20} />
-                </div>
-                <div>
-                  <h5 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{app.patient}</h5>
-                  <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'}`}>{app.treatment}</p>
-                  <p className={`text-[10px] mt-1 font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <Clock size={12} /> {app.date}
-                  </p>
-                </div>
-              </div>
+        <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+          {treatments
+            .filter(t => {
+              const query = treatmentSearch.toLowerCase();
+              const doctor = doctorsList.find(d => d.id === t.doctor_id);
+              const docName = doctor ? `${doctor.first_name} ${doctor.last_name}`.toLowerCase() : '';
+              return t.name.toLowerCase().includes(query) || docName.includes(query);
+            })
+            .map(treatment => {
+              const requiredConsentsCount = treatmentMappings.filter((m:any) => m.treatment_id === treatment.id).length;
+              const doctor = doctorsList.find(d => d.id === treatment.doctor_id);
               
-              <div className="flex flex-col items-end gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 dark:border-slate-800 border-slate-100">
-                {app.consentsReady ? (
-                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 border ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                    <CheckCircle2 size={12}/> Zgody Gotowe
-                  </span>
-                ) : (
-                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 border ${isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                    <AlertTriangle size={12}/> Zgody do podpisu
-                  </span>
-                )}
-                <button className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'}`}>
-                  Szczegóły Wizyty
-                </button>
-              </div>
-            </div>
-          ))}
+              return (
+                <div key={treatment.id} className={`p-4 rounded-[20px] border transition-all ${!treatment.is_active ? 'opacity-50' : ''} ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${treatment.type === 'series' ? (isDarkMode ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
+                      {treatment.type === 'series' ? 'Seria' : 'Pojedynczy'}
+                    </span>
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => {
+                          setTreatmentForm(treatment);
+                          setSelectedTemplatesForTreatment(treatmentMappings.filter((m:any) => m.treatment_id === treatment.id).map((m:any) => m.template_id));
+                          setIsEditingTreatment(true);
+                          setIsTreatmentModalOpen(true);
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`}
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{treatment.name}</h5>
+                  <div className={`mt-2 text-[10px] space-y-1 font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {doctor && <p className="flex items-center gap-1.5"><Stethoscope size={12}/> {doctor.first_name} {doctor.last_name}</p>}
+                    <p className="flex items-center gap-1.5">
+                      <FileSignature size={12} className={requiredConsentsCount > 0 ? 'text-emerald-500' : 'opacity-50'}/> 
+                      Wymaga {requiredConsentsCount} zgód
+                    </p>
+                  </div>
+                </div>
+              )
+          })}
         </div>
       </div>
     </div>
-    
-    {/* MODAL: ZAPISYWANIE PACJENTA NA ZABIEG */}
+
+    {/* ============================================================================ */}
+    {/* MODAL: PROSTE UMAWIANIE WIZYTY (Tylko Pacjent, Zabieg i Data) */}
+    {/* ============================================================================ */}
     {isBookingModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-2xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-slate-800 border-slate-100">
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               <CalendarPlus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-              Zapisz Pacjenta na Zabieg
+              Umów Wizytę
             </h3>
             <button onClick={() => setIsBookingModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
               <X size={20} />
@@ -7137,68 +7340,189 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           
           <form onSubmit={handleBookAppointment} className="space-y-5">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz pacjenta *</label>
-              <select
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>1. Wybierz pacjenta *</label>
+              <select 
                 required
                 value={appointmentForm.patient_id}
                 onChange={e => setAppointmentForm({ ...appointmentForm, patient_id: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="">-- Wyszukaj z bazy --</option>
+                <option value="">-- Wyszukaj pacjenta --</option>
                 {patients.map((p: any) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.pesel})</option>)}
               </select>
             </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz zabieg z katalogu *</label>
-              <select
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>2. Wybierz zabieg z katalogu *</label>
+              <select 
                 required
                 value={appointmentForm.treatment_id}
                 onChange={e => setAppointmentForm({ ...appointmentForm, treatment_id: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="">-- Z katalogu usług --</option>
-                {treatments.map((t: any) => <option key={t.id} value={t.id}>{t.name} {t.type === 'series' ? '(Seria)' : ''}</option>)}
+                <option value="">-- Wybierz usługę z bazy --</option>
+                {treatments.filter(t => t.is_active).map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
+              <p className="text-[9px] mt-2 opacity-60 px-1">Lekarz i preparaty zostaną przypisane automatycznie na podstawie definicji zabiegu.</p>
             </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data i godzina wizyty *</label>
-              <input
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>3. Data i godzina *</label>
+              <input 
                 required
                 type="datetime-local"
                 value={appointmentForm.appointment_date}
                 onChange={e => setAppointmentForm({ ...appointmentForm, appointment_date: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               />
             </div>
 
-            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-blue-900/10 border-blue-900/30' : 'bg-blue-50 border-blue-200/50'}`}>
-              <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-                <Activity size={12}/> Akcja automatyczna systemu
-              </p>
-              <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-800'}`}>
-                Zapisanie wizyty utworzy nowe Appointment ID. Jeśli zabieg posiada przypisane dokumenty prawne w słowniku, zostaną one natychmiast wygenerowane do Portalu Pacjenta.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={updating}
-              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+            <button 
+              type="submit" disabled={updating}
+              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
             >
-              {updating ? 'Przetwarzanie...' : 'Utwórz Wizytę i Wygeneruj Zgody'}
+              {updating ? 'Przetwarzanie...' : 'Zapisz Pacjenta i Generuj Dokumenty'}
             </button>
           </form>
         </div>
       </div>
     )}
+
+    {/* ============================================================================ */}
+    {/* MODAL: MEGA KREATOR ZABIEGU W KATALOGU (Pełne definiowanie) */}
+    {/* ============================================================================ */}
+    {isTreatmentModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex justify-between items-start mb-6 border-b pb-4 dark:border-slate-800 border-slate-100">
+            <div>
+              <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                {isEditingTreatment ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Layers size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
+                {isEditingTreatment ? 'Edytuj Definicję Zabiegu' : 'Stwórz Nowy Zabieg'}
+              </h3>
+            </div>
+            <button onClick={() => setIsTreatmentModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"><X size={20} /></button>
+          </div>
+          
+          <form onSubmit={handleSaveTreatment} className="space-y-6">
+            
+            {/* 1. DANE PODSTAWOWE */}
+            <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>1. Podstawowe dane</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa zabiegu *</label>
+                  <input required value={treatmentForm.name || ''} onChange={e => setTreatmentForm({ ...treatmentForm, name: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usługi</label>
+                  <select value={treatmentForm.type || 'single'} onChange={e => setTreatmentForm({ ...treatmentForm, type: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
+                    <option value="single">Pojedyncza wizyta</option>
+                    <option value="series">Seria zabiegów</option>
+                  </select>
+                </div>
+              </div>
+              {treatmentForm.type === 'series' && (
+                <div className="mt-4">
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Liczba wizyt w serii</label>
+                  <input type="number" min="2" value={treatmentForm.sessions_count || 2} onChange={e => setTreatmentForm({ ...treatmentForm, sessions_count: parseInt(e.target.value) })} className={`w-full md:w-1/3 border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                </div>
+              )}
+            </div>
+
+            {/* 2. SPECYFIKACJA MEDYCZNA */}
+            <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>2. Specyfikacja (Sprzęt i Personel)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślny Lekarz *</label>
+                  <select required value={treatmentForm.doctor_id || ''} onChange={e => setTreatmentForm({ ...treatmentForm, doctor_id: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
+                    <option value="">-- Wybierz z personelu --</option>
+                    {doctorsList.map((d: any) => <option key={d.id} value={d.id}>{d.first_name} {d.last_name} ({d.title})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Preparat / Sprzęt</label>
+                  <select value={treatmentForm.preparation_id || ''} onChange={e => setTreatmentForm({ ...treatmentForm, preparation_id: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
+                    <option value="">-- Opcjonalnie --</option>
+                    {preparationsList.map((p: any) => <option key={p.id} value={p.id}>{p.sponsor_name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj inwazyjności *</label>
+                  <select required value={treatmentForm.treatment_category || 'standard'} onChange={e => setTreatmentForm({ ...treatmentForm, treatment_category: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
+                    <option value="standard">Bezinwazyjny</option>
+                    <option value="needle">Iniekcja (Igła)</option>
+                    <option value="scalpel">Chirurgia (Skalpel)</option>
+                    <option value="laser">Laseroterapia</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślna Sala (Opcjonalnie)</label>
+                <input value={treatmentForm.room || ''} onChange={e => setTreatmentForm({ ...treatmentForm, room: e.target.value })} placeholder="np. Gabinet 3" className={`w-full md:w-1/3 border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+              </div>
+            </div>
+
+            {/* 3. ZALECENIA (PRZED I PO) */}
+            <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}><FileText size={16}/> 3. Szablony Zaleceń</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zalecenia PRZED zabiegiem</label>
+                  <textarea rows={4} value={treatmentForm.pre_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, pre_recommendations: e.target.value })} placeholder="Czego pacjent nie powinien robić przed..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zalecenia PO zabiegu</label>
+                  <textarea rows={4} value={treatmentForm.post_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, post_recommendations: e.target.value })} placeholder="Pielęgnacja domowa..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. ZGODY MEDYCZNE Z BAZY */}
+            <div>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>4. Wymagane Zgody (Wybierz z biblioteki szablonów)</label>
+              <div className={`p-4 rounded-xl border grid grid-cols-1 sm:grid-cols-2 gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                {consentTemplates.length === 0 ? (
+                  <p className="text-xs text-red-500 font-bold">Brak szablonów w systemie.</p>
+                ) : consentTemplates.map((template: any) => {
+                  const isChecked = selectedTemplatesForTreatment.includes(template.id);
+                  return (
+                    <label key={template.id} className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : (isDarkMode ? 'border-slate-600 bg-slate-900 group-hover:border-emerald-500/50' : 'border-slate-300 bg-white group-hover:border-emerald-500/50')}`}>
+                        {isChecked && <CheckCircle2 size={14} />}
+                      </div>
+                      <input 
+                        type="checkbox" className="sr-only" checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedTemplatesForTreatment([...selectedTemplatesForTreatment, template.id]);
+                          else setSelectedTemplatesForTreatment(selectedTemplatesForTreatment.filter(id => id !== template.id));
+                        }}
+                      />
+                      <span className={`text-sm font-bold line-clamp-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                        {template.document_type === 'rodo' ? 'RODO: ' : template.document_type === 'questionnaire' ? 'WYWIAD: ' : 'ZGODA: '} 
+                        {template.title}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+              Zapisz Zabieg w Słowniku
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
   </div>
 )}
 
 
 {/* ============================================================================ */}
-{/* prelegenci */}
+{/* lekarze */}
 {/* ============================================================================ */}
 {activeTab === 'prelegenci' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -7212,10 +7536,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
           <div className="min-w-0">
             <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Partnerzy i prelegenci
+              Lekarze
             </h3>
             <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Zarządzaj gośćmi specjalnymi, dodawaj ich do agendy i na stronę publiczną.
+              Zarządzaj zespołem medycznym. ID lekarza wykorzystamy przy umawianiu wizyt i przypisywaniu zabiegów.
             </p>
           </div>
         </div>
@@ -7231,39 +7555,39 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             }}
             className={`px-4 py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
           >
-            <Plus size={14} /> Prelegent
+            <Plus size={14} /> Lekarz
           </button>
 
           <button
             onClick={() => {
-              setPartnerForm({ type: 'sponsor' })
-              setIsEditingPartner(false)
-              setIsPartnerModalOpen(true)
+              setPreparationForm({ type: 'preparation' })
+              setIsEditingPreparation(false)
+              setIsPreparationModalOpen(true)
             }}
             className={`px-4 py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 border border-slate-700 text-white hover:bg-slate-700' : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'}`}
           >
-            <Plus size={14} /> Sponsor
+            <Plus size={14} /> Preparat
           </button>
         </div>
       </div>
     </div>
 
-    {/* LISTA PRELEGENTÓW, SPONSORÓW I PARTNERÓW */}
+    {/* LISTA LEKARZY */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Wszystkie pozycje ({partners.length})
+          Lekarze ({doctorProfiles.length})
         </h4>
         <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           Przeciągnij, aby zmienić kolejność
         </span>
       </div>
 
-      {partners.length === 0 ? (
+      {doctorProfiles.length === 0 ? (
         <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          <Users size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className="text-base mb-1">Brak prelegentów i sponsorów</p>
-          <p className="text-xs font-medium">Dodaj pierwszą osobę, firmę lub partnera, aby pojawili się na stronie.</p>
+          <Stethoscope size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
+          <p className="text-base mb-1">Brak lekarzy</p>
+          <p className="text-xs font-medium">Dodaj lekarza, zdjęcie i specjalizację, aby można było przypisywać wizyty oraz zabiegi.</p>
         </div>
       ) : (
         <DndContext
@@ -7272,11 +7596,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onDragEnd={handlePartnerDragEnd}
         >
           <SortableContext
-            items={partners.map(p => p.id)}
+            items={doctorProfiles.map(p => p.id)}
             strategy={rectSortingStrategy}
           >
             <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-              {partners.map((item) => (
+              {doctorProfiles.map((item) => (
                 <SortablePartnerItem
                   key={item.id}
                   item={item}
@@ -7295,6 +7619,42 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       )}
     </div>
 
+    {/* LISTA PREPARATÓW */}
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+          Preparaty ({preparationProfiles.length})
+        </h4>
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          ID i zdjęcie preparatu
+        </span>
+      </div>
+
+      {preparationProfiles.length === 0 ? (
+        <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          <ImageIcon size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
+          <p className="text-base mb-1">Brak preparatów</p>
+          <p className="text-xs font-medium">Dodaj preparat, zdjęcie i kategorię, aby później przypisywać go do zabiegów.</p>
+        </div>
+      ) : (
+        <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+          {preparationProfiles.map((item) => (
+            <PreparationItem
+              key={item.id}
+              item={item}
+              isDarkMode={isDarkMode}
+              onEdit={(preparation) => {
+                setPreparationForm(preparation)
+                setIsEditingPreparation(true)
+                setIsPreparationModalOpen(true)
+              }}
+              onDelete={handleDeletePartner}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+
     {/* MODAL DODAWANIA / EDYCJI */}
     {isPartnerModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
@@ -7303,7 +7663,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {isEditingPartner ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
               {isEditingPartner ? 'Edytuj' : 'Dodaj'}{' '}
-              {partnerForm.type === 'speaker' ? 'prelegenta' : 'sponsora'}
+              lekarza
             </h3>
 
             <button
@@ -7316,26 +7676,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <form onSubmit={handleSavePartner} className="space-y-6">
 
-            {/* WSPÓLNE DLA OBU TYPÓW */}
+            {/* USTAWIENIA PROFILU LEKARZA */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Typ podmiotu
-                </label>
-                <select
-                  className={`w-full border rounded-2xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                  value={partnerForm.type}
-                  onChange={e => setPartnerForm({ ...partnerForm, type: e.target.value })}
-                >
-                  <option value="speaker">Prelegent</option>
-                  <option value="sponsor">Sponsor / partner</option>
-                </select>
+              <div className={`p-4 md:p-3.5 rounded-2xl border transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                  ID lekarza
+                </p>
+                <p className={`mt-1 truncate font-mono text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  {partnerForm.id || 'Zostanie nadane po zapisie'}
+                </p>
               </div>
 
               <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div>
-                  <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Widoczny na stronie</p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż kartę gościom</p>
+                  <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Aktywny profil</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż lekarza w systemie</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
@@ -7349,9 +7704,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            {/* FORMULARZ DLA PRELEGENTA */}
-            {partnerForm.type === 'speaker' && (
-              <div className="space-y-5 animate-in fade-in">
+            {/* FORMULARZ DLA LEKARZA */}
+            <div className="space-y-5 animate-in fade-in">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -7383,25 +7737,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Tytuł / stanowisko
+                      Specjalizacja
                     </label>
                     <input
                       className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={partnerForm.title || ''}
                       onChange={e => setPartnerForm({ ...partnerForm, title: e.target.value })}
-                      placeholder="np. Head of Marketing"
+                      placeholder="np. dermatologia, medycyna estetyczna"
                     />
                   </div>
 
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Firma (Opcjonalnie)
+                      Gabinet / zespół
                     </label>
                     <input
                       className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={partnerForm.company || ''}
                       onChange={e => setPartnerForm({ ...partnerForm, company: e.target.value })}
-                      placeholder="np. Google"
+                      placeholder="np. Klinika główna, zespół laseroterapii"
                     />
                   </div>
                 </div>
@@ -7415,80 +7769,33 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={partnerForm.bio || ''}
                     onChange={e => setPartnerForm({ ...partnerForm, bio: e.target.value })}
-                    placeholder="Opisz krótko czym zajmuje się prelegent..."
+                    placeholder="Opisz krótko doświadczenie lekarza, obszary zabiegowe i rolę w opiece nad pacjentem..."
                   />
                   {/* Nowy Przycisk AI do szybkiego pisania Bio */}
                   <AiTextAssistButton
                     eventId={id}
-                    sectionKey="speakers"
+                    sectionKey="doctors"
                     fieldKey="bio"
                     currentValue={partnerForm.bio || ''}
-                    placeholder="Ekspert w dziedzinie..."
+                    placeholder="Lekarz specjalizujący się w..."
                     onApply={(text) => setPartnerForm({ ...partnerForm, bio: text })}
                   />
                 </div>
-              </div>
-            )}
+            </div>
 
-            {/* FORMULARZ DLA SPONSORA / PARTNERA */}
-            {partnerForm.type === 'sponsor' && (
-              <div className="space-y-5 animate-in fade-in">
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Nazwa firmy *
-                  </label>
-                  <input
-                    required
-                    className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    value={partnerForm.sponsor_name || ''}
-                    onChange={e => setPartnerForm({ ...partnerForm, sponsor_name: e.target.value })}
-                    placeholder="np. Acme Corp"
-                  />
-                </div>
-
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Kategoria partnerstwa
-                  </label>
-                  <input
-                    className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    value={partnerForm.sponsor_category || ''}
-                    onChange={e => setPartnerForm({ ...partnerForm, sponsor_category: e.target.value })}
-                    placeholder="np. Partner strategiczny, Gold Sponsor"
-                  />
-                </div>
-
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Logo z zewnętrznego URL (opcjonalnie)
-                  </label>
-                  <input
-                    className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    value={partnerForm.logo_url || ''}
-                    onChange={e => setPartnerForm({ ...partnerForm, logo_url: e.target.value })}
-                    placeholder="https://.../logo.png"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* SEKCJA ZDJĘCIA / LOGO (WSPÓLNA) */}
+            {/* SEKCJA ZDJĘCIA */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                {partnerForm.type === 'speaker' ? 'Zdjęcie profilowe' : 'Wgraj plik z logo'}
+                Zdjęcie lekarza
               </label>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 {(newFiles.partnerPhoto || partnerForm.photo_url || partnerForm.logo_url) && (
-                  <div className={`shrink-0 flex items-center justify-center overflow-hidden border ${
-                    partnerForm.type === 'speaker'
-                      ? `w-20 h-20 rounded-full ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`
-                      : `w-32 h-20 rounded-xl bg-white p-2 ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`
-                  }`}>
+                  <div className={`shrink-0 flex items-center justify-center overflow-hidden border w-20 h-20 rounded-2xl ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <img
-                      src={getPreviewUrl(newFiles.partnerPhoto, partnerForm.type === 'speaker' ? partnerForm.photo_url : partnerForm.logo_url)!}
+                      src={getPreviewUrl(newFiles.partnerPhoto, partnerForm.photo_url)!}
                       alt="Podgląd"
-                      className={`w-full h-full ${partnerForm.type === 'speaker' ? 'object-cover' : 'object-contain'}`}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 )}
@@ -7562,7 +7869,129 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
             >
-              {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz zmiany' : 'Dodaj pozycję')}
+              {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz lekarza' : 'Dodaj lekarza')}
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {isPreparationModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+            <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              {isEditingPreparation ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
+              {isEditingPreparation ? 'Edytuj' : 'Dodaj'} preparat
+            </h3>
+
+            <button
+              onClick={() => setIsPreparationModalOpen(false)}
+              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSavePreparation} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className={`p-4 md:p-3.5 rounded-2xl border transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                  ID preparatu
+                </p>
+                <p className={`mt-1 truncate font-mono text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  {preparationForm.id || 'Zostanie nadane po zapisie'}
+                </p>
+              </div>
+
+              <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                <div>
+                  <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Aktywny preparat</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż preparat w systemie</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={preparationForm.is_visible !== false}
+                    onChange={e => setPreparationForm({ ...preparationForm, is_visible: e.target.checked })}
+                  />
+                  <div className={`w-12 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${isDarkMode ? 'bg-slate-800 peer-checked:bg-[#e8ce7a] peer-checked:after:border-white' : 'bg-slate-200 peer-checked:bg-slate-900'}`} />
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Nazwa preparatu *
+                </label>
+                <input
+                  required
+                  className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={preparationForm.sponsor_name || ''}
+                  onChange={e => setPreparationForm({ ...preparationForm, sponsor_name: e.target.value })}
+                  placeholder="np. kwas hialuronowy"
+                />
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Kategoria / zastosowanie
+                </label>
+                <input
+                  className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={preparationForm.sponsor_category || ''}
+                  onChange={e => setPreparationForm({ ...preparationForm, sponsor_category: e.target.value })}
+                  placeholder="np. wypełniacz, toksyna, peeling"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Opis
+              </label>
+              <textarea
+                rows={3}
+                className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                value={preparationForm.bio || ''}
+                onChange={e => setPreparationForm({ ...preparationForm, bio: e.target.value })}
+                placeholder="Krótki opis preparatu, wskazania lub uwagi dla zespołu."
+              />
+            </div>
+
+            <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Zdjęcie preparatu
+              </label>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                {(newFiles.partnerPhoto || preparationForm.logo_url || preparationForm.photo_url) && (
+                  <div className={`shrink-0 flex items-center justify-center overflow-hidden border w-20 h-20 rounded-2xl ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <img
+                      src={getPreviewUrl(newFiles.partnerPhoto, preparationForm.logo_url || preparationForm.photo_url)!}
+                      alt="Podgląd preparatu"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300 file:border-slate-700' : 'text-slate-700 file:bg-white file:border-slate-300'}`}
+                  onChange={e => setNewFiles({ ...newFiles, partnerPhoto: e.target.files ? e.target.files[0] : null })}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={updating}
+              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+            >
+              {updating ? 'Zapisywanie...' : (isEditingPreparation ? 'Zapisz preparat' : 'Dodaj preparat')}
             </button>
           </form>
         </div>
