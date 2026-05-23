@@ -3170,7 +3170,7 @@ const handleSavePartner = async (e: React.FormEvent) => {
     const doctorDisplayName = `${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim();
     const data = {
       event_id: id,
-      type: 'doctor',
+      type: 'speaker',
       display_order: partnerForm.display_order || 0,
       is_visible: partnerForm.is_visible !== false,
       first_name: partnerForm.first_name,
