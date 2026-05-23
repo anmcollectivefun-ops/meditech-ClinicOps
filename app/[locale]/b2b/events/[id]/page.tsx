@@ -8,16 +8,16 @@ import React, { useState, useEffect, use, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase'
 import { GOOGLE_FONT_OPTIONS, buildGoogleFontStack, getFontFamilyName } from '../../../../lib/googleFonts'
 import {
-  Users, CheckCircle2, XCircle, Leaf, ArrowLeft,
+  Users, User, CheckCircle2, XCircle, Leaf, ArrowLeft,
   Settings, Save, RefreshCw, Trash2, AlertTriangle,
   Plus, Edit3, Eye, EyeOff, X, Search, Filter, MoreHorizontal,
-  ClipboardList, MapPin, Globe, BarChart3, LayoutGrid,
-  Clock, Calendar, Wallet, FileText, Download, Printer,
+  ClipboardList, MapPin, Globe, BarChart3, LayoutGrid, Layers, ListChecks,
+  Clock, Calendar, CalendarPlus, Wallet, FileText, FileSignature, Download, Printer,
   Truck, Car, Bus, Smartphone, Share2, TrendingDown, TrendingUp, Phone,
   UtensilsCrossed, Wine, Coffee, Shirt, Gift, Award,
   Send, MessageSquare, Mail, Video, Mic,
   Music4, Image as ImageIcon, Type, Palette,
-  Zap, Bed, File as FileIcon, Users2,
+  Zap, Activity, Bed, File as FileIcon, Users2, Stethoscope,
   Recycle, Ticket, Briefcase, Train,
   UserRoundPlus, Route, Calculator, Fuel,
   Euro, UsersRound, Percent, BadgeDollarSign, Receipt, CreditCard, ArrowRightLeft,
@@ -300,6 +300,7 @@ const [newFiles, setNewFiles] = useState<{
   const [sessions, setSessions] = useState<any[]>([])
   const [sessionForm, setSessionForm] = useState<any>({})
   const [isEditingSession, setIsEditingSession] = useState(false)
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [updating, setUpdating] = useState(false)
 
   const [gadgets, setGadgets] = useState<any[]>([])
