@@ -547,6 +547,11 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
   const [isScanUploadModalOpen, setIsScanUploadModalOpen] = useState(false)
   const [scanUploadForm, setScanUploadForm] = useState<any>({ patient_id: '', template_id: '', file: null, preview: null })
+
+// --- STANY DLA BAZY PACJENTÓW I WYWIADÓW ---
+  const [todayPatientSearch, setTodayPatientSearch] = useState('')
+  const [allPatientSearch, setAllPatientSearch] = useState('')
+  const [expandedPatientDocs, setExpandedPatientDocs] = useState<string | null>(null)
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
@@ -6063,108 +6068,303 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-      {/* KOLUMNA 1: STATUSY PACJENTÓW (DLA RECEPCJI) */}
+      {/* KOLUMNA 1: CENTRUM DOWODZENIA RECEPCJI (Wizyty i Baza Pacjentów) */}
       <div className="xl:col-span-2 space-y-6">
-        <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dzisiejsze wizyty - Status Dokumentacji</h4>
-
-        <div className="space-y-3">
-          {/* Pacjent 1 - Brak wywiadu */}
-          <div className={`p-4 md:p-5 rounded-[24px] border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-red-900/50' : 'bg-white border-red-200'}`}>
-            <div className="flex items-start gap-4 min-w-0">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600'}`}>
-                <XCircle size={20} />
-              </div>
-              <div className="min-w-0">
-                <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Anna Kowalska</h5>
-                <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Brak wywiadu medycznego!</p>
-                <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zabieg: Mezoterapia igłowa • 14:30</p>
-              </div>
+        
+        {/* SEKCJA A: DZISIEJSZE WIZYTY (Bierzemy z approvedApps) */}
+        <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <div>
+              <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dzisiejsze wizyty</h4>
+              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Kontrola dokumentacji i zgód przed wejściem do gabinetu</p>
             </div>
-            <button
-              onClick={() => showNotification('Link do wywiadu został wysłany SMSem do pacjentki.', 'success')}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
-            >
-              Wyślij SMS z ankietą
-            </button>
-          </div>
-
-          {/* Pacjent 2 - Wywiad jest, brak zgody */}
-          <div className={`p-4 md:p-5 rounded-[24px] border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-amber-700/50' : 'bg-white border-amber-200'}`}>
-            <div className="flex items-start gap-4 min-w-0">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                <AlertTriangle size={20} />
-              </div>
-              <div className="min-w-0">
-                <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Michał Nowak</h5>
-                <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>Oczekuje na podpis zgody zabiegowej</p>
-                <div className="flex gap-2 mt-1.5">
-                  <span className={`text-[9px] px-2 py-0.5 rounded font-black border ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>Wywiad OK</span>
-                  <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Laser frakcyjny CO2</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => window.print()}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-              >
-                Drukuj dla pacjenta
-              </button>
-              <button
-                onClick={() => showNotification('Wysłano prośbę o podpis do aplikacji pacjenta.', 'success')}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-amber-500 text-slate-900 hover:bg-amber-400' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'}`}
-              >
-                Podpisz na tablecie
-              </button>
+            <div className="relative w-full md:w-64 shrink-0">
+              <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+              <input
+                type="text"
+                placeholder="Szukaj pacjenta (dzisiaj)..."
+                value={todayPatientSearch}
+                onChange={e => setTodayPatientSearch(e.target.value)}
+                className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
+              />
             </div>
           </div>
 
-          {/* Pacjent 3 - Komplet */}
-          <div className={`p-4 md:p-5 rounded-[24px] border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-white border-emerald-100'}`}>
-            <div className="flex items-start gap-4 min-w-0">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
-                <CheckCircle2 size={20} />
-              </div>
-              <div className="min-w-0">
-                <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Katarzyna Wiśniewska</h5>
-                <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Komplet dokumentów</p>
-                <p className={`text-[10px] font-medium mt-1 flex items-center gap-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Lekarz może rozpocząć zabieg (Wolumetria). Zgoda wgrana.
-                </p>
-              </div>
-            </div>
-            <button className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-              Zobacz Kartę 360
-            </button>
+          <div className="p-5 md:p-6 space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
+            {approvedApps.length === 0 ? (
+               <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                 Brak umówionych wizyt na dziś.
+               </div>
+            ) : (
+              approvedApps
+              .filter(app => `${app.first_name} ${app.last_name}`.toLowerCase().includes(todayPatientSearch.toLowerCase()) || (app as any).pesel?.includes(todayPatientSearch))
+              .map(app => {
+                const isExpanded = expandedPatientDocs === app.id;
+                
+                // --- Logika Statusu: Szukamy zgód w bazie na podstawie patient_id z aplikacji ---
+                const consents = patientConsentsByPatientId[(app as any).patient_id] || [];
+                // Na potrzeby dema: jeśli pacjent ma 0 zgód -> brak wywiadu. Jeśli 1 -> brakuje zgody na zabieg. Jeśli 2+ -> ok.
+                const isMissingInterview = consents.length === 0;
+                const isMissingConsent = consents.length === 1;
+                const isOk = consents.length >= 2;
+
+                return (
+                  <div key={app.id} className={`rounded-[24px] border shadow-sm transition-colors overflow-hidden ${
+                    isMissingInterview ? (isDarkMode ? 'bg-[#1e293b] border-red-900/50' : 'bg-white border-red-200') :
+                    isMissingConsent ? (isDarkMode ? 'bg-[#1e293b] border-amber-700/50' : 'bg-white border-amber-200') :
+                    (isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-white border-emerald-100')
+                  }`}>
+                    
+                    {/* Pasek główny pacjenta */}
+                    <div className="p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-start gap-4 min-w-0">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                          isMissingInterview ? (isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600') :
+                          isMissingConsent ? (isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600') :
+                          (isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
+                        }`}>
+                          {isMissingInterview ? <XCircle size={20} /> : isMissingConsent ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
+                        </div>
+                        <div className="min-w-0">
+                          <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                            {app.first_name} {app.last_name}
+                          </h5>
+                          <p className={`text-xs font-bold mt-0.5 ${
+                            isMissingInterview ? (isDarkMode ? 'text-red-400' : 'text-red-600') :
+                            isMissingConsent ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') :
+                            (isDarkMode ? 'text-emerald-400' : 'text-emerald-600')
+                          }`}>
+                            {isMissingInterview ? 'Brak wywiadu medycznego!' : isMissingConsent ? 'Oczekuje na podpis zgody zabiegowej' : 'Komplet dokumentów'}
+                          </p>
+                          <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Zabieg: {app.ticket_type || 'Konsultacja'} | Tel: {app.phone || 'brak'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 shrink-0">
+                        {isMissingInterview && (
+                          <button 
+                            onClick={() => showNotification('Link do wywiadu wysłany SMSem.', 'success')}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                          >
+                            Wyślij SMS z ankietą
+                          </button>
+                        )}
+                        {isMissingConsent && (
+                          <button 
+                            onClick={() => showNotification('Wysłano prośbę o podpis do aplikacji pacjenta.', 'success')}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-amber-500 text-slate-900 hover:bg-amber-400' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'}`}
+                          >
+                            Podpisz na tablecie
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setExpandedPatientDocs(isExpanded ? null : app.id)}
+                          className={`p-2 rounded-xl border transition-all ${isExpanded ? (isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-900') : (isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50')}`}
+                          title="Zobacz wszystkie dokumenty"
+                        >
+                          <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Rozwijana lista zgód dla pacjenta (Pobierana z bazy) */}
+                    {isExpanded && (
+                      <div className={`p-5 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'}`}>
+                        <div className="flex items-center justify-between mb-4">
+                          <h6 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Teczka pacjenta: {app.first_name} {app.last_name}
+                          </h6>
+                          <button 
+                            onClick={() => {
+                              setScanUploadForm({ patient_id: (app as any).patient_id, template_id: '', file: null, preview: null });
+                              setIsScanUploadModalOpen(true);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                          >
+                            <Plus size={12} className="inline mr-1" /> Wgraj skan
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {consents.length === 0 ? (
+                            <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak dokumentacji dla tego pacjenta.</p>
+                          ) : consents.map((consent: any) => (
+                            <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-emerald-900/30' : 'bg-white border-emerald-100 shadow-sm'}`}>
+                              <div className="min-w-0 flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                                  <CheckCircle2 size={16} />
+                                </div>
+                                <div>
+                                  <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dokument systemowy #{String(consent.id).slice(0,5)}</p>
+                                  <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-600'}`}>
+                                    Status: {consent.status} | Data: {new Date(consent.created_at).toLocaleDateString('pl-PL')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                {consent.file_url && (
+                                  <a href={consent.file_url} target="_blank" rel="noopener noreferrer" className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`} title="Pobierz PDF">
+                                    <Download size={14}/>
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* MODUŁ SKANERA PAPIERU (Dla tradycjonalistów) */}
-        <div className={`mt-8 p-6 md:p-8 rounded-[32px] border border-dashed flex flex-col items-center justify-center text-center transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:bg-slate-800/50' : 'bg-slate-50 border-slate-300 hover:bg-slate-100'}`}>
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-white text-slate-400 shadow-sm border border-slate-200'}`}>
-            <Download size={24} />
+        {/* SEKCJA B: PEŁNA BAZA PACJENTÓW (Mapowanie żywych danych z Supabase) */}
+        <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors mt-8 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <div>
+              <h4 className={`font-black flex items-center gap-2 text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <Users size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+                Baza Wszystkich Pacjentów ({patients.length})
+              </h4>
+              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Archiwum zgód i wywiadów z poprzednich wizyt</p>
+            </div>
+            <div className="relative w-full xl:w-80 shrink-0">
+              <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+              <input
+                type="text"
+                placeholder="Szukaj (Imię, Nazwisko, PESEL, Telefon)..."
+                value={allPatientSearch}
+                onChange={e => setAllPatientSearch(e.target.value)}
+                className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
+              />
+            </div>
           </div>
-          <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Wgraj odręcznie podpisaną zgodę</h4>
-          <p className={`text-xs mt-2 max-w-md mx-auto ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Opcja awaryjna dla pacjentów preferujących papier. Zrób zdjęcie tabletem lub wgraj skan. Otaguj pacjenta, a plik zapisze się jako oficjalny log w jego cyfrowej Karcie 360.
-          </p>
-          <div className="mt-5 relative w-fit">
-            <button className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]'}`}>
-              Skanuj dokument
-            </button>
-            <input
-              type="file"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              accept="image/*,.pdf"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  const file = e.target.files[0];
-                  const previewUrl = URL.createObjectURL(file);
-                  setScanUploadForm({ patient_id: '', template_id: '', file: file, preview: previewUrl });
-                  setIsScanUploadModalOpen(true);
-                }
-              }}
-            />
+
+          <div className="overflow-x-auto custom-scrollbar max-h-[500px]">
+            <table className="w-full text-left border-collapse">
+              <thead className={`text-[9px] font-black uppercase tracking-widest border-b sticky top-0 ${isDarkMode ? 'bg-slate-900/90 border-slate-800 text-slate-500' : 'bg-slate-50/90 border-slate-200 text-slate-400'} backdrop-blur-md z-10`}>
+                <tr>
+                  <th className="p-4 pl-6">Pacjent</th>
+                  <th className="p-4">PESEL / Telefon</th>
+                  <th className="p-4">Zgody Medyczne</th>
+                  <th className="p-4 text-center">Status Wywiadu</th>
+                  <th className="p-4 pr-6 text-right">Akcje</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                {patients.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-10 text-center font-bold text-sm text-slate-400">
+                      Ładowanie bazy pacjentów lub brak danych...
+                    </td>
+                  </tr>
+                ) : (
+                  patients
+                  .filter(p => `${p.first_name} ${p.last_name}`.toLowerCase().includes(allPatientSearch.toLowerCase()) || p.pesel?.includes(allPatientSearch) || p.phone?.includes(allPatientSearch))
+                  .map(patient => {
+                    const isExpanded = expandedPatientDocs === patient.id;
+                    const consents = patientConsentsByPatientId[patient.id] || [];
+                    const hasValidInterview = consents.length > 0; // w uproszczeniu
+                    
+                    return (
+                      <React.Fragment key={patient.id}>
+                        <tr className={`transition-colors group ${isExpanded ? (isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50') : (isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50/50')}`}>
+                          <td className="p-4 pl-6">
+                            <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{patient.first_name} {patient.last_name}</p>
+                            <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{patient.email || 'Brak email'}</p>
+                          </td>
+                          <td className="p-4">
+                            <p className={`text-xs font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{patient.pesel || '—'}</p>
+                            <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{patient.phone || '—'}</p>
+                          </td>
+                          <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                            {consents.length} podpisanych zgód
+                          </td>
+                          <td className="p-4 text-center">
+                            {hasValidInterview ? (
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                <CheckCircle2 size={10}/> Aktualny
+                              </span>
+                            ) : (
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${isDarkMode ? 'bg-red-900/20 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                <XCircle size={10}/> Brak wywiadu
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 pr-6 text-right">
+                            <button 
+                              onClick={() => setExpandedPatientDocs(isExpanded ? null : patient.id)}
+                              className={`p-2 rounded-lg transition-all border ${isExpanded ? (isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-900') : (isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800')}`}
+                            >
+                              <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                          </td>
+                        </tr>
+                        
+                        {/* Szufladka z pełną historią pacjenta */}
+                        {isExpanded && (
+                          <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
+                            <td colSpan={5} className="p-0 border-t-0">
+                              <div className={`p-5 md:p-6 shadow-inner animate-in slide-in-from-top-2 border-b ${isDarkMode ? 'border-slate-800 bg-slate-950/20' : 'border-slate-200 bg-slate-100/50'}`}>
+                                <div className="flex items-center justify-between mb-4">
+                                  <h6 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    Historia dokumentacji: {patient.first_name} {patient.last_name}
+                                  </h6>
+                                  <button 
+                                    onClick={() => {
+                                      setScanUploadForm({ patient_id: patient.id, template_id: '', file: null, preview: null });
+                                      setIsScanUploadModalOpen(true);
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                                  >
+                                    <Download size={12} /> Wgraj archiwalny skan
+                                  </button>
+                                </div>
+                                
+                                {/* Prawdziwa Lista historycznych zgód pacjenta */}
+                                <div className="space-y-2">
+                                  {consents.length === 0 ? (
+                                    <p className="text-xs text-slate-500 font-bold">Pacjent nie ma jeszcze wgranych żadnych zgód ani wywiadów.</p>
+                                  ) : (
+                                    consents.map((consent: any) => (
+                                      <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                        <div className="min-w-0 flex items-center gap-3">
+                                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                                            <FileText size={16} />
+                                          </div>
+                                          <div>
+                                            <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                                              Zgoda #{String(consent.id).slice(0,8)} 
+                                              <span className="opacity-50 ml-2 text-[10px] uppercase">({consent.status})</span>
+                                            </p>
+                                            <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                              Podpisano / wgrano: {new Date(consent.created_at).toLocaleString('pl-PL')}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-1 shrink-0">
+                                          {consent.file_url && (
+                                            <a href={consent.file_url} target="_blank" rel="noopener noreferrer" className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`} title="Pobierz PDF"><Download size={14}/></a>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
