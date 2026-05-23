@@ -37,7 +37,7 @@ import jsPDF from 'jspdf'
 // 2. TYPY I INTERFEJSY
 // ==========================================================================
 
-type TabModule = 
+type TabModule =
   | 'rekrutacja' | 'logistyka' | 'edycja' | 'stoly'
   | 'harmonogram' | 'menu' | 'budzet' | 'inne' | 'eko'
   | 'komunikacja' | 'checklista' | 'finanse' | 'gadgets'
@@ -70,7 +70,7 @@ interface Guest {
   payment_reference?: string
   payment_status?: string
   ticket_expected_amount?: number | string
-  meal_check_in?: boolean 
+  meal_check_in?: boolean
 }
 
 interface MenuItem {
@@ -155,14 +155,14 @@ const getPreviewUrl = (file: File | null, currentUrl: string | null) => {
 };
 
 
-const SortablePartnerItem = ({ 
-  item, 
-  onEdit, 
+const SortablePartnerItem = ({
+  item,
+  onEdit,
   onDelete,
-  isDarkMode 
-}: { 
-  item: any; 
-  onEdit: (item: any) => void; 
+  isDarkMode
+}: {
+  item: any;
+  onEdit: (item: any) => void;
   onDelete: (id: string) => void;
   isDarkMode?: boolean;
 }) => {
@@ -175,11 +175,11 @@ const SortablePartnerItem = ({
       <div className="flex items-start gap-5">
         <div className="shrink-0">
           {isSpeaker ? (
-            item.photo_url 
-              ? <img src={item.photo_url} className={`w-14 h-14 rounded-full object-cover border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`} /> 
+            item.photo_url
+              ? <img src={item.photo_url} className={`w-14 h-14 rounded-full object-cover border ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`} />
               : <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-200 text-slate-400'}`}><Users size={24} /></div>
           ) : (
-            item.logo_url 
+            item.logo_url
               ? <div className={`h-14 w-24 rounded-lg flex items-center justify-center overflow-hidden border ${isDarkMode ? 'bg-white p-2 border-slate-700' : 'bg-white p-2 border-slate-200'}`}><img src={item.logo_url} className="h-full w-full object-contain" /></div>
               : <div className={`w-24 h-14 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'}`}><ImageIcon size={20} /></div>
           )}
@@ -187,8 +187,8 @@ const SortablePartnerItem = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase border ${
-              isSpeaker 
-                ? (isDarkMode ? 'bg-indigo-900/30 text-indigo-400 border-indigo-800/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200') 
+              isSpeaker
+                ? (isDarkMode ? 'bg-indigo-900/30 text-indigo-400 border-indigo-800/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200')
                 : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
             }`}>
               {isSpeaker ? 'Prelegent' : 'Sponsor'}
@@ -236,7 +236,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [openNavGroup, setOpenNavGroup] = useState('Pacjent i opieka')
-  
+
   const [editForm, setEditForm] = useState<any>(null)
 
 
@@ -381,7 +381,7 @@ const [newSpaceObject, setNewSpaceObject] = useState({
   is_visible_for_team: true
 })
   const sensors = useSensors(useSensor(PointerSensor))
-  
+
   const [newRosTask, setNewRosTask] = useState<any>({
   date: '',
   time: '',
@@ -400,7 +400,7 @@ const [newSpaceObject, setNewSpaceObject] = useState({
     transportOptimized: 0,
     localSuppliers: 0
   })
-  
+
   const [selectedGuests, setSelectedGuests] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all')
@@ -418,7 +418,7 @@ const [newSpaceObject, setNewSpaceObject] = useState({
   const [ticketPaymentFilter, setTicketPaymentFilter] = useState('all')
   const [ticketAccessFilter, setTicketAccessFilter] = useState('all')
   const [ticketTierFilter, setTicketTierFilter] = useState('all')
- 
+
   const [materials, setMaterials] = useState<any[]>([])
   const [eventVideos, setEventVideos] = useState<any[]>([])
   const [videoForm, setVideoForm] = useState<any>({})
@@ -534,6 +534,14 @@ const [patientSearch, setPatientSearch] = useState('')
 const [patientQrFilter, setPatientQrFilter] = useState('all')
 const [expandedPatientIds, setExpandedPatientIds] = useState<Record<string, boolean>>({})
 const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
+
+// --- STANY DLA ZGÓD I DOKUMENTACJI MEDYCZNEJ ---
+  const [consentTemplates, setConsentTemplates] = useState<any[]>([])
+  const [isConsentTemplateModalOpen, setIsConsentTemplateModalOpen] = useState(false)
+  const [consentTemplateForm, setConsentTemplateForm] = useState<any>({})
+
+  const [isScanUploadModalOpen, setIsScanUploadModalOpen] = useState(false)
+  const [scanUploadForm, setScanUploadForm] = useState<any>({ patient_id: '', template_id: '', file: null, preview: null })
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
@@ -730,7 +738,7 @@ const AiTextAssistButton = ({
     className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-400/20 dark:to-purple-400/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:from-indigo-500/20 hover:to-purple-500/20"
     title="Wygeneruj profesjonalną treść z AI"
   >
-    <Sparkles size={14} className="animate-pulse" /> 
+    <Sparkles size={14} className="animate-pulse" />
     Magia AI
   </button>
 )
@@ -1417,9 +1425,9 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('event-covers')
-        .upload(fileName, file, { 
-          cacheControl: '3600', 
-          upsert: true 
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
         });
 
       if (uploadError) {
@@ -1513,7 +1521,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       for (const guestId of selectedGuests) {
         await supabase.from('b2b_applications').update({ status }).eq('id', guestId)
       }
-      setApplications(applications.map(a => 
+      setApplications(applications.map(a =>
         selectedGuests.includes(a.id) ? { ...a, status } : a
       ))
       setSelectedGuests([])
@@ -1538,7 +1546,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   const exportToCSV = () => {
     const headers = ['Imię', 'Nazwisko', 'Firma', 'Status', 'Dieta', 'Alkohol', 'Słodycze', 'Transport', 'Email']
     const rows = applications.map(app => [
-      app.first_name, app.last_name, app.company_name, app.status, 
+      app.first_name, app.last_name, app.company_name, app.status,
       app.diet, app.alcohol_preference || '-', app.sweets_preference || '-', app.transport, app.email
     ])
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -1777,7 +1785,7 @@ const patientQrMetrics = useMemo(() => ({
 // ============================================================================
 // ----- 4.3. HANDLERY DLA STOŁÓW I DRAG & DROP -----
 // ============================================================================
- 
+
 // --- FUNKCJA: IMPORT Z EXCEL ---
   const handleImportExcel = (file: File) => {
     const reader = new FileReader();
@@ -1787,7 +1795,7 @@ const patientQrMetrics = useMemo(() => ({
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const rows: any = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        
+
         for (const row of rows) {
           await supabase.from('b2b_applications').insert([{
             event_id: id,
@@ -1812,7 +1820,7 @@ const patientQrMetrics = useMemo(() => ({
   const handlePrintBadges = () => {
     const doc = new jsPDF();
     const approved = applications.filter(a => a.status === 'approved');
-    
+
     if (approved.length === 0) {
       showNotification('Brak zaakceptowanych gości do wydruku', 'info');
       return;
@@ -1821,7 +1829,7 @@ const patientQrMetrics = useMemo(() => ({
     approved.forEach((guest, idx) => {
       if (idx > 0 && idx % 4 === 0) doc.addPage();
       const yPos = (idx % 4) * 60 + 30;
-      
+
       doc.setFontSize(22);
       doc.text(`${guest.first_name} ${guest.last_name}`, 105, yPos, { align: 'center' });
       doc.setFontSize(12);
@@ -1829,7 +1837,7 @@ const patientQrMetrics = useMemo(() => ({
       doc.setDrawColor(232, 206, 122); // Kolor złoty ANM
       doc.line(50, yPos + 15, 160, yPos + 15);
     });
-    
+
     doc.save(`identyfikatory-${event?.title || 'event'}.pdf`);
     showNotification('Pobieranie pliku PDF...', 'success');
   };
@@ -2240,25 +2248,25 @@ const patientQrMetrics = useMemo(() => ({
     const file = e.target.files?.[0]
     if (!file) return
     setUpdating(true)
-    
+
     try {
       const data = await file.arrayBuffer()
       const workbook = XLSX.read(data, { type: 'array' })
       const sheetName = workbook.SheetNames[0]
       const rows: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName])
-      
+
       let matchCount = 0
-      
+
       // Przechodzimy przez każdy wiersz z pliku bankowego/Bramki
       for (const row of rows) {
         const rowString = JSON.stringify(row).toLowerCase()
-        
+
         // Szukamy pasującej aplikacji po Emailu, Nazwisku lub Referencji
         const matchedApp = applications.find(app => {
           const refMatch = app.payment_reference && rowString.includes(app.payment_reference.toLowerCase())
           const emailMatch = app.email && rowString.includes(app.email.toLowerCase())
           const nameMatch = app.last_name && rowString.includes(app.last_name.toLowerCase())
-          
+
           return refMatch || emailMatch || nameMatch
         })
 
@@ -2275,10 +2283,10 @@ const patientQrMetrics = useMemo(() => ({
           matchCount++
         }
       }
-      
+
       showNotification(`Zakończono analizę pliku. Dopasowano automatycznie ${matchCount} płatności.`, 'success')
       await loadEventData() // Odświeżamy dane po imporcie
-      
+
     } catch (err: any) {
       showNotification('Błąd odczytu pliku z wyciągiem: ' + err.message, 'error')
     } finally {
@@ -2345,14 +2353,14 @@ const patientQrMetrics = useMemo(() => ({
   const handleSaveAsTemplate = async () => {
     const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
     if (!templateName) return;
-    
+
     setUpdating(true);
     try {
       const config = {
         sessions, meals, gadgets, unitCosts,
         dressCode: { title: editForm.dc_title, ladies: editForm.dc_ladies, gents: editForm.dc_gents }
       };
-      
+
       const { error } = await supabase.from('event_templates').insert([{
         event_id: id,
         name: templateName,
@@ -2367,7 +2375,7 @@ const patientQrMetrics = useMemo(() => ({
       setUpdating(false);
     }
   };
-  
+
 
  const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2419,7 +2427,7 @@ const patientQrMetrics = useMemo(() => ({
 
 
       const { id: _id, created_at, business_id, ...cleanData } = updates;
-      
+
       // Opcjonalnie: usuwamy puste pola techniczne, jeśli React je dodał
       delete (cleanData as any).event_sessions;
       delete (cleanData as any).event_gadgets;
@@ -2436,9 +2444,9 @@ const patientQrMetrics = useMemo(() => ({
       setEvent((prev: any) => ({ ...prev, ...updates }));
       setEditForm((prev: any) => ({ ...prev, ...updates }));
       await Promise.all(oldFileUrlsToDelete.map(url => deleteUploadedFile(url)));
-      
+
       showNotification('Zmiany i multimedia zapisane!', 'success');
-      
+
       // 6. Resetowanie stanu plików lokalnych
 
 setNewFiles({
@@ -2468,7 +2476,7 @@ setNewFiles({
   themeImg3: null,
   themeImg4: null
 });
-     
+
 
     } catch (err: any) {
       console.error("Critical Update Error:", err);
@@ -2500,7 +2508,7 @@ setNewFiles({
         image_url: imageUrl
       };
 
-      const { error } = sessionForm.id 
+      const { error } = sessionForm.id
         ? await supabase.from('event_sessions').update(data).eq('id', sessionForm.id)
         : await supabase.from('event_sessions').insert([data]);
 
@@ -3164,7 +3172,7 @@ const { data: checklistItemData } = await supabase
 
       const { data: partnerData } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
       const { data: contractorData } = await supabase.from('contractors').select('*').eq('event_id', id).order('created_at', { ascending: false })
-    
+
       setEvent(ev)
       setEditForm(ev)
       setApplications(apps || [])
@@ -3206,7 +3214,7 @@ await loadPatientConsents()
     loadEcoAiReport()
   }, [loadEcoAiReport])
 
-  
+
 // ============================================================================
 // ----- 4.6. DANE POCHODNE I FILTRACJA -----
 // ============================================================================
@@ -3388,7 +3396,7 @@ const transportAnalytics = useMemo(() => {
       }
     }
   }
-  
+
   const gadgetSummary = useMemo(() => {
   return gadgets.map(gadget => {
     const choices = attendeeGadgetChoices.filter((choice: any) =>
@@ -3516,7 +3524,7 @@ const transportAnalytics = useMemo(() => {
   const filteredApplications = useMemo(() => {
     return applications.filter(app => {
       const search = searchTerm.toLowerCase()
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' ||
         (app.first_name || '').toLowerCase().includes(search) ||
         (app.last_name || '').toLowerCase().includes(search) ||
         (app.company_name || '').toLowerCase().includes(search)
@@ -4252,7 +4260,7 @@ const aiOrganizerTips = useMemo(() => {
 // ============================================================================
 // ----- 4.7. RENDEROWANIE (JEŚLI ŁADOWANIE) -----
 // ============================================================================
- 
+
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="text-center px-4">
@@ -4265,17 +4273,17 @@ const aiOrganizerTips = useMemo(() => {
 // ============================================================================
 // ----- 4.8. KOMPONENT POMOCNICZY TabButton (wewnątrz) -----
 // ============================================================================
-  
+
 // Podmień tę funkcję w swoim pliku!
-const TabButton = ({ tabId, icon: Icon, label, count, urgent }: { 
+const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   tabId: TabModule, icon: any, label: string, count?: number, urgent?: boolean
 }) => {
   const isActive = activeTab === tabId;
   return (
-    <button 
-      onClick={() => setActiveTab(tabId)} 
+    <button
+      onClick={() => setActiveTab(tabId)}
       className={`w-full min-w-0 ${isNavCollapsed ? 'px-2 py-2 justify-center' : 'px-3 py-3'} rounded-2xl text-left text-[11px] font-black transition-all flex items-center gap-3 border ${
-        isActive 
+        isActive
           ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] border-[#e8ce7a] shadow-md scale-[1.02]' : 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]')
           : urgent && count && count > 0
             ? (isDarkMode ? 'bg-red-900/20 text-red-400 border-red-900/50 hover:bg-red-900/40' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100')
@@ -4283,21 +4291,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       }`}
     >
       <span className={`${isNavCollapsed ? 'w-10 h-10' : 'w-9 h-9'} rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-        isActive 
-          ? (isDarkMode ? 'bg-[#0f172a]/10 text-[#0f172a]' : 'bg-white/20 text-[#e8ce7a]') 
-          : urgent && count && count > 0 
-            ? (isDarkMode ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600') 
+        isActive
+          ? (isDarkMode ? 'bg-[#0f172a]/10 text-[#0f172a]' : 'bg-white/20 text-[#e8ce7a]')
+          : urgent && count && count > 0
+            ? (isDarkMode ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600')
             : (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500')
       }`}>
-        <Icon size={16} /> 
+        <Icon size={16} />
       </span>
       <span className={`${isNavCollapsed ? 'hidden' : 'flex'} flex-1 min-w-0 truncate leading-tight`}>{label}</span>
       {!isNavCollapsed && count !== undefined && count > 0 && (
         <span className={`ml-auto shrink-0 px-2 py-1 rounded-full text-[10px] font-black tabular-nums text-center transition-colors ${
-          isActive 
-            ? (isDarkMode ? 'bg-[#0f172a] text-[#e8ce7a]' : 'bg-white text-slate-900') 
-            : urgent 
-              ? (isDarkMode ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-red-600 text-white animate-pulse') 
+          isActive
+            ? (isDarkMode ? 'bg-[#0f172a] text-[#e8ce7a]' : 'bg-white text-slate-900')
+            : urgent
+              ? (isDarkMode ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-red-600 text-white animate-pulse')
               : (isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700')
         }`}>
           {count}
@@ -4564,7 +4572,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           opacity: 0.72;
         }
       `}</style>
-      
+
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl font-black text-xs md:text-sm animate-in slide-in-from-top-2 ${
           notification.type === 'success' ? 'bg-[#253a2a] text-white' :
@@ -4871,12 +4879,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {/* HEADER */}
 {/* ============================================================================ */}
-      
+
      <header className={`border-b p-3 md:p-4 sticky top-0 z-30 shadow-sm transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
   <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2">
     <div className="flex items-center gap-2 md:gap-4">
-      <button 
-        onClick={() => router.push('/b2b/dashboard')} 
+      <button
+        onClick={() => router.push('/b2b/dashboard')}
         className={`p-1.5 md:p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-700'}`}
       >
         <ArrowLeft size={18} />
@@ -4890,32 +4898,32 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </p>
       </div>
     </div>
-    
+
     <div className="flex items-center gap-2 md:gap-3 shrink-0">
-      
+
       {/* Przycisk: Identyfikatory PDF */}
       <button
         onClick={handlePrintBadges}
         className={`hidden md:flex px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider items-center gap-1.5 border transition-all hover:scale-105 shadow-sm ${
-          isDarkMode 
-            ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800' 
+          isDarkMode
+            ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
             : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white hover:text-slate-900'
         }`}
       >
         <Printer size={12}/> Identyfikatory
       </button>
-      
+
       {/* Przycisk: Tryb Ciemny/Jasny */}
       <button
         type="button"
         onClick={toggleDarkMode}
         className={`hidden sm:flex px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider items-center gap-1.5 border transition-all hover:scale-105 shadow-sm ${
-          isDarkMode 
-            ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40' 
+          isDarkMode
+            ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40'
             : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white hover:text-slate-900'
         }`}
       >
-        {isDarkMode ? <Sun size={12}/> : <Moon size={12}/>} 
+        {isDarkMode ? <Sun size={12}/> : <Moon size={12}/>}
         <span className="hidden lg:inline">{isDarkMode ? 'Tryb jasny' : 'Tryb ciemny'}</span>
       </button>
 
@@ -4925,7 +4933,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           type="button"
           onClick={() => setIsHelpMenuOpen(prev => !prev)}
           className={`flex px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider items-center gap-1.5 border transition-all hover:scale-105 shadow-sm ${
-            isHelpMenuOpen 
+            isHelpMenuOpen
               ? (isDarkMode ? 'bg-indigo-500/20 border-indigo-400/50 text-indigo-300' : 'bg-indigo-100 border-indigo-300 text-indigo-800')
               : (isDarkMode ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20' : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100')
           }`}
@@ -4956,8 +4964,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 type="button"
                 onClick={() => setIsHelpMenuOpen(false)}
                 className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700' 
+                  isDarkMode
+                    ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
                     : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
@@ -4990,15 +4998,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         rel="noopener noreferrer"
                         onClick={() => setIsHelpMenuOpen(false)}
                         className={`flex items-start justify-between gap-3 p-3 rounded-2xl transition-colors group border border-transparent ${
-                          isDarkMode 
-                            ? 'hover:bg-slate-800/80 hover:border-slate-700/50' 
+                          isDarkMode
+                            ? 'hover:bg-slate-800/80 hover:border-slate-700/50'
                             : 'hover:bg-slate-50 hover:border-slate-200'
                         }`}
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                            isDarkMode 
-                              ? 'bg-slate-800 text-slate-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-400' 
+                            isDarkMode
+                              ? 'bg-slate-800 text-slate-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-400'
                               : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600'
                           }`}>
                             <BookOpen size={16} />
@@ -5018,8 +5026,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         </div>
 
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-2 transition-colors ${
-                          isDarkMode 
-                            ? 'bg-slate-800 text-slate-500 group-hover:bg-indigo-500/20 group-hover:text-indigo-400' 
+                          isDarkMode
+                            ? 'bg-slate-800 text-slate-500 group-hover:bg-indigo-500/20 group-hover:text-indigo-400'
                             : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'
                         }`}>
                           <ExternalLink size={10} />
@@ -5032,14 +5040,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         )}
       </div>
-      
+
       {/* Znaczek ECO EVENT - Zaktualizowany na spójne złoto+grafit zamiast zieleni */}
       <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-colors ${
-        isDarkMode 
-          ? 'bg-[#e8ce7a] text-[#0f172a]' 
+        isDarkMode
+          ? 'bg-[#e8ce7a] text-[#0f172a]'
           : 'bg-slate-900 text-[#e8ce7a]'
       }`}>
-        <Leaf size={12} className={isDarkMode ? 'text-[#0f172a]' : 'text-[#e8ce7a]'} /> 
+        <Leaf size={12} className={isDarkMode ? 'text-[#0f172a]' : 'text-[#e8ce7a]'} />
         Eco Event
       </span>
     </div>
@@ -5128,7 +5136,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         {/* GRID GŁÓWNY - ZMODYFIKOWANY ABY LEWE MENU ZAWSZE BYŁO W LINII, A NIE FIXED */}
         {/* ============================================================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start">
-          
+
           {/* LEWY SIDEBAR (Używamy kolumn Grida zamiast pozycjonowania fixed!) */}
           <aside className={`${isNavCollapsed ? 'lg:col-span-1 lg:w-[85px]' : 'lg:col-span-3'} lg:sticky lg:top-24 space-y-4 transition-all duration-300 z-20`}>
             <div className={`border rounded-[28px] backdrop-blur-xl transition-colors duration-300 ${isNavCollapsed ? 'p-2 shadow-sm' : 'p-4 shadow-sm'} ${isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}`}>
@@ -5139,13 +5147,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <h2 className={`text-lg font-black truncate mt-0.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>ClinicOps</h2>
                   </div>
                 )}
-                
+
                 {!isNavCollapsed && pendingApps.length > 0 && (
                   <span className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-wider animate-pulse shrink-0">
                     {pendingApps.length} nowe
                   </span>
                 )}
-                
+
                 <button
                   type="button"
                   onClick={() => setIsNavCollapsed(!isNavCollapsed)}
@@ -5191,29 +5199,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'strona_uczestnika' && (
   <form onSubmit={handleSaveParticipantPageSettings} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
           Portal Pacjenta i e-Rejestracja
         </h3>
         <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           Skonfiguruj Cyfrową Ścieżkę Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje się z informacjami o zabiegach.
         </p>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row gap-3 shrink-0">
         <HelpButton sectionKey="guest_page" />
-        <button 
-          type="submit" 
-          disabled={updating} 
+        <button
+          type="submit"
+          disabled={updating}
           className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 ${
             isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'
           }`}
         >
-          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />} 
+          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
           Zapisz zmiany w Portalu
         </button>
       </div>
@@ -5245,10 +5253,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         const isSectionVisible = editForm?.[fields.visible] === true
 
         return (
-          <div 
-            key={section.key} 
+          <div
+            key={section.key}
             className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-all duration-300 ${
-              isSectionVisible 
+              isSectionVisible
                 ? (isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200')
                 : (isDarkMode ? 'bg-slate-900/40 border-slate-800/60' : 'bg-slate-50/50 border-slate-200/60')
             }`}
@@ -5272,7 +5280,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 shrink-0">
                 {!hasDbColumns && (
                   <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
@@ -5280,7 +5288,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </span>
                 )}
                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
-                  isSectionVisible 
+                  isSectionVisible
                     ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                     : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')
                 }`}>
@@ -5291,11 +5299,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             {/* ZAWARTOŚĆ KAFELKA */}
             <div className={`p-5 md:p-6 space-y-5 transition-opacity ${!isSectionVisible && 'opacity-60 grayscale-[30%]'}`}>
-              
+
               {/* TOGGLES (WIDOCZNOŚĆ I AKCJA) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  isSectionVisible 
+                  isSectionVisible
                     ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900/80 shadow-md' : 'border-slate-900 bg-white shadow-sm')
                     : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
                 }`}>
@@ -5312,7 +5320,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       className="sr-only"
                     />
                     <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                      isSectionVisible 
+                      isSectionVisible
                         ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
                         : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
                     }`}>
@@ -5323,7 +5331,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 {section.operational && fields.action && (
                   <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    editForm?.[fields.action] === true 
+                    editForm?.[fields.action] === true
                       ? (isDarkMode ? 'border-indigo-500 bg-indigo-900/10 shadow-md' : 'border-indigo-500 bg-indigo-50 shadow-sm')
                       : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
                   }`}>
@@ -5340,7 +5348,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         className="sr-only"
                       />
                       <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                        editForm?.[fields.action] === true 
+                        editForm?.[fields.action] === true
                           ? (isDarkMode ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white')
                           : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
                       }`}>
@@ -5438,9 +5446,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* ZAPIS STICKY BUTTON */}
     <div className="sticky bottom-6 z-30 flex justify-end mt-8">
-      <button 
-        type="submit" 
-        disabled={updating} 
+      <button
+        type="submit"
+        disabled={updating}
         className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:scale-100 ${
           isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-[#e8ce7a]'
         }`}
@@ -5459,7 +5467,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'edycja' && editForm && (
   <form onSubmit={handleUpdateEvent} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* SEKCJA: TREŚCI TEKSTOWE */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex items-center gap-3 mb-6">
@@ -5474,50 +5482,50 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="space-y-5">
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł wydarzenia</label>
-          <input 
-            className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-            value={editForm.title || ''} 
-            onChange={e => setEditForm({...editForm, title: e.target.value})} 
+          <input
+            className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            value={editForm.title || ''}
+            onChange={e => setEditForm({...editForm, title: e.target.value})}
           />
         </div>
-        
+
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Lokalizacja</label>
-          <input 
-            className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-            value={editForm.location || ''} 
-            onChange={e => setEditForm({...editForm, location: e.target.value})} 
+          <input
+            className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            value={editForm.location || ''}
+            onChange={e => setEditForm({...editForm, location: e.target.value})}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data wydarzenia</label>
-            <input 
-              type="date" 
-              className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-              value={editForm.event_date ? new Date(editForm.event_date).toISOString().split('T')[0] : ''} 
-              onChange={e => setEditForm({...editForm, event_date: e.target.value})} 
+            <input
+              type="date"
+              className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+              value={editForm.event_date ? new Date(editForm.event_date).toISOString().split('T')[0] : ''}
+              onChange={e => setEditForm({...editForm, event_date: e.target.value})}
             />
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spodziewana liczba gości</label>
-            <input 
-              type="number" 
-              className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-              value={editForm.expected_attendees || ''} 
-              onChange={e => setEditForm({...editForm, expected_attendees: e.target.value})} 
+            <input
+              type="number"
+              className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+              value={editForm.expected_attendees || ''}
+              onChange={e => setEditForm({...editForm, expected_attendees: e.target.value})}
             />
           </div>
         </div>
-        
+
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Pełny opis wydarzenia</label>
-          <textarea 
-            rows={4} 
-            className={`w-full border rounded-2xl px-4 py-3.5 font-medium outline-none resize-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-            value={editForm.description || ''} 
-            onChange={e => setEditForm({...editForm, description: e.target.value})} 
+          <textarea
+            rows={4}
+            className={`w-full border rounded-2xl px-4 py-3.5 font-medium outline-none resize-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            value={editForm.description || ''}
+            onChange={e => setEditForm({...editForm, description: e.target.value})}
             placeholder="Opisz krótko czym jest to wydarzenie, kogo zapraszasz i czego można się spodziewać."
           />
           {/* NOWY PRZYCISK AI */}
@@ -5543,7 +5551,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Multimedia (Zdjęcia i Logo)
         </h3>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
         {/* LOGO */}
         <div className={`p-5 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
@@ -5607,14 +5615,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Wygląd i Brand Book
         </h3>
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-8">
         {[
-          { key: 'bg_color', label: 'Tło Strony' }, 
-          { key: 'card_bg_color', label: 'Tło Kafelków' }, 
-          { key: 'heading_color', label: 'Nagłówki' }, 
-          { key: 'text_color', label: 'Tekst (Akapity)' }, 
-          { key: 'primary_color', label: 'Akcent Główny' }, 
+          { key: 'bg_color', label: 'Tło Strony' },
+          { key: 'card_bg_color', label: 'Tło Kafelków' },
+          { key: 'heading_color', label: 'Nagłówki' },
+          { key: 'text_color', label: 'Tekst (Akapity)' },
+          { key: 'primary_color', label: 'Akcent Główny' },
           { key: 'secondary_color', label: 'Akcent Dodatkowy' }
         ].map(field => (
           <div key={field.key} className={`p-3 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
@@ -5684,7 +5692,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             />
           </div>
         </div>
-        
+
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Czcionka Tekstu</label>
           <div className="space-y-2">
@@ -5709,9 +5717,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kształt Elementów (Border Radius)</label>
-          <select 
-            className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} 
-            value={editForm.element_shape || 'rounded-none'} 
+          <select
+            className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+            value={editForm.element_shape || 'rounded-none'}
             onChange={e => setEditForm({...editForm, element_shape: e.target.value})}
           >
             <option value="rounded-none">Ostre krawędzie (Kwadrat)</option>
@@ -5724,9 +5732,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* PRZYCISK ZAPISU - ZHARMONIZOWANY I WIDOCZNY */}
     <div className="sticky bottom-6 z-30 flex justify-end">
-      <button 
-        type="submit" 
-        disabled={updating} 
+      <button
+        type="submit"
+        disabled={updating}
         className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:scale-100 ${
           isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-[#e8ce7a]'
         }`}
@@ -5740,13 +5748,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
 
+
+
+
 {/* ============================================================================ */}
-{/* materiały */}
 {/* DOKUMENTACJA I WYWIAD MEDYCZNY (Dawne 'materialy') */}
 {/* ============================================================================ */}
 {activeTab === 'materialy' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* HEADER */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
@@ -5762,7 +5772,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex gap-2 shrink-0">
         <HelpButton sectionKey="medical_docs" />
         <button
-          onClick={() => showNotification('Otwieram inteligentny kreator szablonów AI...', 'info')}
+          onClick={() => {
+            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false })
+            setIsConsentTemplateModalOpen(true)
+          }}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Sparkles size={14} />
@@ -5792,11 +5805,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     </div>
 
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      
+
       {/* KOLUMNA 1: STATUSY PACJENTÓW (DLA RECEPCJI) */}
       <div className="xl:col-span-2 space-y-6">
         <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dzisiejsze wizyty - Status Dokumentacji</h4>
-        
+
         <div className="space-y-3">
           {/* Pacjent 1 - Brak wywiadu */}
           <div className={`p-4 md:p-5 rounded-[24px] border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-[#1e293b] border-red-900/50' : 'bg-white border-red-200'}`}>
@@ -5810,7 +5823,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zabieg: Mezoterapia igłowa • 14:30</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => showNotification('Link do wywiadu został wysłany SMSem do pacjentki.', 'success')}
               className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
             >
@@ -5834,13 +5847,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
-              <button 
+              <button
                 onClick={() => window.print()}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
               >
                 Drukuj dla pacjenta
               </button>
-              <button 
+              <button
                 onClick={() => showNotification('Wysłano prośbę o podpis do aplikacji pacjenta.', 'success')}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-amber-500 text-slate-900 hover:bg-amber-400' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'}`}
               >
@@ -5879,10 +5892,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Opcja awaryjna dla pacjentów preferujących papier. Zrób zdjęcie tabletem lub wgraj skan. Otaguj pacjenta, a plik zapisze się jako oficjalny log w jego cyfrowej Karcie 360.
           </p>
           <div className="mt-5 relative w-fit">
-            <button className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+            <button className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]'}`}>
               Skanuj dokument
             </button>
-            <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*,.pdf" />
+            <input
+              type="file"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              accept="image/*,.pdf"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  const previewUrl = URL.createObjectURL(file);
+                  setScanUploadForm({ patient_id: '', template_id: '', file: file, preview: previewUrl });
+                  setIsScanUploadModalOpen(true);
+                }
+              }}
+            />
           </div>
         </div>
       </div>
@@ -5892,49 +5917,333 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza Szablonów
         </h4>
-        
-        <div className="space-y-3">
-          {/* Kwestionariusz */}
+
+        <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+          {/* Przykładowe Szablony (Docelowo zmapujemy tu 'consentTemplates' pobrane z bazy) */}
           <div className={`p-4 rounded-[20px] border shadow-sm ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/20 to-slate-900 border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-200'}`}>
             <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-100 text-indigo-700 border-indigo-200'}`}>Systemowy</span>
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-100 text-indigo-700 border-indigo-200'}`}>Kwestionariusz</span>
               <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-white text-slate-500'}`}><Edit3 size={14}/></button>
             </div>
             <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Pełny Wywiad Medyczny</h5>
-            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Inteligentna ankieta zdrowotna, wymagana automatycznie przed pierwszą wizytą każdego pacjenta.</p>
+            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Inteligentna ankieta zdrowotna, wymuszana co 6 miesięcy.</p>
           </div>
 
-          {/* Zgoda Laser */}
           <div className={`p-4 rounded-[20px] border shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
             <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Edytowalny</span>
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Zgoda Zabiegowa</span>
               <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500'}`}><Edit3 size={14}/></button>
             </div>
-            <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Zgoda: Laser frakcyjny CO2</h5>
-            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zgoda zabiegowa obejmująca przeciwwskazania (izotretynoina, opalenizna) oraz zalecenia po.</p>
+            <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Laser frakcyjny CO2</h5>
+            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Obejmuje przeciwwskazania (izotretynoina, opalenizna) oraz zalecenia pozabiegowe.</p>
           </div>
 
-          {/* Zgoda RODO */}
           <div className={`p-4 rounded-[20px] border shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
             <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Edytowalny</span>
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Globalne / RODO</span>
               <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500'}`}><Edit3 size={14}/></button>
             </div>
             <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Zgoda RODO & Marketing</h5>
             <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zgoda na publikację wizerunku (zdjęcia przed/po), kontakt SMS oraz newsletter.</p>
           </div>
         </div>
-        
-        <button 
-          onClick={() => showNotification('Otwieram pusty szablon. Możesz wkleić własną treść lub użyć asystenta AI.', 'info')}
+
+        <button
+          onClick={() => {
+            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false })
+            setIsConsentTemplateModalOpen(true)
+          }}
           className={`w-full py-4 border-2 border-dashed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${isDarkMode ? 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 bg-slate-900/50' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 bg-slate-50'}`}
         >
           <Plus size={16} /> Nowy Szablon Zgody
         </button>
       </div>
     </div>
+
+    {/* ============================================================================ */}
+    {/* MODAL 1: WGRYWANIE SKANU PAPIEROWEGO DO KARTY PACJENTA */}
+    {/* ============================================================================ */}
+    {isScanUploadModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+            <div>
+              <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <Download size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+                Otaguj dokument
+              </h3>
+              <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Przypisz wgrany skan do konkretnego pacjenta i typu dokumentu.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setIsScanUploadModalOpen(false)
+                setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
+              }}
+              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`rounded-2xl border flex items-center justify-center overflow-hidden bg-slate-100 ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-300'}`} style={{ minHeight: '250px' }}>
+              {scanUploadForm.preview ? (
+                <img src={scanUploadForm.preview} alt="Podgląd skanu" className="max-w-full max-h-[300px] object-contain" />
+              ) : (
+                <div className="text-center p-4 text-slate-400">
+                  <FileIcon size={40} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-xs font-bold uppercase tracking-wider">Dokument PDF</p>
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              // Tutaj docelowo logika wrzucająca do Supabase Storage i insert do patient_consents
+              showNotification('Dokument pomyślnie połączony z Kartą Pacjenta!', 'success')
+              setIsScanUploadModalOpen(false)
+            }} className="space-y-5">
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  1. Wybierz Pacjenta *
+                </label>
+                <select
+                  required
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                  value={scanUploadForm.patient_id}
+                  onChange={e => setScanUploadForm({ ...scanUploadForm, patient_id: e.target.value })}
+                >
+                  <option value="">-- Wyszukaj pacjenta --</option>
+                  {/* Mapowanie pacjentów (Mock dla widoku) */}
+                  <option value="1">Anna Kowalska (850212...)</option>
+                  <option value="2">Michał Nowak (900414...)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  2. Czego dotyczy dokument? *
+                </label>
+                <select
+                  required
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                  value={scanUploadForm.template_id}
+                  onChange={e => setScanUploadForm({ ...scanUploadForm, template_id: e.target.value })}
+                >
+                  <option value="">-- Wybierz szablon z bazy --</option>
+                  <option value="t1">Pełny Wywiad Medyczny</option>
+                  <option value="t2">Zgoda: Laser frakcyjny CO2</option>
+                  <option value="t3">Zgoda RODO & Marketing</option>
+                </select>
+              </div>
+
+              <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/30' : 'bg-emerald-50 border-emerald-200/50'}`}>
+                <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  <ShieldCheck size={12}/> Audyt systemowy
+                </p>
+                <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
+                  Ten plik zostanie wgrany z Twoim podpisem cyfrowym jako pracownika weryfikującego (Osoba z recepcji).
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+              >
+                Zapisz w Karcie 360
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ============================================================================ */}
+    {/* MODAL 2: KREATOR SZABLONÓW ZGÓD (Baza Managera) */}
+    {/* ============================================================================ */}
+    {isConsentTemplateModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+            <div>
+              <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+                Kreator Szablonu Dokumentu
+              </h3>
+              <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Dodaj nowy wzór, który pacjenci będą akceptować w swoim panelu cyfrowym.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsConsentTemplateModalOpen(false)}
+              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            showNotification('Szablon zapisany w bazie.', 'success')
+            setIsConsentTemplateModalOpen(false)
+          }} className="space-y-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Tytuł dokumentu *
+                </label>
+                <input
+                  required
+                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={consentTemplateForm.title || ''}
+                  onChange={e => setConsentTemplateForm({ ...consentTemplateForm, title: e.target.value })}
+                  placeholder="np. Zgoda na modelowanie ust"
+                />
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Typ dokumentu
+                </label>
+                <select
+                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                  value={consentTemplateForm.document_type || 'consent'}
+                  onChange={e => setConsentTemplateForm({ ...consentTemplateForm, document_type: e.target.value })}
+                >
+                  <option value="consent">Zgoda na zabieg (Oświadczenie)</option>
+                  <option value="questionnaire">Wywiad Medyczny (Ankieta)</option>
+                  <option value="rodo">Klauzula RODO / Regulamin</option>
+                  <option value="info">Informacja / Zalecenia po</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Przypisz do zabiegu
+                </label>
+                <input
+                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={consentTemplateForm.required_for_treatment || ''}
+                  onChange={e => setConsentTemplateForm({ ...consentTemplateForm, required_for_treatment: e.target.value })}
+                  placeholder="np. Laseroterapia (opcjonalnie)"
+                />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Ważność dokumentu (Miesiące)
+                </label>
+                <input
+                  type="number"
+                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={consentTemplateForm.validity_months || ''}
+                  onChange={e => setConsentTemplateForm({ ...consentTemplateForm, validity_months: Number(e.target.value) })}
+                  placeholder="np. 6 (Zostaw puste = Bezterminowo)"
+                />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Numer wersji
+                </label>
+                <input
+                  type="number"
+                  readOnly
+                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+                  value={consentTemplateForm.version || 1}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-5 border-slate-200 dark:border-slate-800">
+              {[
+                {
+                  key: 'is_global_required',
+                  title: 'Wymagane globalnie',
+                  desc: 'Każdy pacjent musi to podpisać (np. RODO)'
+                },
+                {
+                  key: 'is_active',
+                  title: 'Szablon Aktywny',
+                  desc: 'Dostępny do wyboru przez recepcję i pacjentów'
+                }
+              ].map(item => {
+                const isChecked = consentTemplateForm[item.key] === true;
+                return (
+                  <label
+                    key={item.key}
+                    className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      isChecked
+                        ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-slate-50')
+                        : (isDarkMode ? 'border-slate-700 bg-slate-950/50' : 'border-slate-200 bg-white')
+                    }`}
+                  >
+                    <div>
+                      <p className={`font-black text-sm ${isChecked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>
+                        {item.title}
+                      </p>
+                      <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                        {item.desc}
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={e => setConsentTemplateForm({ ...consentTemplateForm, [item.key]: e.target.checked })}
+                      className="sr-only"
+                    />
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                      isChecked
+                        ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
+                        : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
+                    }`}>
+                      {isChecked && <CheckCircle2 size={14} />}
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Treść Szablonu / Pytania
+                </label>
+                <button type="button" className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}>
+                  <Sparkles size={12}/> Generuj szkielet AI
+                </button>
+              </div>
+              <textarea
+                rows={10}
+                className={`w-full border rounded-xl px-4 py-4 text-sm font-medium outline-none resize-y transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                value={consentTemplateForm.content_template || ''}
+                onChange={e => setConsentTemplateForm({ ...consentTemplateForm, content_template: e.target.value })}
+                placeholder="Tutaj wpisz treść zgody (możesz używać znaczników takich jak [IMIE_PACJENTA] czy [DATA] - system podmieni je automatycznie podczas generowania PDF)."
+              />
+            </div>
+
+            <button
+              type="submit"
+              className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+            >
+              Zapisz Szablon w Bazie
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
   </div>
 )}
+
+
+
+
+
+
 
 
 {/* ============================================================================ */}
@@ -6154,7 +6463,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           ) : sessions.map((item) => (
             <div key={item.id} className={`p-5 md:p-6 transition-colors group ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
               <div className="flex flex-col md:flex-row gap-5 md:gap-6">
-                
+
                 {/* Zdjęcie */}
                 <div className={`w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
                   {item.image_url ? (
@@ -6174,7 +6483,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      
+
                       <div className="flex items-center gap-2 flex-wrap mb-2">
                         <span
                           className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
@@ -6263,7 +6572,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'prelegenci' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* HEADER Z PRZYCISKAMI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -6283,7 +6592,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <HelpButton sectionKey="operations" />
-          
+
           <button
             onClick={() => {
               setPartnerForm({ type: 'speaker' })
@@ -6376,7 +6685,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
 
           <form onSubmit={handleSavePartner} className="space-y-6">
-            
+
             {/* WSPÓLNE DLA OBU TYPÓW */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -6538,12 +6847,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 {partnerForm.type === 'speaker' ? 'Zdjęcie profilowe' : 'Wgraj plik z logo'}
               </label>
-              
+
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 {(newFiles.partnerPhoto || partnerForm.photo_url || partnerForm.logo_url) && (
                   <div className={`shrink-0 flex items-center justify-center overflow-hidden border ${
-                    partnerForm.type === 'speaker' 
-                      ? `w-20 h-20 rounded-full ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}` 
+                    partnerForm.type === 'speaker'
+                      ? `w-20 h-20 rounded-full ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`
                       : `w-32 h-20 rounded-xl bg-white p-2 ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`
                   }`}>
                     <img
@@ -6553,7 +6862,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     />
                   </div>
                 )}
-                
+
                 <input
                   type="file"
                   accept="image/*"
@@ -6681,7 +6990,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           {gadgetSummary.map(summary => (
             <div key={summary.gadget.id} className={`p-5 md:p-6 transition-colors ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                
+
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className={`w-16 h-16 rounded-2xl overflow-hidden border shrink-0 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
                     {summary.gadget.image_url ? (
@@ -6784,7 +7093,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               {summary.choices.length > 0 && (
                 <details className="mt-5 group">
                   <summary className={`cursor-pointer text-[10px] font-black uppercase tracking-widest flex items-center gap-2 select-none transition-colors ${isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'}`}>
-                    <ChevronDown size={14} className="group-open:rotate-180 transition-transform" /> 
+                    <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
                     Pokaż listę osób ({summary.choices.length})
                   </summary>
 
@@ -7115,10 +7424,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, is_active: checked })
               }
             ].map(item => (
-              <label 
+              <label
                 key={item.key}
                 className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  item.checked 
+                  item.checked
                     ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900 shadow-md' : 'border-slate-900 bg-slate-50 shadow-md')
                     : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-white hover:bg-slate-50')
                 }`}
@@ -7138,7 +7447,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   className="sr-only"
                 />
                 <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
-                  item.checked 
+                  item.checked
                     ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
                     : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
                 }`}>
@@ -7293,35 +7602,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'finanse' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* HEADER SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Wallet size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          <Wallet size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
           Płatności i koszty procedur
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           Płatności pacjentów, zaliczki, VAT, koszty procedur i kontrola rentowności kliniki.
         </p>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 shrink-0">
         <HelpButton sectionKey="budget" />
-        <button 
-          onClick={() => { setBudgetTransferForm({ currency: 'PLN' }); setIsBudgetTransferModalOpen(true) }} 
+        <button
+          onClick={() => { setBudgetTransferForm({ currency: 'PLN' }); setIsBudgetTransferModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
           <ArrowRightLeft size={14} /> Przenieś
         </button>
-        <button 
-          onClick={() => { setBudgetCategoryForm({ color: '#94a3b8', planned_budget: 0 }); setIsEditingBudgetCategory(false); setIsBudgetCategoryModalOpen(true) }} 
+        <button
+          onClick={() => { setBudgetCategoryForm({ color: '#94a3b8', planned_budget: 0 }); setIsEditingBudgetCategory(false); setIsBudgetCategoryModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
           <Plus size={14} /> Kategoria
         </button>
-        <button 
-          onClick={() => { setBudgetItemForm({ type: 'expense', category: 'other', currency: 'PLN', vat_rate: 23, payment_status: 'planned', is_active: true }); setIsEditingBudgetItem(false); setIsBudgetItemModalOpen(true) }} 
+        <button
+          onClick={() => { setBudgetItemForm({ type: 'expense', category: 'other', currency: 'PLN', vat_rate: 23, payment_status: 'planned', is_active: true }); setIsEditingBudgetItem(false); setIsBudgetItemModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Plus size={14} /> Wydatek
@@ -7343,8 +7652,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Finanse kliniki pod kontrolą
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapłaty. 
-            Gdy wprowadzisz więcej danych (catering, druk), AI przeanalizuje wydatki i wskaże, 
+            Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapłaty.
+            Gdy wprowadzisz więcej danych (catering, druk), AI przeanalizuje wydatki i wskaże,
             gdzie relokacja środków da najwyższy "Green ROI" (najwięcej uratowanego CO₂ na każdą wydaną złotówkę).
           </p>
         </div>
@@ -7372,7 +7681,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
             <kpi.icon size={80} className={isDarkMode ? 'text-white' : 'text-slate-900'} />
           </div>
-          
+
           <div className="relative z-10">
             <div className="flex justify-between items-start">
               <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -7441,11 +7750,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <button onClick={() => { setBudgetCategoryForm(category); setIsEditingBudgetCategory(true); setIsBudgetCategoryModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><Edit3 size={14}/></button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] md:text-xs">
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Plan</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.planned_budget)}</span></div>
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Wydano</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.used_budget)}</span></div>
-            
+
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Zapłacono</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(category.paid_amount)}</span></div>
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Do zapłaty</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(category.unpaid_amount)}</span></div>
           </div>
@@ -7473,8 +7782,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="flex flex-wrap gap-2">
           <div className="relative">
             <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}/>
-            <input 
-              className={`w-48 md:w-64 pl-9 pr-3 py-2 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} 
+            <input
+              className={`w-48 md:w-64 pl-9 pr-3 py-2 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
               placeholder="Szukaj..." value={budgetSearch} onChange={e => setBudgetSearch(e.target.value)}
             />
           </div>
@@ -7499,13 +7808,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredBudgetItems.map((item: any) => {
               const due = Math.max(Number(item.gross_amount || 0) - Number(item.paid_amount || 0), 0)
-              const badge = item.payment_status === 'paid' 
+              const badge = item.payment_status === 'paid'
                 ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
-                : item.payment_status === 'partially_paid' 
+                : item.payment_status === 'partially_paid'
                   ? (isDarkMode ? 'bg-blue-900/30 text-blue-400 border border-blue-800' : 'bg-blue-50 text-blue-700 border border-blue-200')
-                  : item.payment_status === 'advance_paid' 
+                  : item.payment_status === 'advance_paid'
                     ? (isDarkMode ? 'bg-amber-900/30 text-amber-400 border border-amber-800' : 'bg-amber-50 text-amber-700 border border-amber-200')
-                    : item.payment_status === 'overdue' 
+                    : item.payment_status === 'overdue'
                       ? (isDarkMode ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-red-50 text-red-700 border border-red-200')
                       : (isDarkMode ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-slate-100 text-slate-600 border border-slate-200')
               return (
@@ -7544,8 +7853,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
         <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ostatnie płatności</h4>
         <div className="space-y-3">
-          {budgetPayments.slice(0,8).map((p: any) => { 
-            const item = budgetItems.find((i: any) => i.id === p.budget_item_id); 
+          {budgetPayments.slice(0,8).map((p: any) => {
+            const item = budgetItems.find((i: any) => i.id === p.budget_item_id);
             return (
               <div key={p.id} className={`flex items-center justify-between gap-3 border-b pb-3 text-xs ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                 <div className="min-w-0">
@@ -7557,18 +7866,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <span className={`text-[9px] uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{p.payment_method || '—'}</span>
                 </div>
               </div>
-            ) 
+            )
           })}
           {budgetPayments.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak zarejestrowanych płatności.</p>}
         </div>
       </div>
-      
+
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
         <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Przesunięcia środków</h4>
         <div className="space-y-3">
-          {budgetTransfers.slice(0,8).map((t: any) => { 
-            const from = budgetCategories.find((c: any) => c.id === t.from_category_id); 
-            const to = budgetCategories.find((c: any) => c.id === t.to_category_id); 
+          {budgetTransfers.slice(0,8).map((t: any) => {
+            const from = budgetCategories.find((c: any) => c.id === t.from_category_id);
+            const to = budgetCategories.find((c: any) => c.id === t.to_category_id);
             return (
               <div key={t.id} className={`flex items-center justify-between gap-3 border-b pb-3 text-xs ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                 <div className="min-w-0">
@@ -7581,7 +7890,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
                 <span className={`font-black text-sm tabular-nums shrink-0 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{formatMoney(t.amount, t.currency)}</span>
               </div>
-            ) 
+            )
           })}
           {budgetTransfers.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak przesunięć budżetowych.</p>}
         </div>
@@ -7719,7 +8028,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all mt-2 ${
-          budgetItemForm.is_active !== false 
+          budgetItemForm.is_active !== false
             ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-slate-50')
             : (isDarkMode ? 'border-slate-700 bg-slate-950/50' : 'border-slate-200 bg-white')
         }`}>
@@ -7914,22 +8223,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'dostawcy' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Briefcase size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> 
+          <Briefcase size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/>
           Baza Podwykonawców
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           Zarządzaj firmami, umowami, przypisuj ich do modułów (transport, prelegenci) i wliczaj do budżetu.
         </p>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 shrink-0">
         <HelpButton sectionKey="operations" />
-        <button 
+        <button
           onClick={() => {
             setContractorForm({});
             setIsEditingContractor(false);
@@ -7975,27 +8284,27 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* LISTA Z WYSZUKIWANIEM I DETALAMI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-      
+
       {/* Pasek narzędziowy / Filtry */}
       <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row justify-between xl:items-center gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
         <div className="flex flex-wrap gap-2">
-          <button 
+          <button
             onClick={() => setFilterTag(null)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-              !filterTag 
-                ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white') 
+              !filterTag
+                ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white')
                 : (isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300')
             }`}
           >
             Wszystkie ({contractors.length})
           </button>
           {allTags.map(tag => (
-            <button 
+            <button
               key={tag}
               onClick={() => setFilterTag(tag === filterTag ? null : tag)}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                filterTag === tag 
-                  ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white') 
+                filterTag === tag
+                  ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white')
                   : (isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300')
               }`}
             >
@@ -8006,15 +8315,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="flex gap-2 w-full xl:w-auto shrink-0">
           <div className="relative flex-1 xl:w-64">
             <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-            <input 
-              type="text" 
-              placeholder="Szukaj po nazwie, NIP, e-mail..." 
+            <input
+              type="text"
+              placeholder="Szukaj po nazwie, NIP, e-mail..."
               value={searchContractor}
               onChange={e => setSearchContractor(e.target.value)}
               className={`w-full pl-9 pr-3 py-2 border rounded-xl text-sm font-medium outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
             />
           </div>
-          <button 
+          <button
             onClick={() => exportContractorsToCSV()}
             className={`p-2 border rounded-xl transition-colors shrink-0 shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             title="Eksportuj CSV"
@@ -8041,14 +8350,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             ) : (
               filteredContractors.map(contractor => {
                 const isExpanded = expandedContractorId === contractor.id;
-                
+
                 return (
                   <React.Fragment key={contractor.id}>
                     {/* Wiersz z podsumowaniem (Klikalny by rozwinąć szczegóły) */}
-                    <tr 
+                    <tr
                       className={`transition-colors cursor-pointer group ${
-                        isExpanded 
-                          ? (isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50') 
+                        isExpanded
+                          ? (isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50')
                           : (isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50/50')
                       }`}
                       onClick={() => setExpandedContractorId(isExpanded ? null : contractor.id)}
@@ -8092,7 +8401,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </td>
                       <td className="p-4 pr-6 text-right">
                         <div className="flex justify-end gap-1">
-                          <button 
+                          <button
                             title={isExpanded ? 'Zwiń szczegóły' : 'Pokaż szczegóły'}
                             className={`p-2 rounded-lg transition-all ${isExpanded ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-900') : (isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700')}`}
                           >
@@ -8107,7 +8416,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
                         <td colSpan={5} className="p-0 border-t-0">
                           <div className={`p-5 md:p-6 shadow-inner animate-in slide-in-from-top-2 border-b ${isDarkMode ? 'border-slate-800 bg-slate-950/20' : 'border-slate-200 bg-slate-100/50'}`}>
-                            
+
                             <div className="flex flex-col xl:flex-row gap-6">
                               {/* Kolumna 1: Info kontaktowe i Rejestrowe */}
                               <div className="flex-1 space-y-4">
@@ -8184,13 +8493,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             )}
 
                             <div className={`mt-5 pt-4 border-t flex justify-end gap-2 ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-                              <button 
+                              <button
                                 onClick={() => { setContractorForm(contractor); setIsEditingContractor(true); setIsContractorModalOpen(true); }}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-blue-400 border border-slate-700' : 'bg-white text-blue-700 border border-slate-200'}`}
                               >
                                 <Edit3 size={14} /> Edytuj pełne dane
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDeleteContractor(contractor.id)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-red-900/20 text-red-400 border border-red-900/30' : 'bg-red-50 text-red-600 border border-red-100'}`}
                               >
@@ -8225,7 +8534,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
 
           <form onSubmit={handleSaveContractor} className="space-y-6">
-            
+
             {/* Dane podstawowe */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Dane Firmowe</h4>
@@ -8281,7 +8590,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             {/* Zakres Usługi */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Zakres usługi i Budżet</h4>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usługodawcy</label>
@@ -8307,9 +8616,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria budżetowa</label>
                   <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.budget_category || ''} onChange={e => setContractorForm({...contractorForm, budget_category: e.target.value})} placeholder="np. transport, scena, catering" />
                 </div>
-                
+
                 <label className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                  contractorForm.include_in_budget !== false 
+                  contractorForm.include_in_budget !== false
                     ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white')
                     : (isDarkMode ? 'border-slate-700 bg-slate-950/50' : 'border-slate-200 bg-slate-50')
                 }`}>
@@ -8390,7 +8699,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
                 <Link size={16} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}/> Tagi, Powiązania i Pliki
               </h4>
-              
+
               <div className="mb-5">
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tagi / Etykiety</label>
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -8404,13 +8713,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="newTagInput"
-                    placeholder="Nowy tag (np. dostawcy, prelegenci)" 
+                    placeholder="Nowy tag (np. dostawcy, prelegenci)"
                     className={`flex-1 border rounded-xl px-4 py-2.5 text-sm font-medium outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       const input = document.getElementById('newTagInput') as HTMLInputElement;
@@ -8501,11 +8810,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-slate-200 dark:border-slate-700/50">
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wgraj plik (Faktura/Kosztorys)</label>
-                  <input 
-                    type="file" 
-                    accept="application/pdf,image/*" 
+                  <input
+                    type="file"
+                    accept="application/pdf,image/*"
                     className={`text-[10px] w-full file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:cursor-pointer transition-colors ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700' : 'text-slate-600 file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300'}`}
-                    onChange={e => setNewFiles({...newFiles, contractorInvoice: e.target.files ? e.target.files[0] : null})} 
+                    onChange={e => setNewFiles({...newFiles, contractorInvoice: e.target.files ? e.target.files[0] : null})}
                   />
                   {contractorForm.invoice_url && !newFiles.contractorInvoice && (
                     <div className="mt-3">
@@ -8522,9 +8831,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              disabled={updating} 
+            <button
+              type="submit"
+              disabled={updating}
               className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
             >
               {updating ? 'Zapisywanie...' : (isEditingContractor ? 'Zapisz zmiany w profilu' : 'Dodaj podwykonawcę')}
@@ -8592,8 +8901,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Stan zadań operacyjnych
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadań otwartych</strong>. 
-            W tym <strong className={isDarkMode ? 'text-rose-400' : 'text-rose-600'}>{checklistItems.filter((item: any) => String(item.priority || '').toLowerCase() === 'high' && !item.is_done).length}</strong> oznaczonych jako pilne (priorytet wysoki). 
+            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadań otwartych</strong>.
+            W tym <strong className={isDarkMode ? 'text-rose-400' : 'text-rose-600'}>{checklistItems.filter((item: any) => String(item.priority || '').toLowerCase() === 'high' && !item.is_done).length}</strong> oznaczonych jako pilne (priorytet wysoki).
             System AI z czasem pomoże generować powtarzalne listy np. dla dostawców.
           </p>
         </div>
@@ -9131,7 +9440,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all mt-2 ${
-              checklistItemForm.is_done 
+              checklistItemForm.is_done
                 ? (isDarkMode ? 'border-emerald-500 bg-emerald-900/10' : 'border-emerald-500 bg-emerald-50')
                 : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
             }`}>
@@ -9153,7 +9462,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className="sr-only"
               />
               <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                checklistItemForm.is_done 
+                checklistItemForm.is_done
                   ? 'bg-emerald-500 text-white'
                   : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
               }`}>
@@ -9181,19 +9490,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'bilety' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Ticket size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          <Ticket size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
           Rejestracja & Płatności
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           Zarządzaj dostępami, kontroluj wpłaty i importuj wyciągi bankowe.
         </p>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 shrink-0">
         <HelpButton sectionKey="tickets" />
         <button
@@ -9243,19 +9552,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Settings size={20} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} /> 
+            <Settings size={20} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} />
             Ustawienia rejestracji
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Tryb zapisów, limit miejsc i komunikaty dla uczestników.
           </p>
         </div>
-        <button 
-          onClick={handleSaveRegistrationSettings} 
-          disabled={updating} 
+        <button
+          onClick={handleSaveRegistrationSettings}
+          disabled={updating}
           className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />} 
+          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
           Zapisz ustawienia
         </button>
       </div>
@@ -9293,7 +9602,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           const isChecked = editForm?.[key] !== false;
           return (
             <label key={key} className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              isChecked 
+              isChecked
                 ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white')
                 : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
             }`}>
@@ -9312,7 +9621,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className="sr-only"
               />
               <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                isChecked 
+                isChecked
                   ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
                   : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
               }`}>
@@ -9418,7 +9727,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* LISTA ZGŁOSZEŃ I IMPORT BANKOWY (Odzyskana Tabela!) */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-      
+
       {/* HEADER TABELI Z PRZYCISKIEM IMPORTU */}
       <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-5 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <div>
@@ -9429,23 +9738,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Zarządzaj ręcznie statusem lub zaimportuj wyciąg bankowy, aby system automatycznie oznaczył gości jako opłaconych.
           </p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
           {/* Ukryty input do importu plików */}
-          <input 
-            type="file" 
-            id="bank-statement-upload" 
-            accept=".csv, .xlsx, .xls" 
-            className="hidden" 
-            onChange={handleImportBankStatement} 
+          <input
+            type="file"
+            id="bank-statement-upload"
+            accept=".csv, .xlsx, .xls"
+            className="hidden"
+            onChange={handleImportBankStatement}
           />
-          <button 
+          <button
             type="button"
             onClick={() => document.getElementById('bank-statement-upload')?.click()}
             disabled={updating}
             className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
           >
-            {updating ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />} 
+            {updating ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
             Importuj Wyciąg Bankowy
           </button>
         </div>
@@ -9455,11 +9764,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className={`px-5 py-4 border-b flex flex-wrap gap-3 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-100'}`}>
         <div className="relative flex-1 min-w-[200px]">
           <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-          <input 
-            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} 
-            placeholder="Szukaj osoby, firmy lub numeru referencyjnego..." 
-            value={ticketSearch} 
-            onChange={e => setTicketSearch(e.target.value)} 
+          <input
+            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            placeholder="Szukaj osoby, firmy lub numeru referencyjnego..."
+            value={ticketSearch}
+            onChange={e => setTicketSearch(e.target.value)}
           />
         </div>
         <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketPaymentFilter} onChange={e => setTicketPaymentFilter(e.target.value)}>
@@ -9502,7 +9811,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </tr>
             ) : filteredTicketApplications.map((app: any) => {
               const tier = getTicketTierForApplication(app)
-              
+
               // Kolory dla pigułek statusów
               const getAccessColor = (status: string) => {
                 if (status === 'active') return isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -9528,12 +9837,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </p>
                     )}
                   </td>
-                  
+
                   <td className="p-4 min-w-[150px]">
                     <p className={`text-xs font-black truncate ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{app.ticket_type || tier?.name || 'Brak Pakietu'}</p>
                     <p className={`text-[10px] font-bold mt-1 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{app.company_name || 'Brak firmy'}</p>
                   </td>
-                  
+
                   <td className="p-4 min-w-[150px]">
                     <p className={`text-sm font-black tabular-nums ${getPaymentColor(app.payment_status)}`}>
                       {Number(app.ticket_paid_amount || 0).toLocaleString('pl-PL')} <span className="text-[10px] font-bold text-slate-500">/ {Number(app.ticket_expected_amount || 0).toLocaleString('pl-PL')} {tier?.currency || 'PLN'}</span>
@@ -9542,38 +9851,38 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       {app.payment_status === 'paid' ? 'Opłacone' : app.payment_status === 'unpaid' ? 'Nieopłacone' : 'Bez opłaty'}
                     </span>
                   </td>
-                  
+
                   <td className="p-4">
                     <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${getAccessColor(app.access_status)}`}>
                       {app.access_status === 'active' ? 'Aktywny' : app.access_status === 'waitlist' ? 'Rezerwowa' : app.access_status === 'cancelled' ? 'Anulowany' : 'Oczekujący'}
                     </span>
                   </td>
-                  
+
                   <td className="p-4 pr-6 text-right">
                     <div className="flex flex-wrap justify-end gap-2 min-w-[200px] xl:min-w-[320px]">
-                      
+
                       {app.payment_status !== 'paid' && app.ticket_expected_amount > 0 && (
-                        <button 
-                          onClick={() => markTicketPaid(app)} 
+                        <button
+                          onClick={() => markTicketPaid(app)}
                           title="Oznacz jako opłacone"
                           className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40 border border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
                         >
                           <Wallet size={16} />
                         </button>
                       )}
-                      
+
                       {app.access_status !== 'active' && (
-                        <button 
-                          onClick={() => activateTicketParticipant(app)} 
+                        <button
+                          onClick={() => activateTicketParticipant(app)}
                           title="Aktywuj dostęp"
                           className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 border border-blue-800/50' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
                         >
                           <CheckCircle2 size={16} />
                         </button>
                       )}
-                      
-                      <button 
-                        onClick={() => { setTicketApplicationForm(app); setIsTicketApplicationModalOpen(true) }} 
+
+                      <button
+                        onClick={() => { setTicketApplicationForm(app); setIsTicketApplicationModalOpen(true) }}
                         title="Edytuj szczegóły"
                         className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`}
                       >
@@ -9617,7 +9926,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <X size={20} />
             </button>
           </div>
-          
+
           <form onSubmit={handleSaveTicketTier} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -9676,7 +9985,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 const isChecked = ticketTierForm[key] === true || (['is_active', 'includes_catering', 'includes_gadget'].includes(key) && ticketTierForm[key] !== false);
                 return (
                   <label key={key} className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    isChecked 
+                    isChecked
                       ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white')
                       : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
                   }`}>
@@ -9719,7 +10028,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </button>
           </div>
           <form onSubmit={handleSaveApplicationTicket} className="space-y-6">
-            
+
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zmień Typ Biletu / Pakiet z Cennika</label>
               <select
@@ -9793,7 +10102,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Referencja / Potwierdzenie zewn. (ID Transakcji)</label>
               <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. TR-10928-BLIK" value={ticketApplicationForm.payment_reference || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, payment_reference: e.target.value })} />
             </div>
-            
+
             {'notes' in ticketApplicationForm && (
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka Wewnętrzna</label>
@@ -9810,16 +10119,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
   </div>
 )}
-            
+
 {/* ============================================================================ */}
 {/* ORGANIZER / CENTRUM DOWODZENIA (Z WIZUALNYM KALENDARZEM) */}
 {/* =========================================================================== */}
 {activeTab === 'minutowka' && (() => {
-  
+
   // 1. AGREGACJA WSZYSTKICH WYDARZEŃ Z CAŁEGO PLANNERA
   const aggregatedEvents = (() => {
     const allEvents: any[] = [];
-    
+
     // Z Minutówki
     runOfShow.forEach((task: any) => {
       if (task.date) {
@@ -9885,7 +10194,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     if (currentMonth === 11) { setOrganizerCurrentMonth(0); setOrganizerCurrentYear(currentYear + 1); }
     else setOrganizerCurrentMonth(currentMonth + 1);
   };
-  
+
   const prevMonth = () => {
     if (currentMonth === 0) { setOrganizerCurrentMonth(11); setOrganizerCurrentYear(currentYear - 1); }
     else setOrganizerCurrentMonth(currentMonth - 1);
@@ -9913,7 +10222,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Centrum Dowodzenia Eventu
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            Oś czasu Twojego wydarzenia. Dodawaj zadania (minutówkę), a system automatycznie ściągnie tutaj również 
+            Oś czasu Twojego wydarzenia. Dodawaj zadania (minutówkę), a system automatycznie ściągnie tutaj również
             terminy płatności do podwykonawców oraz sesje z agendy. Pełna kontrola w jednym kalendarzu.
           </p>
         </div>
@@ -9957,10 +10266,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEWA KOLUMNA: KALENDARZ I AI ASSIST */}
         <div className="xl:col-span-5 space-y-6">
-          
+
           {/* AI ASSIST PANEL */}
           <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900 border-indigo-900/50' : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100'}`}>
             <div className="flex items-start gap-4">
@@ -9974,23 +10283,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <h4 className={`text-sm md:text-base font-black leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   Analiza harmonogramu
                 </h4>
-                
+
                 <div className="mt-3 space-y-2">
                   {aggregatedEvents.filter(e => e.source === 'Finanse').length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-amber-500 mt-0.5">•</span> 
+                      <span className="text-amber-500 mt-0.5">•</span>
                       Masz oczekujące terminy płatności do podwykonawców. Upewnij się, że budżet jest zabezpieczony na te daty.
                     </p>
                   )}
                   {aggregatedEvents.length === 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-indigo-500 mt-0.5">•</span> 
+                      <span className="text-indigo-500 mt-0.5">•</span>
                       Twój kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogło zacząć śledzić obłożenie pracą przed eventem.
                     </p>
                   )}
                   {aggregatedEvents.filter(e => e.isCritical).length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-red-500 mt-0.5">•</span> 
+                      <span className="text-red-500 mt-0.5">•</span>
                       W kalendarzu znajdują się punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
                     </p>
                   )}
@@ -10022,26 +10331,26 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               {Array.from({ length: offsetDays }).map((_, i) => (
                 <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0"></div>
               ))}
-              
+
               {/* Dni miesiąca */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isSelected = selectedCalendarDate === formattedDate;
                 const isToday = todayIso === formattedDate;
-                
+
                 // Szukamy zdarzeń na dany dzień (do oznaczenia kropek)
                 const dayEvents = aggregatedEvents.filter(e => e.date === formattedDate);
                 const hasCritical = dayEvents.some(e => e.isCritical);
                 const hasFinance = dayEvents.some(e => e.source === 'Finanse');
                 const hasAgenda = dayEvents.some(e => e.source === 'Agenda');
-                
+
                 return (
                   <button
                     key={day}
                     onClick={() => setSelectedCalendarDate(formattedDate)}
                     className={`aspect-square relative flex flex-col items-center justify-center rounded-xl transition-all border ${
-                      isSelected 
+                      isSelected
                         ? (isDarkMode ? 'bg-slate-800 border-[#e8ce7a] text-white shadow-md' : 'bg-slate-900 border-slate-900 text-white shadow-md')
                         : isToday
                           ? (isDarkMode ? 'bg-slate-800/50 border-slate-600 text-[#e8ce7a]' : 'bg-slate-100 border-slate-300 text-slate-900')
@@ -10049,7 +10358,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     }`}
                   >
                     <span className="text-xs md:text-sm font-black">{day}</span>
-                    
+
                     {/* Wskaźniki zdarzeń pod numerem dnia */}
                     {dayEvents.length > 0 && (
                       <div className="absolute bottom-1.5 flex gap-0.5">
@@ -10068,7 +10377,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h5 className={`text-xs font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                 Zdarzenia dla: {selectedCalendarDate}
               </h5>
-              
+
               <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-1">
                 {selectedDateEvents.length === 0 ? (
                   <p className={`text-xs font-medium italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -10095,7 +10404,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         {/* PRAWA KOLUMNA: DODAWANIE MINUTÓWKI I LISTA */}
         <div className="xl:col-span-7 space-y-6">
-          
+
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
             <div className="flex items-center gap-3 mb-5">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
@@ -10219,8 +10528,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 runOfShow
                   .sort((a: any, b: any) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`))
                   .map((task: any) => (
-                    <div 
-                      key={task.id} 
+                    <div
+                      key={task.id}
                       className={`relative border rounded-2xl p-4 transition-all group ${
                         task.status === 'done'
                           ? (isDarkMode ? 'bg-slate-900/30 border-emerald-900/30 opacity-60' : 'bg-slate-50 border-emerald-100 opacity-60')
@@ -10231,7 +10540,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4 min-w-0 flex-1">
-                          
+
                           <button
                             type="button"
                             onClick={() => {
@@ -10263,7 +10572,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                 </span>
                               )}
                             </div>
-                            
+
                             <p className={`text-sm font-black leading-snug ${task.status === 'done' ? (isDarkMode ? 'text-slate-500 line-through' : 'text-slate-400 line-through') : (isDarkMode ? 'text-white' : 'text-slate-900')}`}>
                               {task.task}
                             </p>
@@ -10933,12 +11242,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'eko' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
+
     {/* HERO - GŁÓWNY PANEL AI (ZMNIEJSZONY) */}
     <section className="relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-5 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-colors duration-200 border-slate-800 bg-gradient-to-br from-slate-950 via-[#0f172a] to-[#253a2a]">
       <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#e8ce7a]/10 blur-3xl pointer-events-none" />
       <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-      
+
       <div className="relative z-10 max-w-3xl">
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8ce7a]/30 bg-black/40 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-[#e8ce7a] backdrop-blur-md">
           <Sparkles size={12} className="animate-pulse" />
@@ -10979,14 +11288,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { label: 'Nadwyżka gadżetów', value: `${displayedEcoAnalysis.gadgetOverstockCount} szt.`, icon: Gift, isGood: displayedEcoAnalysis.gadgetOverstockCount < 10 },
         { label: 'Oszczędności', value: `${displayedEcoAnalysis.estimatedCostSavings.toLocaleString('pl-PL')} zł`, icon: Wallet, isGood: true }
       ].map((item: any) => (
-        <div 
-          key={item.label} 
+        <div
+          key={item.label}
           className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}
         >
           <div className="absolute -right-3 -bottom-3 opacity-[0.05] pointer-events-none">
             <item.icon size={70} className={isDarkMode ? 'text-white' : 'text-slate-900'} />
           </div>
-          
+
           <div className="relative z-10">
             <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               {item.label}
@@ -11012,7 +11321,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             {displayedEcoAnalysis.totalCo2Saved.toFixed(1)} <span className="text-xl md:text-2xl text-slate-400">kg CO₂</span>
           </h3>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-3 mt-6">
           <div className={`rounded-2xl border p-3 text-center ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
             <p className="text-2xl md:text-3xl font-black text-emerald-500">{displayedEcoAnalysis.treesEquivalent}</p>
@@ -11064,7 +11373,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <h3 className={`text-base md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Co poprawić przed eventem?</h3>
         </div>
       </div>
-      
+
       {displayedEcoAnalysis.recommendations.length === 0 ? (
         <div className={`rounded-2xl border p-6 text-center ${isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-emerald-50 border-emerald-200'}`}>
           <BadgeCheck size={32} className="mx-auto text-emerald-500 mb-3" />
@@ -11081,8 +11390,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {item.area || 'Logistyka'}
                   </span>
                   <span className={`rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-wider ${
-                    item.impact === 'wysoki' 
-                      ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                    item.impact === 'wysoki'
+                      ? 'bg-red-500/10 text-red-500 border border-red-500/20'
                       : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                   }`}>
                     Priorytet: {item.impact}
@@ -11142,14 +11451,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* Dwie Kolumny: ANALIZA OBSZARÓW + SCENARIUSZE */}
     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      
+
       {/* Analiza Obszarów */}
       <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <div className="mb-5">
           <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Analiza Obszarów</p>
           <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>GOZ według modułów</h3>
         </div>
-        
+
         <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[350px]">
           {displayedEcoAnalysis.areas.map((area: any, i: number) => {
             const isGood = area.status === 'dobrze' || area.status === 'mocny wynik';
@@ -11801,33 +12110,33 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 {activeTab === 'logistyka' && (
   <div className="space-y-6 animate-in fade-in duration-300">
-    
+
     {/* === 1. KARTY OPERACYJNE (KPI) === */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {[
-        { 
-          label: 'Zaopatrzenie barowe', 
+        {
+          label: 'Zaopatrzenie barowe',
           value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osób`,
           sub: 'Wymaga zakupu alkoholu',
           icon: <Truck size={16} />,
           color: 'from-purple-600 to-purple-800'
         },
-        { 
-          label: 'Diety specjalne', 
+        {
+          label: 'Diety specjalne',
           value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osób`,
           sub: 'Wymaga osobnych oznaczeń',
           icon: <UtensilsCrossed size={16} />,
           color: 'from-amber-500 to-amber-700'
         },
-        { 
-          label: 'Rooming list', 
+        {
+          label: 'Rooming list',
           value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osób`,
           sub: 'Rezerwacje potwierdzone',
           icon: <Bed size={16} />,
           color: 'from-blue-600 to-blue-800'
         },
-        { 
-          label: 'Zapotrzebowanie na shuttle', 
+        {
+          label: 'Zapotrzebowanie na shuttle',
           value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osób`,
           sub: 'Flota do zamówienia',
           icon: <Bus size={16} />,
@@ -11851,7 +12160,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* === 2. ANALITYKA ZASOBÓW === */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      
+
       {/* Obłożenie noclegowe */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-2 mb-4">
@@ -11871,7 +12180,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </span>
               </div>
               <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     item.current > item.total ? 'bg-red-500' : 'bg-[#253a2a]'
                   }`}
@@ -11886,7 +12195,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-     
+
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-2 mb-4">
           <Wine size={18} className="text-[#253a2a]" />
@@ -11908,7 +12217,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <span>{count} os. ({Math.round(percent)}%)</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${item.color} rounded-full transition-all duration-500`}
                     style={{ width: `${percent}%` }}
                   />
@@ -11920,7 +12229,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    
+
     <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
       <div className="bg-[#1e293b] px-5 py-4 flex flex-wrap justify-between items-center gap-3">
         <div>
@@ -11936,8 +12245,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-black text-white transition">
             FILTRUJ BRAKI
           </button>
-          <button 
-            onClick={exportToCSV} 
+          <button
+            onClick={exportToCSV}
             className="px-4 py-1.5 bg-[#e8ce7a] text-slate-900 rounded-lg text-[10px] font-black hover:bg-yellow-400 transition"
           >
             EKSPORT XLSX
@@ -11961,8 +12270,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             {approvedApps.map((app) => {
               const missingRSVP = !app.rsvp_status || app.rsvp_status === 'oczekuje';
               return (
-                <tr 
-                  key={app.id} 
+                <tr
+                  key={app.id}
                   className={`group transition-all hover:bg-slate-50 ${
                     missingRSVP ? 'bg-red-50/40' : ''
                   }`}
@@ -11973,8 +12282,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </td>
                   <td className="p-4 text-center">
                     <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black border ${
-                      !missingRSVP 
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                      !missingRSVP
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                         : 'bg-red-100 text-red-800 border-red-200 animate-pulse'
                     }`}>
                       {!missingRSVP ? 'CONFIRMED' : 'MISSING'}
@@ -12025,7 +12334,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     </div>
                   </td>
                   <td className="p-4 text-center">
-                    <button 
+                    <button
                       onClick={() => setEditingGuest(app)}
                       className="opacity-0 group-hover:opacity-100 transition-all p-2 bg-slate-800 hover:bg-[#253a2a] text-white rounded-lg shadow-md"
                     >
@@ -12046,7 +12355,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================*/}
 {activeTab === 'komunikacja' && (
   <div className="space-y-6 animate-in fade-in duration-300">
-    
+
     {/* 1. STATUS KOMUNIKACJI - METRYKI */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -12086,7 +12395,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {/* 2. CENTRUM WYSYŁKI */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      
+
       {/* KANAŁ: EMAIL MASOWY */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-900 text-white flex items-center gap-3">
@@ -12129,7 +12438,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentów</strong>, którzy wymagają potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
             </p>
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white hover:border-slate-400 transition-colors cursor-pointer group">
               <div className="flex items-center gap-3">
@@ -12138,7 +12447,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <span className="text-[9px] bg-slate-100 px-2 py-1 rounded font-bold">PREMIUM</span>
             </div>
-            
+
             <div className="flex items-center justify-between p-3 border border-[#253a2a] rounded-xl bg-[#253a2a]/5 group">
               <div className="flex items-center gap-3">
                 <Mail size={16} className="text-[#253a2a]"/>
@@ -12149,7 +12458,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </button>
             </div>
           </div>
-          
+
           <p className="text-[9px] text-slate-400 text-center mt-6 font-bold uppercase tracking-widest">
             Logi wysyłki: Ostatni reminder 2h temu
           </p>
@@ -12168,7 +12477,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
 )}
    </div>
-          
+
 
         </div>
       </main>
