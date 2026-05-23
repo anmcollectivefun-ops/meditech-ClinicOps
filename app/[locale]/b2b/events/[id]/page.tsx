@@ -125,23 +125,23 @@ const defaultFleetForm: FleetForm = {
 }
 
 // ==========================================================================
-// 3. DANE MOCKOWE I POMOCNICZE (POZA GĹĂ“WNYM KOMPONENTEM)
+// 3. DANE MOCKOWE I POMOCNICZE (POZA GŁÓWNYM KOMPONENTEM)
 // ==========================================================================
 
 const generateMockMenu = (): MenuItem[] => {
   return [
-    { id: '1', name: 'SaĹ‚atka z lokalnych warzyw', category: 'starter', ingredients: ['saĹ‚ata', 'pomidory', 'ogĂłrek'], allergens: [], co2_footprint: 0.2, waste_potential: 5, portions_planned: 50, portions_actual: 45 },
-    { id: '2', name: 'PolÄ™dwica z jelenia', category: 'main', ingredients: ['polÄ™dwica', 'ziemniaki', 'szparagi'], allergens: ['seler'], co2_footprint: 2.1, waste_potential: 15, portions_planned: 50, portions_actual: 38 },
-    { id: '3', name: 'Risotto z grzybami', category: 'vegetarian', ingredients: ['ryĹĽ', 'grzyby', 'parmezan'], allergens: ['laktoza'], co2_footprint: 0.8, waste_potential: 10, portions_planned: 30, portions_actual: 28 },
-    { id: '4', name: 'Tarta owocowa', category: 'dessert', ingredients: ['jabĹ‚ka', 'mÄ…ka', 'masĹ‚o'], allergens: ['gluten', 'laktoza'], co2_footprint: 0.4, waste_potential: 8, portions_planned: 60, portions_actual: 52 },
+    { id: '1', name: 'Sałatka z lokalnych warzyw', category: 'starter', ingredients: ['sałata', 'pomidory', 'ogórek'], allergens: [], co2_footprint: 0.2, waste_potential: 5, portions_planned: 50, portions_actual: 45 },
+    { id: '2', name: 'Polędwica z jelenia', category: 'main', ingredients: ['polędwica', 'ziemniaki', 'szparagi'], allergens: ['seler'], co2_footprint: 2.1, waste_potential: 15, portions_planned: 50, portions_actual: 38 },
+    { id: '3', name: 'Risotto z grzybami', category: 'vegetarian', ingredients: ['ryż', 'grzyby', 'parmezan'], allergens: ['laktoza'], co2_footprint: 0.8, waste_potential: 10, portions_planned: 30, portions_actual: 28 },
+    { id: '4', name: 'Tarta owocowa', category: 'dessert', ingredients: ['jabłka', 'mąka', 'masło'], allergens: ['gluten', 'laktoza'], co2_footprint: 0.4, waste_potential: 8, portions_planned: 60, portions_actual: 52 },
   ]
 }
-// Funkcja liczÄ…ca Ĺ›lad wÄ™glowy i koszty
+// Funkcja licząca ślad węglowy i koszty
 
 
 const generateMockRoutes = (apps: Guest[]): TransportRoute[] => {
   return [
-    { id: '1', name: 'Centrum -> Hotel', vehicle_type: 'bus', capacity: 50, occupied: 35, co2_per_person: 2.1, route: ['Dworzec GĹ‚Ăłwny', 'Hotel Conference', 'Centrum'] },
+    { id: '1', name: 'Centrum -> Hotel', vehicle_type: 'bus', capacity: 50, occupied: 35, co2_per_person: 2.1, route: ['Dworzec Główny', 'Hotel Conference', 'Centrum'] },
     { id: '2', name: 'Lotnisko -> Miejsce', vehicle_type: 'van', capacity: 15, occupied: 12, co2_per_person: 3.5, route: ['Lotnisko', 'Hotel'] },
   ]
 }
@@ -178,7 +178,7 @@ const SortablePartnerItem = ({
   isDarkMode?: boolean;
 }) => {
   const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || item.sponsor_name || 'Lekarz bez nazwy';
-  const specialization = item.title || item.specialization || item.sponsor_category || 'Specjalizacja nieuzupeĹ‚niona';
+  const specialization = item.title || item.specialization || item.sponsor_category || 'Specjalizacja nieuzupełniona';
 
   return (
     <div className={`p-5 transition-colors ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
@@ -226,7 +226,7 @@ const SortablePartnerItem = ({
               onDelete(item.id)
             }}
             className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}
-            title="UsuĹ„ lekarza"
+            title="Usuń lekarza"
           >
             <Trash2 size={14} />
           </button>
@@ -248,7 +248,7 @@ const PreparationItem = ({
   isDarkMode?: boolean;
 }) => {
   const preparationName = item.sponsor_name || item.name || 'Preparat bez nazwy';
-  const category = item.sponsor_category || item.category || 'Kategoria nieuzupeĹ‚niona';
+  const category = item.sponsor_category || item.category || 'Kategoria nieuzupełniona';
   const imageUrl = item.logo_url || item.photo_url;
 
   return (
@@ -275,7 +275,7 @@ const PreparationItem = ({
           <button type="button" onClick={(event) => { event.stopPropagation(); onEdit(item) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`} title="Edytuj preparat">
             <Edit3 size={14} />
           </button>
-          <button type="button" onClick={(event) => { event.stopPropagation(); onDelete(item.id) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`} title="UsuĹ„ preparat">
+          <button type="button" onClick={(event) => { event.stopPropagation(); onDelete(item.id) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`} title="Usuń preparat">
             <Trash2 size={14} />
           </button>
         </div>
@@ -286,7 +286,7 @@ const PreparationItem = ({
 
 
 // ==========================================================================
-// 4. GĹĂ“WNY KOMPONENT B2BEventDetail
+// 4. GŁÓWNY KOMPONENT B2BEventDetail
 // ==========================================================================
 
 export default function B2BEventDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -294,7 +294,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
-  // ----- 4.1. STANY GĹĂ“WNE -----
+  // ----- 4.1. STANY GŁÓWNE -----
   const [event, setEvent] = useState<any>(null)
   const [applications, setApplications] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
@@ -404,14 +404,14 @@ const [newFiles, setNewFiles] = useState<{
   const [vendors, setVendors] = useState([
     { id: '1', category: 'Obiekt/Hotel', name: 'Hotel Conference Center', contactPerson: 'Anna Kowalska', email: 'anna@hotel.pl', phone: '+48 500 600 700', status: 'Umowa podpisana' },
     { id: '2', category: 'Catering', name: 'EkoFood Solutions', contactPerson: 'Marek Nowak', email: 'kontakt@ekofood.pl', phone: '+48 600 700 800', status: 'Wycena' },
-    { id: '3', category: 'Transport', name: 'Bus-Trans sp. z o.o.', contactPerson: 'Piotr WiĹ›niewski', email: 'biuro@bustrans.pl', phone: '+48 700 800 900', status: 'Brak kontaktu' }
+    { id: '3', category: 'Transport', name: 'Bus-Trans sp. z o.o.', contactPerson: 'Piotr Wiśniewski', email: 'biuro@bustrans.pl', phone: '+48 700 800 900', status: 'Brak kontaktu' }
   ])
 
   const [runOfShow, setRunOfShow] = useState<any[]>([
-    { id: '1', time: '06:00', task: 'Wjazd ekipy technicznej (Scena i AV)', assignee: 'Firma AV', location: 'Sala GĹ‚Ăłwna', status: 'done', isCritical: true },
+    { id: '1', time: '06:00', task: 'Wjazd ekipy technicznej (Scena i AV)', assignee: 'Firma AV', location: 'Sala Główna', status: 'done', isCritical: true },
     { id: '2', time: '08:00', task: 'Rozstawienie cateringu - przerwa kawowa', assignee: 'Catering', location: 'Foyer', status: 'pending', isCritical: false },
-    { id: '3', time: '08:30', task: 'Odprawa recepcji, odpalenie skanerĂłw', assignee: 'Koordynator', location: 'Recepcja', status: 'pending', isCritical: true },
-    { id: '4', time: '09:45', task: 'GotowoĹ›Ä‡ prowadzÄ…cego, wĹ‚Ä…czenie muzyki', assignee: 'ReĹĽyser', location: 'Backstage', status: 'pending', isCritical: true },
+    { id: '3', time: '08:30', task: 'Odprawa recepcji, odpalenie skanerów', assignee: 'Koordynator', location: 'Recepcja', status: 'pending', isCritical: true },
+    { id: '4', time: '09:45', task: 'Gotowość prowadzącego, włączenie muzyki', assignee: 'Reżyser', location: 'Backstage', status: 'pending', isCritical: true },
   ])
   const [newRosTask, setNewRosTask] = useState<any>({
   date: '',
@@ -473,7 +473,7 @@ const [searchContractor, setSearchContractor] = useState('')
 
 const [expandedContractorId, setExpandedContractorId] = useState<string | null>(null);
 // ==========================================
-  // STANY DOTYCZÄ„CE TRANSPORTU
+  // STANY DOTYCZĄCE TRANSPORTU
   // ==========================================
   const [fleet, setFleet] = useState<any[]>([])
   const [carpoolingAds, setCarpoolingAds] = useState<any[]>([])
@@ -498,7 +498,7 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
     co2ReductionPercent: 0
   });
 }, [fleet, carpoolingAds]);
-// --- STANY DLA ZAKĹADKI DOKUMENTACJI ---
+// --- STANY DLA ZAKŁADKI DOKUMENTACJI ---
   const [templateSearch, setTemplateSearch] = useState('')
   const [activeTemplateSendId, setActiveTemplateSendId] = useState<string | null>(null)
   const [selectedPatientForTemplate, setSelectedPatientForTemplate] = useState<string>('')
@@ -549,7 +549,7 @@ const [ecoAiReport, setEcoAiReport] = useState<any>(null)
 const [ecoAiLoading, setEcoAiLoading] = useState(false)
 const [aiTextAssistConfig, setAiTextAssistConfig] = useState<any>(null)
 const [aiTextTone, setAiTextTone] = useState('premium')
-const [aiTextLength, setAiTextLength] = useState('Ĺ›rednia')
+const [aiTextLength, setAiTextLength] = useState('średnia')
 const [aiTextDocumentType, setAiTextDocumentType] = useState('consent')
 const [aiTextInstruction, setAiTextInstruction] = useState('')
 const [aiTextSuggestion, setAiTextSuggestion] = useState('')
@@ -569,7 +569,7 @@ const [patientQrFilter, setPatientQrFilter] = useState('all')
 const [expandedPatientIds, setExpandedPatientIds] = useState<Record<string, boolean>>({})
 const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
-// --- STANY DLA ZGĂ“D I DOKUMENTACJI MEDYCZNEJ ---
+// --- STANY DLA ZGÓD I DOKUMENTACJI MEDYCZNEJ ---
   const [consentTemplates, setConsentTemplates] = useState<any[]>([])
   const [isConsentTemplateModalOpen, setIsConsentTemplateModalOpen] = useState(false)
   const [consentTemplateForm, setConsentTemplateForm] = useState<any>({})
@@ -577,36 +577,36 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [isScanUploadModalOpen, setIsScanUploadModalOpen] = useState(false)
   const [scanUploadForm, setScanUploadForm] = useState<any>({ patient_id: '', template_id: '', file: null, preview: null })
 
-// --- STANY DLA BAZY PACJENTĂ“W I WYWIADĂ“W ---
+// --- STANY DLA BAZY PACJENTÓW I WYWIADÓW ---
   const [todayPatientSearch, setTodayPatientSearch] = useState('')
   const [allPatientSearch, setAllPatientSearch] = useState('')
   const [expandedPatientDocs, setExpandedPatientDocs] = useState<string | null>(null)
 
 
-  // --- STANY DLA NOWEJ REJESTRACJI PACJENTĂ“W ---
+  // --- STANY DLA NOWEJ REJESTRACJI PACJENTÓW ---
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false)
   const [isEditingPatient, setIsEditingPatient] = useState(false)
   const [patientForm, setPatientForm] = useState<any>({})
   const [registrySearch, setRegistrySearch] = useState('')
-// --- STANY DLA NOWEGO MODUĹU WIZYT I ZABIEGĂ“W ---
+// --- STANY DLA NOWEGO MODUŁU WIZYT I ZABIEGÓW ---
   const [treatments, setTreatments] = useState<any[]>([])
   const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
   const [appointmentsList, setAppointmentsList] = useState<any[]>([])
   const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' })
 
-  // --- PRAWDZIWE STANY KATALOGU ZABIEGĂ“W ---
+  // --- PRAWDZIWE STANY KATALOGU ZABIEGÓW ---
   const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false)
   const [isEditingTreatment, setIsEditingTreatment] = useState(false)
   const [treatmentForm, setTreatmentForm] = useState<any>({})
   const [selectedTemplatesForTreatment, setSelectedTemplatesForTreatment] = useState<string[]>([])
   const [treatmentSearch, setTreatmentSearch] = useState('')
 
-  // Listy sĹ‚ownikowe pobierane z event_partners
+  // Listy słownikowe pobierane z event_partners
   const [doctorsList, setDoctorsList] = useState<any[]>([])
   const [preparationsList, setPreparationsList] = useState<any[]>([])
 
   const loadPartnersCatalog = async () => {
-    // Pobieramy prawdziwe dane lekarzy i preparatĂłw
+    // Pobieramy prawdziwe dane lekarzy i preparatów
     const { data, error } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true });
     if (error) {
       console.warn('event_partners catalog load error:', error.message)
@@ -619,19 +619,22 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       setPreparationsList(data.filter(isPreparationPartner));
     }
   }
-  // PAMIÄTAJ: dodaj loadPartnersCatalog() do swojego gĹ‚Ăłwnego useEffect() !
+  // PAMIĘTAJ: dodaj loadPartnersCatalog() do swojego głównego useEffect() !
 
   const handleSaveTreatment = async (e: React.FormEvent) => {
     e.preventDefault();
     setUpdating(true);
     try {
       let currentTreatmentId = treatmentForm.id;
+      const treatmentDoctorId = doctorsList.some((doctor: any) => doctor.id === treatmentForm.doctor_id)
+        ? treatmentForm.doctor_id
+        : null;
       const payload = {
         event_id: id,
         name: treatmentForm.name,
         type: treatmentForm.type || 'single',
         sessions_count: treatmentForm.sessions_count || 1,
-        doctor_id: treatmentForm.doctor_id || null,
+        doctor_id: treatmentDoctorId,
         preparation_id: treatmentForm.preparation_id || null,
         price_amount: treatmentForm.price_amount === '' || treatmentForm.price_amount === undefined ? null : Number(treatmentForm.price_amount || 0),
         currency: treatmentForm.currency || 'PLN',
@@ -663,13 +666,13 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       setSelectedTemplatesForTreatment([]);
       await loadTreatmentsCatalog(); 
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
   };
 
-  // POBIERANIE KATALOGU (Dodaj to tam, gdzie masz inne funkcje Ĺ‚adujÄ…ce np. loadPatients)
+  // POBIERANIE KATALOGU (Dodaj to tam, gdzie masz inne funkcje ładujące np. loadPatients)
   const loadTreatmentsCatalog = async () => {
     const { data: tData } = await supabase.from('treatments').select('*').eq('is_active', true);
     if (tData) setTreatments(tData);
@@ -693,7 +696,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     setAppointmentsList(data || [])
   }
 
-  // GĹĂ“WNA FUNKCJA: TWORZY WIZYTÄ I GENERUJE ZGODY
+  // GŁÓWNA FUNKCJA: TWORZY WIZYTĘ I GENERUJE ZGODY
   const handleBookAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appointmentForm.patient_id || !appointmentForm.treatment_id || !appointmentForm.appointment_date) {
@@ -702,21 +705,24 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     
     setUpdating(true);
     try {
-      // 1. ZnajdĹş nazwÄ™ zabiegu w sĹ‚owniku
+      // 1. Znajdź nazwę zabiegu w słowniku
       const selectedTreatment = treatments.find(t => t.id === appointmentForm.treatment_id);
       if (!selectedTreatment) {
         showNotification('Nie znaleziono wybranego zabiegu w katalogu', 'error');
         return;
       }
+      const appointmentDoctorId = doctorsList.some((doctor: any) => doctor.id === selectedTreatment?.doctor_id)
+        ? selectedTreatment.doctor_id
+        : null;
 
-      // 2. UtwĂłrz nowÄ… wizytÄ™ w bazie
+      // 2. Utwórz nową wizytę w bazie
       const { data: newAppointment, error: appError } = await supabase
         .from('appointments')
         .insert([{
           patient_id: appointmentForm.patient_id,
           treatment_id: appointmentForm.treatment_id,
           treatment_name: selectedTreatment?.name || 'Zabieg medyczny',
-          doctor_id: selectedTreatment?.doctor_id || null,
+          doctor_id: appointmentDoctorId,
           price_amount: appointmentForm.price_amount === '' || appointmentForm.price_amount === undefined
             ? (selectedTreatment?.price_amount ?? null)
             : Number(appointmentForm.price_amount || 0),
@@ -731,7 +737,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
       if (appError) throw appError;
 
-      // 3. SprawdĹş, jakich zgĂłd wymaga ten zabieg w tabeli Ĺ‚Ä…cznikowej
+      // 3. Sprawdź, jakich zgód wymaga ten zabieg w tabeli łącznikowej
       const requiredTemplates = treatmentMappings
         .filter(m => m.treatment_id === appointmentForm.treatment_id)
         .map(m => m.template_id);
@@ -742,7 +748,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           event_id: id,
           patient_id: appointmentForm.patient_id,
           template_id: templateId,
-          appointment_id: newAppointment.id, // Tu dzieje siÄ™ magia spajajÄ…ca!
+          appointment_id: newAppointment.id, // Tu dzieje się magia spajająca!
           status: 'pending' // Gotowe dla pacjenta na Portal
         }));
 
@@ -764,7 +770,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   };
  
 // ============================================================================
-// ----- 4.2. FUNKCJE POMOCNICZE (wywoĹ‚ywane z wnÄ™trza) -----
+// ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
 
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -798,6 +804,78 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     return rawDate ? new Date(rawDate).toLocaleString('pl-PL') : 'brak daty'
   }
 
+  const getConsentTemplate = (consent: any) =>
+    consent.medical_consent_templates
+    || consentTemplates.find((item: any) => item.id === consent.template_id)
+    || null
+
+  const isConsentConfirmed = (consent: any) => consent.status === 'signed'
+
+  const getConsentStatusMeta = (consent: any) => {
+    if (isConsentConfirmed(consent)) {
+      return {
+        label: 'Potwierdzone',
+        icon: CheckCircle2,
+        badgeClass: isDarkMode
+          ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50'
+          : 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        cardClass: isDarkMode
+          ? 'bg-slate-950 border-emerald-900/40'
+          : 'bg-white border-emerald-200 shadow-sm',
+        iconClass: isDarkMode
+          ? 'bg-emerald-900/30 text-emerald-400'
+          : 'bg-emerald-100 text-emerald-700'
+      }
+    }
+
+    if (consent.status === 'scanned_document') {
+      return {
+        label: 'Skan wgrany - do weryfikacji',
+        icon: AlertTriangle,
+        badgeClass: isDarkMode
+          ? 'bg-amber-900/20 text-amber-400 border-amber-800/50'
+          : 'bg-amber-50 text-amber-700 border-amber-200',
+        cardClass: isDarkMode
+          ? 'bg-slate-950 border-amber-900/40'
+          : 'bg-white border-amber-200 shadow-sm',
+        iconClass: isDarkMode
+          ? 'bg-amber-900/30 text-amber-400'
+          : 'bg-amber-100 text-amber-700'
+      }
+    }
+
+    return {
+      label: 'Do podpisu',
+      icon: XCircle,
+      badgeClass: isDarkMode
+        ? 'bg-red-900/20 text-red-400 border-red-800/50'
+        : 'bg-red-50 text-red-700 border-red-200',
+      cardClass: isDarkMode
+        ? 'bg-slate-950 border-red-900/40'
+        : 'bg-white border-red-200 shadow-sm',
+      iconClass: isDarkMode
+        ? 'bg-red-900/30 text-red-400'
+        : 'bg-red-100 text-red-700'
+    }
+  }
+
+  const getPatientDocumentSummary = (consents: any[]) => {
+    const pendingDocs = consents.filter((consent: any) => !isConsentConfirmed(consent))
+    const questionnaires = consents.filter((consent: any) => getConsentTemplate(consent)?.document_type === 'questionnaire')
+    const pendingQuestionnaires = questionnaires.filter((consent: any) => !isConsentConfirmed(consent))
+    const signedDocs = consents.filter((consent: any) => isConsentConfirmed(consent))
+
+    return {
+      pendingDocs,
+      questionnaires,
+      pendingQuestionnaires,
+      signedDocs,
+      hasPendingDocs: pendingDocs.length > 0,
+      hasMissingQuestionnaire: questionnaires.length === 0,
+      hasPendingQuestionnaire: pendingQuestionnaires.length > 0
+    }
+  }
+
   const loadHelpDocuments = useCallback(async () => {
     const { data, error } = await supabase
       .from('help_documents')
@@ -821,7 +899,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     (item: any) => item.section_key === sectionKey && item.is_active !== false
   )
 
-  // Nowy, wyrĂłĹĽniajÄ…cy siÄ™ styl (Indygo) z peĹ‚nym wsparciem Dark Mode
+  // Nowy, wyróżniający się styl (Indygo) z pełnym wsparciem Dark Mode
   const className =
     'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-[10px] font-black uppercase transition-all shadow-sm shrink-0 hover:scale-105'
 
@@ -829,7 +907,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     return (
       <button
         type="button"
-        onClick={() => showNotification('Instrukcja dla tej sekcji nie zostaĹ‚a jeszcze dodana.', 'info')}
+        onClick={() => showNotification('Instrukcja dla tej sekcji nie została jeszcze dodana.', 'info')}
         className={className}
         title="Pomoc"
       >
@@ -857,7 +935,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const openAiTextAssist = (config: any) => {
     setAiTextAssistConfig(config)
     setAiTextTone('premium')
-    setAiTextLength('Ĺ›rednia')
+    setAiTextLength('średnia')
     setAiTextDocumentType(config.documentType === 'info' ? 'aftercare' : (config.documentType || 'consent'))
     setAiTextInstruction('')
     setAiTextSuggestion(config.currentValue || '')
@@ -885,7 +963,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     const additionalInstruction = String(config?.additionalInstruction || '').trim()
     const eventTitle = event?.title || 'wydarzenie'
     const eventLocation = event?.location ? ` w lokalizacji ${event.location}` : ''
-    const short = String(aiTextLength || '').toLowerCase().includes('krĂłt')
+    const short = String(aiTextLength || '').toLowerCase().includes('krót')
     const isMedicalDocument = sectionKey === 'medical_documents' || sectionKey === 'medical_docs' || sectionKey === 'patient_consents'
 
     if (isMedicalDocument) {
@@ -893,60 +971,60 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
       if (documentType === 'questionnaire') {
         return [
-          `WYWIAD MEDYCZNY PRZED PROCEDURÄ„: ${procedure}`,
+          `WYWIAD MEDYCZNY PRZED PROCEDURĄ: ${procedure}`,
           '',
           'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
           'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
-          'Data wypeĹ‚nienia: [DATA]',
+          'Data wypełnienia: [DATA]',
           '',
           '1. Cel wywiadu',
           'Celem wywiadu jest zebranie informacji istotnych dla bezpiecznej kwalifikacji pacjenta do procedury.',
           '',
-          '2. Pytania ogĂłlne',
+          '2. Pytania ogólne',
           '- Czy pacjent choruje przewlekle?',
           '- Czy pacjent przyjmuje stale leki?',
-          '- Czy wystÄ™pujÄ… alergie lub nadwraĹĽliwoĹ›ci?',
+          '- Czy występują alergie lub nadwrażliwości?',
           '- Czy w ostatnim czasie wykonano podobne procedury?',
           '',
           '3. Przeciwwskazania i czynniki ryzyka',
-          '- CiÄ…ĹĽa lub karmienie piersiÄ…: [TAK/NIE]',
+          '- Ciąża lub karmienie piersią: [TAK/NIE]',
           '- Aktywne infekcje lub stany zapalne: [TAK/NIE]',
-          '- SkĹ‚onnoĹ›Ä‡ do bliznowcĂłw lub zaburzeĹ„ gojenia: [TAK/NIE]',
+          '- Skłonność do bliznowców lub zaburzeń gojenia: [TAK/NIE]',
           '- Inne istotne informacje: [OPIS]',
           '',
-          '4. OĹ›wiadczenie pacjenta',
-          'OĹ›wiadczam, ĹĽe przekazane informacje sÄ… zgodne z mojÄ… wiedzÄ….',
+          '4. Oświadczenie pacjenta',
+          'Oświadczam, że przekazane informacje są zgodne z moją wiedzą.',
           '',
           'Podpis pacjenta: ____________________    Podpis personelu: ____________________',
           '',
-          'Uwaga: dokument wymaga zatwierdzenia przez osobÄ™ uprawnionÄ… przed uĹĽyciem.'
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
         ].join('\n')
       }
 
       if (documentType === 'aftercare' || documentType === 'precare') {
-        const phase = documentType === 'precare' ? 'PRZED PROCEDURÄ„' : 'PO PROCEDURZE'
+        const phase = documentType === 'precare' ? 'PRZED PROCEDURĄ' : 'PO PROCEDURZE'
         return [
           `ZALECENIA DLA PACJENTA ${phase}: ${procedure}`,
           '',
           'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
           '',
           '1. Cel dokumentu',
-          'PoniĹĽsze zalecenia majÄ… pomĂłc pacjentowi w bezpiecznym postÄ™powaniu po procedurze.',
+          'Poniższe zalecenia mają pomóc pacjentowi w bezpiecznym postępowaniu po procedurze.',
           '',
-          '2. Zalecenia ogĂłlne',
-          '- StosowaÄ‡ siÄ™ do indywidualnych zaleceĹ„ osoby wykonujÄ…cej procedurÄ™.',
-          '- ObserwowaÄ‡ miejsce zabiegowe i zgĹ‚aszaÄ‡ niepokojÄ…ce objawy.',
-          '- UnikaÄ‡ dziaĹ‚aĹ„ wskazanych jako przeciwwskazane po procedurze.',
+          '2. Zalecenia ogólne',
+          '- Stosować się do indywidualnych zaleceń osoby wykonującej procedurę.',
+          '- Obserwować miejsce zabiegowe i zgłaszać niepokojące objawy.',
+          '- Unikać działań wskazanych jako przeciwwskazane po procedurze.',
           '',
-          '3. Kiedy skontaktowaÄ‡ siÄ™ z placĂłwkÄ…',
-          '- NasilajÄ…cy siÄ™ bĂłl, obrzÄ™k lub zaczerwienienie.',
+          '3. Kiedy skontaktować się z placówką',
+          '- Nasilający się ból, obrzęk lub zaczerwienienie.',
           '- Objawy infekcji lub reakcja alergiczna.',
-          '- KaĹĽdy objaw budzÄ…cy niepokĂłj pacjenta.',
+          '- Każdy objaw budzący niepokój pacjenta.',
           '',
           '4. Kontrola',
           'Termin kontroli / kontaktu follow-up: [TERMIN]',
           '',
-          'Uwaga: dokument wymaga zatwierdzenia przez osobÄ™ uprawnionÄ… przed uĹĽyciem.'
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
         ].join('\n')
       }
 
@@ -954,20 +1032,20 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         return [
           `FOLLOW-UP DO PACJENTA PO WIZYCIE / PROCEDURZE: ${procedure}`,
           '',
-          'Status treĹ›ci: WERSJA ROBOCZA DO WERYFIKACJI',
+          'Status treści: WERSJA ROBOCZA DO WERYFIKACJI',
           '',
-          'DzieĹ„ dobry [IMIE_PACJENTA],',
+          'Dzień dobry [IMIE_PACJENTA],',
           '',
-          'kontaktujemy siÄ™ po wizycie, aby upewniÄ‡ siÄ™, ĹĽe wszystko przebiega prawidĹ‚owo.',
+          'kontaktujemy się po wizycie, aby upewnić się, że wszystko przebiega prawidłowo.',
           '',
-          'Prosimy o kontakt z placĂłwkÄ…, jeĹ›li pojawiĹ‚y siÄ™ niepokojÄ…ce objawy, nasilony bĂłl, obrzÄ™k, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
+          'Prosimy o kontakt z placówką, jeśli pojawiły się niepokojące objawy, nasilony ból, obrzęk, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
           '',
           'Termin kontroli / kolejnego kontaktu: [TERMIN]',
           '',
           'Pozdrawiamy,',
           '[NAZWA_PLACOWKI]',
           '',
-          'Uwaga: treĹ›Ä‡ wymaga zatwierdzenia przez osobÄ™ uprawnionÄ… przed wysyĹ‚kÄ….'
+          'Uwaga: treść wymaga zatwierdzenia przez osobę uprawnioną przed wysyłką.'
         ].join('\n')
       }
 
@@ -981,62 +1059,62 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           'Administratorem danych jest: [NAZWA_PLACOWKI], [ADRES], [KONTAKT].',
           '',
           '2. Zakres danych',
-          'Dane mogÄ… obejmowaÄ‡ dane identyfikacyjne, kontaktowe, informacje o wizytach oraz dokumentacjÄ™ zwiÄ…zanÄ… z obsĹ‚ugÄ… pacjenta.',
+          'Dane mogą obejmować dane identyfikacyjne, kontaktowe, informacje o wizytach oraz dokumentację związaną z obsługą pacjenta.',
           '',
           '3. Cele przetwarzania',
-          '- obsĹ‚uga pacjenta i wizyt,',
+          '- obsługa pacjenta i wizyt,',
           '- prowadzenie dokumentacji,',
           '- kontakt organizacyjny,',
-          '- dziaĹ‚ania marketingowe wyĹ‚Ä…cznie po wyraĹĽeniu odrÄ™bnej zgody.',
+          '- działania marketingowe wyłącznie po wyrażeniu odrębnej zgody.',
           '',
           '4. Zgody',
-          '[ ] WyraĹĽam zgodÄ™ na kontakt SMS/e-mail w sprawach organizacyjnych.',
-          '[ ] WyraĹĽam zgodÄ™ na kontakt marketingowy.',
-          '[ ] WyraĹĽam zgodÄ™ na wykorzystanie wizerunku / zdjÄ™Ä‡ przed i po, jeĹĽeli dotyczy.',
+          '[ ] Wyrażam zgodę na kontakt SMS/e-mail w sprawach organizacyjnych.',
+          '[ ] Wyrażam zgodę na kontakt marketingowy.',
+          '[ ] Wyrażam zgodę na wykorzystanie wizerunku / zdjęć przed i po, jeżeli dotyczy.',
           '',
           'Podpis pacjenta: ____________________    Data: [DATA]',
           '',
-          'Uwaga: dokument wymaga weryfikacji prawnej przed uĹĽyciem.'
+          'Uwaga: dokument wymaga weryfikacji prawnej przed użyciem.'
         ].join('\n')
       }
 
       return [
-        `ZGODA PACJENTA NA PROCEDURÄ: ${procedure}`,
+        `ZGODA PACJENTA NA PROCEDURĘ: ${procedure}`,
         '',
         'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNO-PRAWNEJ',
         'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
         'Data: [DATA]',
-        'PlacĂłwka: [NAZWA_PLACOWKI]',
+        'Placówka: [NAZWA_PLACOWKI]',
         '',
         '1. Opis procedury',
-        'Pacjent zostaĹ‚ poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
+        'Pacjent został poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
         '',
-        '2. MoĹĽliwe przeciwwskazania',
+        '2. Możliwe przeciwwskazania',
         '- aktywne infekcje lub stany zapalne,',
-        '- ciÄ…ĹĽa lub karmienie piersiÄ…, jeĹĽeli dotyczy procedury,',
-        '- alergie lub nadwraĹĽliwoĹ›ci na stosowane preparaty,',
-        '- inne przeciwwskazania wskazane przez osobÄ™ kwalifikujÄ…cÄ….',
+        '- ciąża lub karmienie piersią, jeżeli dotyczy procedury,',
+        '- alergie lub nadwrażliwości na stosowane preparaty,',
+        '- inne przeciwwskazania wskazane przez osobę kwalifikującą.',
         '',
-        '3. MoĹĽliwe dziaĹ‚ania niepoĹĽÄ…dane / powikĹ‚ania',
-        '- bĂłl, obrzÄ™k, zaczerwienienie, siniaki,',
+        '3. Możliwe działania niepożądane / powikłania',
+        '- ból, obrzęk, zaczerwienienie, siniaki,',
         '- reakcja alergiczna,',
         '- infekcja lub zaburzenia gojenia,',
-        '- efekt estetyczny odbiegajÄ…cy od oczekiwaĹ„ pacjenta.',
+        '- efekt estetyczny odbiegający od oczekiwań pacjenta.',
         '',
-        '4. Alternatywy i moĹĽliwoĹ›Ä‡ odmowy',
-        'Pacjent zostaĹ‚ poinformowany o moĹĽliwoĹ›ci rezygnacji z procedury oraz o dostÄ™pnych alternatywach, jeĹĽeli wystÄ™pujÄ….',
+        '4. Alternatywy i możliwość odmowy',
+        'Pacjent został poinformowany o możliwości rezygnacji z procedury oraz o dostępnych alternatywach, jeżeli występują.',
         '',
-        '5. OĹ›wiadczenia pacjenta',
-        '[ ] OĹ›wiadczam, ĹĽe miaĹ‚em/am moĹĽliwoĹ›Ä‡ zadania pytaĹ„.',
-        '[ ] OĹ›wiadczam, ĹĽe przekazaĹ‚em/am prawdziwe informacje o stanie zdrowia.',
-        '[ ] WyraĹĽam Ĺ›wiadomÄ… zgodÄ™ na wykonanie procedury.',
+        '5. Oświadczenia pacjenta',
+        '[ ] Oświadczam, że miałem/am możliwość zadania pytań.',
+        '[ ] Oświadczam, że przekazałem/am prawdziwe informacje o stanie zdrowia.',
+        '[ ] Wyrażam świadomą zgodę na wykonanie procedury.',
         '',
         '6. Zalecenia',
-        'Pacjent otrzymaĹ‚ zalecenia przed i po procedurze oraz zostaĹ‚ poinformowany o koniecznoĹ›ci kontaktu w razie niepokojÄ…cych objawĂłw.',
+        'Pacjent otrzymał zalecenia przed i po procedurze oraz został poinformowany o konieczności kontaktu w razie niepokojących objawów.',
         '',
         'Podpis pacjenta: ____________________    Podpis osoby uprawnionej: ____________________',
         '',
-        'Uwaga: dokument wymaga zatwierdzenia przez osobÄ™ uprawnionÄ… przed uĹĽyciem z pacjentem.'
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem z pacjentem.'
       ].join('\n')
     }
 
@@ -1045,9 +1123,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       return [
         `${doctorName} - profil specjalisty`,
         '',
-        additionalInstruction || 'UzupeĹ‚nij specjalizacjÄ™, zakres pracy, doĹ›wiadczenie i obszary zabiegowe lekarza.',
+        additionalInstruction || 'Uzupełnij specjalizację, zakres pracy, doświadczenie i obszary zabiegowe lekarza.',
         '',
-        'Opis powinien byÄ‡ krĂłtki, profesjonalny i oparty wyĹ‚Ä…cznie na potwierdzonych danych. Nie dopisuj tytuĹ‚Ăłw, certyfikatĂłw ani lat doĹ›wiadczenia, jeĹ›li nie zostaĹ‚y podane.'
+        'Opis powinien być krótki, profesjonalny i oparty wyłącznie na potwierdzonych danych. Nie dopisuj tytułów, certyfikatów ani lat doświadczenia, jeśli nie zostały podane.'
       ].join('\n')
     }
 
@@ -1056,9 +1134,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       return [
         `${preparationName} - opis preparatu`,
         '',
-        additionalInstruction || 'UzupeĹ‚nij kategoriÄ™, zastosowanie i waĹĽne uwagi dla zespoĹ‚u.',
+        additionalInstruction || 'Uzupełnij kategorię, zastosowanie i ważne uwagi dla zespołu.',
         '',
-        'Opis powinien byÄ‡ neutralny i zgodny z dokumentacjÄ… producenta. Nie dopisuj wskazaĹ„, certyfikatĂłw, skĹ‚adu ani efektĂłw klinicznych, jeĹ›li nie zostaĹ‚y podane.'
+        'Opis powinien być neutralny i zgodny z dokumentacją producenta. Nie dopisuj wskazań, certyfikatów, składu ani efektów klinicznych, jeśli nie zostały podane.'
       ].join('\n')
     }
 
@@ -1068,27 +1146,27 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     if (fieldKey.includes('title')) {
       if (sectionKey === 'menu') return 'Menu wydarzenia'
       if (sectionKey === 'transport') return 'Transport i dojazd'
-      if (sectionKey === 'workshops') return 'Warsztaty i aktywnoĹ›ci'
-      if (sectionKey === 'faq') return 'NajwaĹĽniejsze informacje'
+      if (sectionKey === 'workshops') return 'Warsztaty i aktywności'
+      if (sectionKey === 'faq') return 'Najważniejsze informacje'
       return `Sekcja wydarzenia ${eventTitle}`
     }
 
     if (fieldKey.includes('cta')) {
       if (sectionKey === 'menu') return 'Wybierz menu'
-      if (sectionKey === 'transport') return 'PotwierdĹş transport'
-      if (sectionKey === 'workshops') return 'Zapisz siÄ™'
-      return 'SprawdĹş szczegĂłĹ‚y'
+      if (sectionKey === 'transport') return 'Potwierdź transport'
+      if (sectionKey === 'workshops') return 'Zapisz się'
+      return 'Sprawdź szczegóły'
     }
 
     if (aiTextTone === 'eco') {
       return short
-        ? `SprawdĹş aktualne informacje o ${eventTitle}${eventLocation}. Korzystamy z cyfrowej strony, aby ograniczaÄ‡ wydruki.`
-        : `Tutaj znajdziesz aktualne informacje o ${eventTitle}${eventLocation}. To cyfrowe centrum uczestnika, ktĂłre organizator moĹĽe aktualizowaÄ‡ na bieĹĽÄ…co bez dodatkowych wydrukĂłw.`
+        ? `Sprawdź aktualne informacje o ${eventTitle}${eventLocation}. Korzystamy z cyfrowej strony, aby ograniczać wydruki.`
+        : `Tutaj znajdziesz aktualne informacje o ${eventTitle}${eventLocation}. To cyfrowe centrum uczestnika, które organizator może aktualizować na bieżąco bez dodatkowych wydruków.`
     }
 
     return short
-      ? `SprawdĹş aktualne informacje o ${eventTitle}${eventLocation}.`
-      : `Tutaj znajdziesz aktualne informacje dotyczÄ…ce wydarzenia ${eventTitle}${eventLocation}. Organizator moĹĽe aktualizowaÄ‡ tÄ™ sekcjÄ™ na bieĹĽÄ…co, dlatego warto wracaÄ‡ do strony przed wydarzeniem.`
+      ? `Sprawdź aktualne informacje o ${eventTitle}${eventLocation}.`
+      : `Tutaj znajdziesz aktualne informacje dotyczące wydarzenia ${eventTitle}${eventLocation}. Organizator może aktualizować tę sekcję na bieżąco, dlatego warto wracać do strony przed wydarzeniem.`
   }
 
   const generateAiTextSuggestion = async () => {
@@ -1130,13 +1208,13 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           normalizedSuggestion.includes('wydarzen') ||
           normalizedSuggestion.includes('organizator') ||
           normalizedSuggestion.includes('regulaminie') ||
-          normalizedSuggestion.includes('goĹ›ci')
+          normalizedSuggestion.includes('gości')
         )
 
       if (looksLikeOldEventFallback || (isMedicalDocumentRequest && !suggestion.trim())) {
         setAiTextSuggestion(buildLocalAiTextFallback(aiTextAssistConfig))
-        setAiTextReason('Odrzucono eventowÄ… odpowiedĹş starej funkcji AI i uĹĽyto bezpiecznego medycznego szkieletu dokumentu.')
-        setAiTextMissingContext(['WdrĂłĹĽ zaktualizowanÄ… Edge Function generate-text-suggestion, aby model generowaĹ‚ dokumenty medyczne bez fallbacku.'])
+        setAiTextReason('Odrzucono eventową odpowiedź starej funkcji AI i użyto bezpiecznego medycznego szkieletu dokumentu.')
+        setAiTextMissingContext(['Wdróż zaktualizowaną Edge Function generate-text-suggestion, aby model generował dokumenty medyczne bez fallbacku.'])
       } else {
         setAiTextSuggestion(suggestion)
         setAiTextReason(data?.reason || '')
@@ -1150,9 +1228,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         code: error?.code
       })
       setAiTextSuggestion(buildLocalAiTextFallback(aiTextAssistConfig))
-      setAiTextReason('Edge Function nie odpowiedziaĹ‚a, wiÄ™c pokazano bezpieczny lokalny szkic na podstawie danych pola. Po wdroĹĽeniu funkcji Supabase sugestie bÄ™dÄ… generowane przez AI.')
-      setAiTextMissingContext(['SprawdĹş, czy Edge Function generate-text-suggestion jest wdroĹĽona w Supabase i ma ustawiony sekret DEEPSEEK_API_KEY.'])
-      showNotification('Edge Function AI nie odpowiedziaĹ‚a. PokazaĹ‚am lokalny szkic treĹ›ci do rÄ™cznej edycji.', 'info')
+      setAiTextReason('Edge Function nie odpowiedziała, więc pokazano bezpieczny lokalny szkic na podstawie danych pola. Po wdrożeniu funkcji Supabase sugestie będą generowane przez AI.')
+      setAiTextMissingContext(['Sprawdź, czy Edge Function generate-text-suggestion jest wdrożona w Supabase i ma ustawiony sekret DEEPSEEK_API_KEY.'])
+      showNotification('Edge Function AI nie odpowiedziała. Pokazałam lokalny szkic treści do ręcznej edycji.', 'info')
     } finally {
       setAiTextLoading(false)
     }
@@ -1163,8 +1241,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     aiTextAssistConfig.onApply(aiTextSuggestion)
     showNotification(
       aiTextAssistConfig?.mode === 'medical_document'
-        ? 'Szkic AI zostaĹ‚ wstawiony. Przed uĹĽyciem zatwierdĹş go medycznie i prawnie.'
-        : 'Propozycja AI zostaĹ‚a wstawiona do pola. Zapisz formularz, aby utrwaliÄ‡ zmianÄ™.',
+        ? 'Szkic AI został wstawiony. Przed użyciem zatwierdź go medycznie i prawnie.'
+        : 'Propozycja AI została wstawiona do pola. Zapisz formularz, aby utrwalić zmianę.',
       'success'
     )
     closeAiTextAssist()
@@ -1201,7 +1279,7 @@ const AiTextAssistButton = ({
     type="button"
     onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, relatedEntityTitle, additionalInstruction, placeholder, mode, documentType, onApply })}
     className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-400/20 dark:to-purple-400/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:from-indigo-500/20 hover:to-purple-500/20"
-    title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalnÄ… treĹ›Ä‡ z AI'}
+    title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalną treść z AI'}
   >
     <Sparkles size={14} className="animate-pulse" />
     {label}
@@ -1256,7 +1334,7 @@ const AiTextAssistButton = ({
         await loadEcoAiReport()
       }
 
-      showNotification('Analiza AI Eco zostaĹ‚a odĹ›wieĹĽona na podstawie aktualnych danych z planera.', 'success')
+      showNotification('Analiza AI Eco została odświeżona na podstawie aktualnych danych z planera.', 'success')
     } catch (error: any) {
       console.error('Eco AI analysis invoke error:', {
         message: error?.message,
@@ -1264,7 +1342,7 @@ const AiTextAssistButton = ({
         hint: error?.hint,
         code: error?.code
       })
-      showNotification(`Nie udaĹ‚o siÄ™ odĹ›wieĹĽyÄ‡ analizy AI: ${error?.message || 'Nieznany bĹ‚Ä…d'}`, 'error')
+      showNotification(`Nie udało się odświeżyć analizy AI: ${error?.message || 'Nieznany błąd'}`, 'error')
     } finally {
       setEcoAiLoading(false)
     }
@@ -1348,7 +1426,7 @@ const AiTextAssistButton = ({
     const isName = normalized && normalized !== '0' && normalized !== '1' && Number.isNaN(Number(normalized.replace('+', '')))
     return isName && index === 0
       ? normalized
-      : `Osoba towarzyszÄ…ca ${index + 1} - ${fallbackName || 'goĹ›Ä‡'}`
+      : `Osoba towarzysząca ${index + 1} - ${fallbackName || 'gość'}`
   }
 
   const parseSizes = (value: any) => {
@@ -1477,7 +1555,7 @@ const loadConsentTemplates = useCallback(async () => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn('BĹ‚Ä…d Ĺ‚adowania szablonĂłw z bazy:', error.message);
+    console.warn('Błąd ładowania szablonów z bazy:', error.message);
     setConsentTemplates([]);
     return;
   }
@@ -1493,7 +1571,7 @@ const loadConsentTemplates = useCallback(async () => {
       event_id: id,
       application_id: app.id,
       unit_type: 'main',
-      display_name: baseName || app.email || 'GoĹ›Ä‡',
+      display_name: baseName || app.email || 'Gość',
       first_name: app.first_name || null,
       last_name: app.last_name || null,
       email: app.email || null,
@@ -1521,7 +1599,7 @@ const loadConsentTemplates = useCallback(async () => {
         event_id: id,
         application_id: app.id,
         unit_type: 'companion',
-        display_name: getCompanionDisplayName(app.companion, baseName || app.email || 'goĹ›Ä‡', index),
+        display_name: getCompanionDisplayName(app.companion, baseName || app.email || 'gość', index),
         first_name: null,
         last_name: null,
         email: null,
@@ -1547,13 +1625,13 @@ const loadConsentTemplates = useCallback(async () => {
         event_id: id,
         application_id: app.id,
         unit_type: 'child',
-        display_name: `Dziecko ${index + 1} - ${baseName || app.email || 'goĹ›Ä‡'}`,
+        display_name: `Dziecko ${index + 1} - ${baseName || app.email || 'gość'}`,
         first_name: null,
         last_name: null,
         email: null,
         phone: null,
         age_group: 'child',
-        diet: 'dzieciÄ™ce',
+        diet: 'dziecięce',
         allergies: app.allergies || null,
         ticket_type: ticketType,
         access_status: accessStatus,
@@ -1575,7 +1653,7 @@ const loadConsentTemplates = useCallback(async () => {
     if (!app?.id) return
     const existing = attendeeUnits.some(unit => unit.application_id === app.id)
     if (existing) {
-      showNotification('QR dla tego zgĹ‚oszenia juĹĽ istniejÄ…', 'info')
+      showNotification('QR dla tego zgłoszenia już istnieją', 'info')
       return
     }
 
@@ -1583,7 +1661,7 @@ const loadConsentTemplates = useCallback(async () => {
     const { error } = await supabase.from('event_attendee_units').insert(rows)
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaĹ‚o siÄ™ wygenerowaÄ‡ QR. SprawdĹş tabelÄ™ event_attendee_units.', 'error')
+      showNotification('Nie udało się wygenerować QR. Sprawdź tabelę event_attendee_units.', 'error')
       return
     }
 
@@ -1595,7 +1673,7 @@ const createPatientQrUnit = async (patient: any) => {
   const existing = attendeeUnits.find((unit: any) => unit.patient_id === patient.id)
 
   if (existing) {
-    showNotification('Ten pacjent ma juĹĽ wygenerowany QR', 'info')
+    showNotification('Ten pacjent ma już wygenerowany QR', 'info')
     return
   }
 
@@ -1608,7 +1686,7 @@ const createPatientQrUnit = async (patient: any) => {
       .eq('id', patient.id)
 
     if (patientUpdateError) {
-      showNotification('Nie udaĹ‚o siÄ™ zapisaÄ‡ tokenu pacjenta: ' + patientUpdateError.message, 'error')
+      showNotification('Nie udało się zapisać tokenu pacjenta: ' + patientUpdateError.message, 'error')
       return
     }
   }
@@ -1635,7 +1713,7 @@ const createPatientQrUnit = async (patient: any) => {
   }])
 
   if (error) {
-    showNotification('Nie udaĹ‚o siÄ™ wygenerowaÄ‡ QR pacjenta: ' + error.message, 'error')
+    showNotification('Nie udało się wygenerować QR pacjenta: ' + error.message, 'error')
     return
   }
 
@@ -1658,14 +1736,14 @@ const createPatientQrUnit = async (patient: any) => {
       .flatMap((app: any) => buildAttendeeUnitRows(app))
 
     if (rows.length === 0) {
-      showNotification('Nie ma brakujÄ…cych QR do wygenerowania', 'info')
+      showNotification('Nie ma brakujących QR do wygenerowania', 'info')
       return
     }
 
     const { error } = await supabase.from('event_attendee_units').insert(rows)
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaĹ‚o siÄ™ wygenerowaÄ‡ QR. SprawdĹş tabelÄ™ event_attendee_units.', 'error')
+      showNotification('Nie udało się wygenerować QR. Sprawdź tabelę event_attendee_units.', 'error')
       return
     }
 
@@ -1695,7 +1773,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ checked_in: true, checked_in_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaĹ‚o siÄ™ zapisaÄ‡ check-in', 'error')
+      showNotification('Nie udało się zapisać check-in', 'error')
       return
     }
     await insertEventPassScan(unit, 'entry_checkin')
@@ -1710,7 +1788,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ wristband_code: wristbandCode, wristband_issued: true, wristband_issued_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaĹ‚o siÄ™ wydaÄ‡ opaski', 'error')
+      showNotification('Nie udało się wydać opaski', 'error')
       return
     }
     await insertEventPassScan(unit, 'wristband_issue')
@@ -1724,7 +1802,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       .update({ wristband_returned: true, wristband_returned_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaĹ‚o siÄ™ zapisaÄ‡ zwrotu opaski', 'error')
+      showNotification('Nie udało się zapisać zwrotu opaski', 'error')
       return
     }
     await insertEventPassScan(unit, 'wristband_return')
@@ -1733,7 +1811,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   }
 
   const handleResetUnitStatus = async (unit: any) => {
-    if (!confirm('ZresetowaÄ‡ status check-in i opaski dla tej jednostki?')) return
+    if (!confirm('Zresetować status check-in i opaski dla tej jednostki?')) return
     const { error } = await supabase
       .from('event_attendee_units')
       .update({
@@ -1747,7 +1825,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       })
       .eq('id', unit.id)
     if (error) {
-      showNotification('Nie udaĹ‚o siÄ™ zresetowaÄ‡ statusu', 'error')
+      showNotification('Nie udało się zresetować statusu', 'error')
       return
     }
     await loadEventPassData()
@@ -1772,13 +1850,13 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     const { error } = await supabase.from('event_staff_access').insert([data])
     if (error) {
       console.warn('Event pass table unavailable:', error.message)
-      showNotification('Nie udaĹ‚o siÄ™ dodaÄ‡ dostÄ™pu obsĹ‚ugi', 'error')
+      showNotification('Nie udało się dodać dostępu obsługi', 'error')
       return
     }
     setStaffAccessForm({})
     setIsStaffAccessModalOpen(false)
     await loadEventPassData()
-    showNotification('DostÄ™p obsĹ‚ugi przygotowany', 'success')
+    showNotification('Dostęp obsługi przygotowany', 'success')
   }
 
   const getStaffPassUrl = (accessToken?: string) => {
@@ -1805,18 +1883,18 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   }
 
   const publicSectionConfigs = [
-    { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'WĹ‚Ä…cz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietÄ™, leki albo przygotowanie do wizyty.' },
-    { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'WĹ‚Ä…cz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostÄ™pne wizyty, konsultacje i procedury.' },
-    { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'PokaĹĽ kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz uĹĽycie kodu QR do check-inu wizyty i dostÄ™pu personelu.' },
-    { key: 'theme', label: 'Standard placĂłwki', icon: Palette, placeholderTitle: 'Standard obsĹ‚ugi', placeholderDescription: 'Opisz standard wizyty, komfort i doĹ›wiadczenie pacjenta.' },
-    { key: 'agenda', label: 'ĹšcieĹĽka wizyty', icon: ClipboardList, placeholderTitle: 'ĹšcieĹĽka pacjenta', placeholderDescription: 'Opisz kolejne kroki od rejestracji po follow-up.' },
-    { key: 'speakers', label: 'Lekarze / specjaliĹ›ci', icon: Mic, placeholderTitle: 'ZespĂłĹ‚ medyczny', placeholderDescription: 'Przedstaw lekarzy, specjalistĂłw i opiekunĂłw pacjenta.' },
-    { key: 'sponsors', label: 'Partnerzy medyczni', icon: Briefcase, placeholderTitle: 'Partnerzy kliniki', placeholderDescription: 'Opisz partnerĂłw, laboratoria lub wspĂłĹ‚pracujÄ…ce podmioty.' },
-    { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub waĹĽne pliki.' },
-    { key: 'announcements', label: 'OgĹ‚oszenia / aktualnoĹ›ci', icon: MessageSquare, placeholderTitle: 'OgĹ‚oszenia', placeholderDescription: 'Dodaj waĹĽne komunikaty dla uczestnikĂłw.' },
-    { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe dziaĹ‚ania promocyjne.' },
-    { key: 'gallery', label: 'Galeria / klimat eventu', icon: ImageIcon, placeholderTitle: 'Galeria wydarzenia', placeholderDescription: 'PokaĹĽ zdjÄ™cia, klimat i wizualnÄ… zapowiedĹş wydarzenia.' },
-    { key: 'faq', label: 'FAQ / waĹĽne informacje', icon: AlertTriangle, placeholderTitle: 'WaĹĽne informacje', placeholderDescription: 'Zbierz najwaĹĽniejsze odpowiedzi i informacje organizacyjne.' },
+    { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietę, leki albo przygotowanie do wizyty.' },
+    { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostępne wizyty, konsultacje i procedury.' },
+    { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz użycie kodu QR do check-inu wizyty i dostępu personelu.' },
+    { key: 'theme', label: 'Standard placówki', icon: Palette, placeholderTitle: 'Standard obsługi', placeholderDescription: 'Opisz standard wizyty, komfort i doświadczenie pacjenta.' },
+    { key: 'agenda', label: 'Ścieżka wizyty', icon: ClipboardList, placeholderTitle: 'Ścieżka pacjenta', placeholderDescription: 'Opisz kolejne kroki od rejestracji po follow-up.' },
+    { key: 'speakers', label: 'Lekarze / specjaliści', icon: Mic, placeholderTitle: 'Zespół medyczny', placeholderDescription: 'Przedstaw lekarzy, specjalistów i opiekunów pacjenta.' },
+    { key: 'sponsors', label: 'Partnerzy medyczni', icon: Briefcase, placeholderTitle: 'Partnerzy kliniki', placeholderDescription: 'Opisz partnerów, laboratoria lub współpracujące podmioty.' },
+    { key: 'materials', label: 'Zgody i dokumenty', icon: FileIcon, placeholderTitle: 'Dokumenty pacjenta', placeholderDescription: 'Dodaj zgody, ankiety medyczne, zalecenia lub ważne pliki.' },
+    { key: 'announcements', label: 'Ogłoszenia / aktualności', icon: MessageSquare, placeholderTitle: 'Ogłoszenia', placeholderDescription: 'Dodaj ważne komunikaty dla uczestników.' },
+    { key: 'promo', label: 'Strefa promocyjna', icon: BadgeDollarSign, placeholderTitle: 'Strefa promocyjna', placeholderDescription: 'Opisz reklamy, oferty lub dodatkowe działania promocyjne.' },
+    { key: 'gallery', label: 'Galeria / klimat eventu', icon: ImageIcon, placeholderTitle: 'Galeria wydarzenia', placeholderDescription: 'Pokaż zdjęcia, klimat i wizualną zapowiedź wydarzenia.' },
+    { key: 'faq', label: 'FAQ / ważne informacje', icon: AlertTriangle, placeholderTitle: 'Ważne informacje', placeholderDescription: 'Zbierz najważniejsze odpowiedzi i informacje organizacyjne.' },
     { key: 'documents', label: 'Regulamin / dokumenty', icon: FileText, placeholderTitle: 'Regulamin i dokumenty', placeholderDescription: 'Dodaj regulamin, polityki, dokumenty lub warunki uczestnictwa.' },
   ]
 
@@ -1866,7 +1944,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       }
 
       if (Object.keys(updates).length === 0) {
-        showNotification('Najpierw dodaj kolumny ustawieĹ„ strony uczestnika w b2b_events', 'info')
+        showNotification('Najpierw dodaj kolumny ustawień strony uczestnika w b2b_events', 'info')
         console.warn('Missing public section columns:', Array.from(missingFields))
         return
       }
@@ -1887,7 +1965,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       showNotification('Ustawienia strony uczestnika zapisane', 'success')
     } catch (err: any) {
       console.error('Participant page settings save error:', err)
-      showNotification('BĹ‚Ä…d zapisu ustawieĹ„ strony uczestnika: ' + err.message, 'error')
+      showNotification('Błąd zapisu ustawień strony uczestnika: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -1898,7 +1976,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
 
     try {
       const fileExt = file.name.split('.').pop();
-      // Unikalna nazwa z timestampem gwarantuje, ĹĽe przeglÄ…darka nie pokaĹĽe starego cache'u
+      // Unikalna nazwa z timestampem gwarantuje, że przeglądarka nie pokaże starego cache'u
       const fileName = `${ownerId}/${prefix}-${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -1909,12 +1987,12 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
         });
 
       if (uploadError) {
-        console.error(`BĹ‚Ä…d przesyĹ‚ania pliku (${prefix}):`, uploadError.message);
+        console.error(`Błąd przesyłania pliku (${prefix}):`, uploadError.message);
         showNotification(`Problem z obrazem ${prefix}: ${uploadError.message}`, 'error');
         return null;
       }
 
-      // Pobranie publicznego adresu URL z nowo utworzonej Ĺ›cieĹĽki
+      // Pobranie publicznego adresu URL z nowo utworzonej ścieżki
       const { data } = supabase.storage
         .from('event-covers')
         .getPublicUrl(fileName);
@@ -1922,7 +2000,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       return data.publicUrl;
 
     } catch (err) {
-      console.error("Nieoczekiwany bĹ‚Ä…d uploadu:", err);
+      console.error("Nieoczekiwany błąd uploadu:", err);
       return null;
     }
   };
@@ -1987,10 +2065,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     try {
       await supabase.from('b2b_applications').update({ status: newStatus }).eq('id', appId)
       setApplications(applications.map(a => a.id === appId ? { ...a, status: newStatus } : a))
-      showNotification(`Status goĹ›cia zaktualizowany`, 'success')
+      showNotification(`Status gościa zaktualizowany`, 'success')
       calculateEcoMetrics(applications)
     } catch (error) {
-      showNotification('BĹ‚Ä…d aktualizacji statusu', 'error')
+      showNotification('Błąd aktualizacji statusu', 'error')
     }
   }
 
@@ -2003,10 +2081,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
         selectedGuests.includes(a.id) ? { ...a, status } : a
       ))
       setSelectedGuests([])
-      showNotification(`Zaktualizowano ${selectedGuests.length} goĹ›ci`, 'success')
+      showNotification(`Zaktualizowano ${selectedGuests.length} gości`, 'success')
       calculateEcoMetrics(applications)
     } catch (error) {
-      showNotification('BĹ‚Ä…d aktualizacji grupowej', 'error')
+      showNotification('Błąd aktualizacji grupowej', 'error')
     }
   }
 
@@ -2015,14 +2093,14 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       await supabase.from('b2b_applications').delete().eq('id', appId)
       setApplications(applications.filter(a => a.id !== appId))
       setShowDeleteConfirm(null)
-      showNotification('GoĹ›Ä‡ usuniÄ™ty', 'success')
+      showNotification('Gość usunięty', 'success')
     } catch (error) {
-      showNotification('BĹ‚Ä…d usuwania goĹ›cia', 'error')
+      showNotification('Błąd usuwania gościa', 'error')
     }
   }
 
   const exportToCSV = () => {
-    const headers = ['ImiÄ™', 'Nazwisko', 'Firma', 'Status', 'Dieta', 'Alkohol', 'SĹ‚odycze', 'Transport', 'Email']
+    const headers = ['Imię', 'Nazwisko', 'Firma', 'Status', 'Dieta', 'Alkohol', 'Słodycze', 'Transport', 'Email']
     const rows = applications.map(app => [
       app.first_name, app.last_name, app.company_name, app.status,
       app.diet, app.alcohol_preference || '-', app.sweets_preference || '-', app.transport, app.email
@@ -2034,7 +2112,7 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     a.href = url
     a.download = `goscie-${event?.title || 'wydarzenie'}.csv`
     a.click()
-    showNotification('Lista goĹ›ci wyeksportowana', 'success')
+    showNotification('Lista gości wyeksportowana', 'success')
   }
 
     const saveGuestChanges = async (e: React.FormEvent) => {
@@ -2045,10 +2123,10 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       const { error } = await supabase.from('b2b_applications').update(editingGuest).eq('id', editingGuest.id);
       if (error) throw error;
       setApplications(applications.map(a => a.id === editingGuest.id ? editingGuest : a));
-      showNotification('Dane goĹ›cia zaktualizowane', 'success');
+      showNotification('Dane gościa zaktualizowane', 'success');
       setEditingGuest(null);
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -2107,13 +2185,13 @@ const handleSaveContractor = async (e: React.FormEvent) => {
       contact_person: contractorForm.contact_person,
       website_url: contractorForm.website_url,
 
-      // Typ usĹ‚ugi / budĹĽet
+      // Typ usługi / budżet
       service_type: contractorForm.service_type,
       service_scope: contractorForm.service_scope,
       budget_category: contractorForm.budget_category || contractorForm.service_type,
       include_in_budget: contractorForm.include_in_budget !== false,
 
-      // Kwoty i pĹ‚atnoĹ›ci
+      // Kwoty i płatności
       amount: grossAmount,
       net_amount: netAmount,
       vat_rate: vatRate,
@@ -2133,7 +2211,7 @@ const handleSaveContractor = async (e: React.FormEvent) => {
       contract_signed_date: contractorForm.contract_signed_date || null,
       document_folder_url: contractorForm.document_folder_url,
 
-      // PowiÄ…zania
+      // Powiązania
       tags: contractorForm.tags || [],
       fleet_id: contractorForm.fleet_id || null,
       speaker_id: contractorForm.speaker_id || null,
@@ -2170,19 +2248,19 @@ const handleSaveContractor = async (e: React.FormEvent) => {
     setContractorForm({});
     showNotification('Podwykonawca zapisany', 'success');
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d zapisu: ' + err.message, 'error');
+    showNotification('Błąd zapisu: ' + err.message, 'error');
   } finally {
     setUpdating(false);
   }
 };
 const handleDeleteContractor = async (id: string) => {
-  if (!confirm('UsunÄ…Ä‡ podwykonawcÄ™?')) return;
+  if (!confirm('Usunąć podwykonawcę?')) return;
   try {
     await supabase.from('contractors').delete().eq('id', id);
     await loadContractors();
-    showNotification('UsuniÄ™to', 'success');
+    showNotification('Usunięto', 'success');
   } catch (err) {
-    showNotification('BĹ‚Ä…d', 'error');
+    showNotification('Błąd', 'error');
   }
 };
 
@@ -2272,7 +2350,7 @@ const patientQrMetrics = useMemo(() => ({
   visitsClosed: patientQrRows.filter((row: any) => row.unit?.wristband_returned).length,
 }), [patients.length, patientQrRows])
 // ============================================================================
-// ----- 4.3. HANDLERY DLA STOĹĂ“W I DRAG & DROP -----
+// ----- 4.3. HANDLERY DLA STOŁÓW I DRAG & DROP -----
 // ============================================================================
 
 // --- FUNKCJA: IMPORT Z EXCEL ---
@@ -2289,17 +2367,17 @@ const patientQrMetrics = useMemo(() => ({
           await supabase.from('b2b_applications').insert([{
             event_id: id,
             patient_id: crypto.randomUUID(),
-            first_name: row['ImiÄ™'] || row['first_name'],
+            first_name: row['Imię'] || row['first_name'],
             last_name: row['Nazwisko'] || row['last_name'],
             email: row['Email'] || row['email'],
             company_name: row['Firma'] || row['company'],
             status: 'pending'
           }]);
         }
-        showNotification(`Zaimportowano ${rows.length} goĹ›ci`, 'success');
+        showNotification(`Zaimportowano ${rows.length} gości`, 'success');
         loadEventData();
       } catch (err) {
-        showNotification('BĹ‚Ä…d importu pliku Excel', 'error');
+        showNotification('Błąd importu pliku Excel', 'error');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -2311,7 +2389,7 @@ const patientQrMetrics = useMemo(() => ({
     const approved = applications.filter(a => a.status === 'approved');
 
     if (approved.length === 0) {
-      showNotification('Brak zaakceptowanych goĹ›ci do wydruku', 'info');
+      showNotification('Brak zaakceptowanych gości do wydruku', 'info');
       return;
     }
 
@@ -2323,7 +2401,7 @@ const patientQrMetrics = useMemo(() => ({
       doc.text(`${guest.first_name} ${guest.last_name}`, 105, yPos, { align: 'center' });
       doc.setFontSize(12);
       doc.text(guest.company_name?.toUpperCase() || '', 105, yPos + 10, { align: 'center' });
-      doc.setDrawColor(232, 206, 122); // Kolor zĹ‚oty ANM
+      doc.setDrawColor(232, 206, 122); // Kolor złoty ANM
       doc.line(50, yPos + 15, 160, yPos + 15);
     });
 
@@ -2334,8 +2412,8 @@ const patientQrMetrics = useMemo(() => ({
   const handleCreateDefaultBudgetCategories = async () => {
     const defaults = [
       { name: 'Personel medyczny', slug: 'medical_team', planned_budget: 0, color: '#0f766e', sort_order: 1 },
-      { name: 'Preparaty i materiaĹ‚y', slug: 'preparations', planned_budget: 0, color: '#7c3aed', sort_order: 2 },
-      { name: 'SprzÄ™t i serwis', slug: 'equipment', planned_budget: 0, color: '#2563eb', sort_order: 3 },
+      { name: 'Preparaty i materiały', slug: 'preparations', planned_budget: 0, color: '#7c3aed', sort_order: 2 },
+      { name: 'Sprzęt i serwis', slug: 'equipment', planned_budget: 0, color: '#2563eb', sort_order: 3 },
       { name: 'Diagnostyka i laboratoria', slug: 'diagnostics', planned_budget: 0, color: '#0891b2', sort_order: 4 },
       { name: 'Marketing i pierwszy kontakt', slug: 'marketing', planned_budget: 0, color: '#db2777', sort_order: 5 },
       { name: 'Administracja i recepcja', slug: 'administration', planned_budget: 0, color: '#64748b', sort_order: 6 },
@@ -2345,9 +2423,9 @@ const patientQrMetrics = useMemo(() => ({
       { name: 'Przychody z wizyt', slug: 'visit_income', planned_budget: 0, color: '#16a34a', sort_order: 10 }
     ].map(category => ({ ...category, event_id: id }))
     const { error } = await supabase.from('event_budget_categories').insert(defaults)
-    if (error) return showNotification('BĹ‚Ä…d tworzenia kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd tworzenia kategorii: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Kategorie budĹĽetu utworzone', 'success')
+    showNotification('Kategorie budżetu utworzone', 'success')
   }
 
   const getBudgetItemPaymentStatus = (grossAmount: number, paidAmount: number, advanceAmount: number, fallback = 'planned') => {
@@ -2406,9 +2484,9 @@ const patientQrMetrics = useMemo(() => ({
       await loadBudgetData()
       setIsBudgetItemModalOpen(false)
       setBudgetItemForm({})
-      showNotification('Pozycja budĹĽetu zapisana', 'success')
+      showNotification('Pozycja budżetu zapisana', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu pozycji: ' + err.message, 'error')
+      showNotification('Błąd zapisu pozycji: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2416,9 +2494,9 @@ const patientQrMetrics = useMemo(() => ({
 
   const handleDeactivateBudgetItem = async (itemId: string) => {
     const { error } = await supabase.from('event_budget_items').update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', itemId)
-    if (error) return showNotification('BĹ‚Ä…d ukrywania pozycji: ' + error.message, 'error')
+    if (error) return showNotification('Błąd ukrywania pozycji: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Pozycja budĹĽetu ukryta', 'success')
+    showNotification('Pozycja budżetu ukryta', 'success')
   }
 
   const handleSaveBudgetCategory = async (e: React.FormEvent) => {
@@ -2435,7 +2513,7 @@ const patientQrMetrics = useMemo(() => ({
     const { error } = isEditingBudgetCategory && budgetCategoryForm.id
       ? await supabase.from('event_budget_categories').update(data).eq('id', budgetCategoryForm.id)
       : await supabase.from('event_budget_categories').insert([data])
-    if (error) return showNotification('BĹ‚Ä…d zapisu kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd zapisu kategorii: ' + error.message, 'error')
     await loadBudgetData()
     setIsBudgetCategoryModalOpen(false)
     setBudgetCategoryForm({})
@@ -2443,18 +2521,18 @@ const patientQrMetrics = useMemo(() => ({
   }
 
   const handleDeleteBudgetCategory = async (categoryId: string) => {
-    if (!confirm('UsunÄ…Ä‡ kategoriÄ™ budĹĽetu?')) return
+    if (!confirm('Usunąć kategorię budżetu?')) return
     const { error } = await supabase.from('event_budget_categories').delete().eq('id', categoryId)
-    if (error) return showNotification('BĹ‚Ä…d usuwania kategorii: ' + error.message, 'error')
+    if (error) return showNotification('Błąd usuwania kategorii: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Kategoria usuniÄ™ta', 'success')
+    showNotification('Kategoria usunięta', 'success')
   }
 
   const handleSaveBudgetTransfer = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = Number(budgetTransferForm.amount || 0)
     if (!budgetTransferForm.from_category_id || !budgetTransferForm.to_category_id || budgetTransferForm.from_category_id === budgetTransferForm.to_category_id || amount <= 0) {
-      return showNotification('UzupeĹ‚nij poprawnie przesuniÄ™cie Ĺ›rodkĂłw', 'error')
+      return showNotification('Uzupełnij poprawnie przesunięcie środków', 'error')
     }
     const fromCategory = budgetCategories.find((c: any) => c.id === budgetTransferForm.from_category_id)
     const toCategory = budgetCategories.find((c: any) => c.id === budgetTransferForm.to_category_id)
@@ -2466,7 +2544,7 @@ const patientQrMetrics = useMemo(() => ({
       currency: budgetTransferForm.currency || 'PLN',
       reason: budgetTransferForm.reason || null
     }])
-    if (error) return showNotification('BĹ‚Ä…d przesuniÄ™cia: ' + error.message, 'error')
+    if (error) return showNotification('Błąd przesunięcia: ' + error.message, 'error')
     await Promise.all([
       supabase.from('event_budget_categories').update({ planned_budget: Number(fromCategory?.planned_budget || 0) - amount }).eq('id', fromCategory.id),
       supabase.from('event_budget_categories').update({ planned_budget: Number(toCategory?.planned_budget || 0) + amount }).eq('id', toCategory.id)
@@ -2474,7 +2552,7 @@ const patientQrMetrics = useMemo(() => ({
     await loadBudgetData()
     setIsBudgetTransferModalOpen(false)
     setBudgetTransferForm({})
-    showNotification(Number(fromCategory?.planned_budget || 0) < amount ? 'PrzesuniÄ™to Ĺ›rodki, ale ĹşrĂłdĹ‚owa kategoria zeszĹ‚a poniĹĽej zera' : 'Ĺšrodki przesuniÄ™te', Number(fromCategory?.planned_budget || 0) < amount ? 'info' : 'success')
+    showNotification(Number(fromCategory?.planned_budget || 0) < amount ? 'Przesunięto środki, ale źródłowa kategoria zeszła poniżej zera' : 'Środki przesunięte', Number(fromCategory?.planned_budget || 0) < amount ? 'info' : 'success')
   }
 
   const handleAddBudgetPayment = async (e: React.FormEvent) => {
@@ -2491,7 +2569,7 @@ const patientQrMetrics = useMemo(() => ({
       payment_reference: budgetPaymentForm.payment_reference || null,
       notes: budgetPaymentForm.notes || null
     }])
-    if (error) return showNotification('BĹ‚Ä…d dodawania pĹ‚atnoĹ›ci: ' + error.message, 'error')
+    if (error) return showNotification('Błąd dodawania płatności: ' + error.message, 'error')
     const newPaidAmount = Number(selectedBudgetItem.paid_amount || 0) + amount
     const grossAmount = Number(selectedBudgetItem.gross_amount || 0)
     const paymentStatus = newPaidAmount >= grossAmount ? 'paid' : newPaidAmount > 0 ? 'partially_paid' : 'planned'
@@ -2500,7 +2578,7 @@ const patientQrMetrics = useMemo(() => ({
     setIsBudgetPaymentModalOpen(false)
     setBudgetPaymentForm({})
     setSelectedBudgetItem(null)
-    showNotification('PĹ‚atnoĹ›Ä‡ dodana', 'success')
+    showNotification('Płatność dodana', 'success')
   }
 
   const handleMarkAppointmentPaid = async (appointment: any) => {
@@ -2519,9 +2597,9 @@ const patientQrMetrics = useMemo(() => ({
       })
       .eq('id', appointment.id)
 
-    if (error) return showNotification('BĹ‚Ä…d oznaczania wizyty jako zapĹ‚aconej: ' + error.message, 'error')
+    if (error) return showNotification('Błąd oznaczania wizyty jako zapłaconej: ' + error.message, 'error')
     await loadAppointments()
-    showNotification('Wizyta oznaczona jako opĹ‚acona', 'success')
+    showNotification('Wizyta oznaczona jako opłacona', 'success')
   }
 
   const hasBudgetSource = (sourceType: string, sourceId: string) =>
@@ -2567,9 +2645,9 @@ const patientQrMetrics = useMemo(() => ({
           }
         })
       const count = await insertBudgetRows(rows)
-      showNotification(`Dodano ${count} podwykonawcĂłw do budĹĽetu`, 'success')
+      showNotification(`Dodano ${count} podwykonawców do budżetu`, 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d importu podwykonawcĂłw: ' + err.message, 'error')
+      showNotification('Błąd importu podwykonawców: ' + err.message, 'error')
     }
   }
 
@@ -2586,7 +2664,7 @@ const patientQrMetrics = useMemo(() => ({
       const count = await insertBudgetRows(rows)
       showNotification(`Dodano ${count} pozycji z checklisty`, 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d importu checklisty: ' + err.message, 'error')
+      showNotification('Błąd importu checklisty: ' + err.message, 'error')
     }
   }
 
@@ -2601,8 +2679,8 @@ const patientQrMetrics = useMemo(() => ({
       source_id: null,
       type: 'income',
       category: 'income',
-      title: 'Przychody z biletĂłw',
-      description: `Oczekiwany przychĂłd: ${formatMoney(expectedTicketRevenue)}`,
+      title: 'Przychody z biletów',
+      description: `Oczekiwany przychód: ${formatMoney(expectedTicketRevenue)}`,
       net_amount: paidTicketRevenue,
       vat_rate: 0,
       vat_amount: 0,
@@ -2617,9 +2695,9 @@ const patientQrMetrics = useMemo(() => ({
     const { error } = existing
       ? await supabase.from('event_budget_items').update(data).eq('id', existing.id)
       : await supabase.from('event_budget_items').insert([data])
-    if (error) return showNotification('BĹ‚Ä…d importu biletĂłw: ' + error.message, 'error')
+    if (error) return showNotification('Błąd importu biletów: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Przychody z biletĂłw przeliczone', 'success')
+    showNotification('Przychody z biletów przeliczone', 'success')
   }
 
   const handleSaveRegistrationSettings = async () => {
@@ -2644,7 +2722,7 @@ const patientQrMetrics = useMemo(() => ({
       setEditForm((prev: any) => ({ ...prev, ...updates }))
       showNotification('Ustawienia rejestracji zapisane', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu ustawieĹ„: ' + err.message, 'error')
+      showNotification('Błąd zapisu ustawień: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2683,21 +2761,21 @@ const patientQrMetrics = useMemo(() => ({
       setTicketTierForm({})
       showNotification('Typ biletu zapisany', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu biletu: ' + err.message, 'error')
+      showNotification('Błąd zapisu biletu: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
   }
 
   const handleDeleteTicketTier = async (tierId: string) => {
-    if (!confirm('UsunÄ…Ä‡ ten typ biletu?')) return
+    if (!confirm('Usunąć ten typ biletu?')) return
     try {
       const { error } = await supabase.from('ticket_tiers').delete().eq('id', tierId)
       if (error) throw error
       await loadEventData()
-      showNotification('Typ biletu usuniÄ™ty', 'success')
+      showNotification('Typ biletu usunięty', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d usuwania biletu: ' + err.message, 'error')
+      showNotification('Błąd usuwania biletu: ' + err.message, 'error')
     }
   }
 
@@ -2706,9 +2784,9 @@ const patientQrMetrics = useMemo(() => ({
       const { error } = await supabase.from('ticket_tiers').update({ is_active: tier.is_active === false }).eq('id', tier.id)
       if (error) throw error
       await loadEventData()
-      showNotification(tier.is_active === false ? 'Typ biletu aktywny' : 'Typ biletu wyĹ‚Ä…czony', 'success')
+      showNotification(tier.is_active === false ? 'Typ biletu aktywny' : 'Typ biletu wyłączony', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zmiany statusu biletu: ' + err.message, 'error')
+      showNotification('Błąd zmiany statusu biletu: ' + err.message, 'error')
     }
   }
 
@@ -2719,7 +2797,7 @@ const patientQrMetrics = useMemo(() => ({
       setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...updates } : app))
       showNotification(message, 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d aktualizacji zgĹ‚oszenia: ' + err.message, 'error')
+      showNotification('Błąd aktualizacji zgłoszenia: ' + err.message, 'error')
     }
   }
 
@@ -2729,10 +2807,10 @@ const patientQrMetrics = useMemo(() => ({
     ticket_paid_amount: Number(app.ticket_expected_amount || 0),
     payment_matched_by: 'manual',
     payment_matched_at: new Date().toISOString()
-  }, 'Oznaczono jako opĹ‚acone')
+  }, 'Oznaczono jako opłacone')
 
 
-  // --- FUNKCJA: IMPORT I AUTO-MATCHING WYCIÄ„GĂ“W BANKOWYCH ---
+  // --- FUNKCJA: IMPORT I AUTO-MATCHING WYCIĄGÓW BANKOWYCH ---
   const handleImportBankStatement = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -2746,11 +2824,11 @@ const patientQrMetrics = useMemo(() => ({
 
       let matchCount = 0
 
-      // Przechodzimy przez kaĹĽdy wiersz z pliku bankowego/Bramki
+      // Przechodzimy przez każdy wiersz z pliku bankowego/Bramki
       for (const row of rows) {
         const rowString = JSON.stringify(row).toLowerCase()
 
-        // Szukamy pasujÄ…cej aplikacji po Emailu, Nazwisku lub Referencji
+        // Szukamy pasującej aplikacji po Emailu, Nazwisku lub Referencji
         const matchedApp = applications.find(app => {
           const refMatch = app.payment_reference && rowString.includes(app.payment_reference.toLowerCase())
           const emailMatch = app.email && rowString.includes(app.email.toLowerCase())
@@ -2759,25 +2837,25 @@ const patientQrMetrics = useMemo(() => ({
           return refMatch || emailMatch || nameMatch
         })
 
-        // JeĹ›li znaleziono uczestnika i nie jest jeszcze opĹ‚acony
+        // Jeśli znaleziono uczestnika i nie jest jeszcze opłacony
         if (matchedApp && matchedApp.payment_status !== 'paid') {
-          // UĹĽywamy Twojej juĹĽ istniejÄ…cej funkcji updateTicketApplication
+          // Używamy Twojej już istniejącej funkcji updateTicketApplication
           await updateTicketApplication(matchedApp.id, {
             payment_status: 'paid',
             ticket_status: 'paid',
             ticket_paid_amount: Number(matchedApp.ticket_expected_amount || 0),
             payment_matched_by: 'auto_import',
             payment_matched_at: new Date().toISOString()
-          }, `Zaimportowano wpĹ‚atÄ™ dla: ${matchedApp.first_name} ${matchedApp.last_name}`)
+          }, `Zaimportowano wpłatę dla: ${matchedApp.first_name} ${matchedApp.last_name}`)
           matchCount++
         }
       }
 
-      showNotification(`ZakoĹ„czono analizÄ™ pliku. Dopasowano automatycznie ${matchCount} pĹ‚atnoĹ›ci.`, 'success')
-      await loadEventData() // OdĹ›wieĹĽamy dane po imporcie
+      showNotification(`Zakończono analizę pliku. Dopasowano automatycznie ${matchCount} płatności.`, 'success')
+      await loadEventData() // Odświeżamy dane po imporcie
 
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d odczytu pliku z wyciÄ…giem: ' + err.message, 'error')
+      showNotification('Błąd odczytu pliku z wyciągiem: ' + err.message, 'error')
     } finally {
       setUpdating(false)
       if (e.target) e.target.value = '' // Reset inputu pliku
@@ -2795,21 +2873,21 @@ const patientQrMetrics = useMemo(() => ({
     ticket_status: 'waitlist',
     is_active_participant: false,
     status: 'pending'
-  }, 'Przeniesiono na listÄ™ rezerwowÄ…')
+  }, 'Przeniesiono na listę rezerwową')
 
   const cancelTicketParticipant = (app: any) => updateTicketApplication(app.id, {
     access_status: 'cancelled',
     ticket_status: 'cancelled',
     is_active_participant: false,
     status: 'rejected'
-  }, 'ZgĹ‚oszenie anulowane')
+  }, 'Zgłoszenie anulowane')
 
   const resetTicketParticipant = (app: any) => updateTicketApplication(app.id, {
     access_status: 'pending',
     ticket_status: 'new',
     is_active_participant: false,
     status: 'pending'
-  }, 'CofniÄ™to do oczekujÄ…cych')
+  }, 'Cofnięto do oczekujących')
 
   const handleSaveApplicationTicket = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2830,9 +2908,9 @@ const patientQrMetrics = useMemo(() => ({
       if (error) throw error
       setApplications(prev => prev.map(app => app.id === ticketApplicationForm.id ? { ...app, ...updates } : app))
       setIsTicketApplicationModalOpen(false)
-      showNotification('Dane biletu zgĹ‚oszenia zapisane', 'success')
+      showNotification('Dane biletu zgłoszenia zapisane', 'success')
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu zgĹ‚oszenia: ' + err.message, 'error')
+      showNotification('Błąd zapisu zgłoszenia: ' + err.message, 'error')
     } finally {
       setUpdating(false)
     }
@@ -2860,30 +2938,30 @@ const patientQrMetrics = useMemo(() => ({
         showNotification('Nowy pacjent dodany do bazy', 'success');
       }
 
-      await loadPatients(); // OdĹ›wieĹĽamy gĹ‚ĂłwnÄ… bazÄ™!
+      await loadPatients(); // Odświeżamy główną bazę!
       setIsPatientModalOpen(false);
       setPatientForm({});
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu pacjenta: ' + err.message, 'error');
+      showNotification('Błąd zapisu pacjenta: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeletePatient = async (id: string) => {
-    if (!confirm('UsunÄ…Ä‡ tego pacjenta i caĹ‚Ä… jego dokumentacjÄ™? Tej operacji nie moĹĽna cofnÄ…Ä‡.')) return;
+    if (!confirm('Usunąć tego pacjenta i całą jego dokumentację? Tej operacji nie można cofnąć.')) return;
     try {
       const { error } = await supabase.from('patients').delete().eq('id', id);
       if (error) throw error;
       await loadPatients();
-      showNotification('Pacjent usuniÄ™ty', 'success');
+      showNotification('Pacjent usunięty', 'success');
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d usuwania pacjenta: ' + err.message, 'error');
+      showNotification('Błąd usuwania pacjenta: ' + err.message, 'error');
     }
   };
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
-    const templateName = prompt('Podaj nazwÄ™ dla szablonu:', `${event?.title} - Szablon`);
+    const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
     if (!templateName) return;
 
     setUpdating(true);
@@ -2900,9 +2978,9 @@ const patientQrMetrics = useMemo(() => ({
       }]);
 
       if (error) throw error;
-      showNotification('Szablon zostaĹ‚ zapisany pomyĹ›lnie!', 'success');
+      showNotification('Szablon został zapisany pomyślnie!', 'success');
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d zapisu: ' + err.message, 'error');
+      showNotification('Błąd zapisu: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -2917,7 +2995,7 @@ const patientQrMetrics = useMemo(() => ({
       const updates = { ...editForm };
       const oldFileUrlsToDelete: string[] = [];
 
-      // KLUCZOWE: Prefixy w kluczach (np. image_1_url) muszÄ… byÄ‡ IDENTYCZNE jak nazwy kolumn w Supabase
+      // KLUCZOWE: Prefixy w kluczach (np. image_1_url) muszą być IDENTYCZNE jak nazwy kolumn w Supabase
       const filesToUpload = [
   { key: 'cover_image_url', file: newFiles.cover, prefix: 'cover' },
   { key: 'logo_url', file: newFiles.logo, prefix: 'logo' },
@@ -2935,7 +3013,7 @@ const patientQrMetrics = useMemo(() => ({
   { key: 'theme_image_4_url', file: newFiles.themeImg4, prefix: 'theme-4' }
 ];
 
-      // 1. Upload plikĂłw rĂłwnolegle
+      // 1. Upload plików równolegle
       const results = await Promise.all(
         filesToUpload.map(async (item) => {
           if (item.file) {
@@ -2949,7 +3027,7 @@ const patientQrMetrics = useMemo(() => ({
       // 2. Przypisanie URL z Cache-Bustingiem
       results.forEach(res => {
         if (res?.url) {
-          // UĹĽywamy backtickĂłw, aby dodaÄ‡ unikalny znacznik czasu
+          // Używamy backticków, aby dodać unikalny znacznik czasu
           const oldUrl = event?.[res.key] || editForm?.[res.key];
           if (oldUrl) oldFileUrlsToDelete.push(oldUrl);
           updates[res.key] = `${res.url}?t=${Date.now()}`;
@@ -2959,7 +3037,7 @@ const patientQrMetrics = useMemo(() => ({
 
       const { id: _id, created_at, business_id, ...cleanData } = updates;
 
-      // Opcjonalnie: usuwamy puste pola techniczne, jeĹ›li React je dodaĹ‚
+      // Opcjonalnie: usuwamy puste pola techniczne, jeśli React je dodał
       delete (cleanData as any).event_sessions;
 
       // 4. Zapis do bazy danych
@@ -2977,7 +3055,7 @@ const patientQrMetrics = useMemo(() => ({
 
       showNotification('Zmiany i multimedia zapisane!', 'success');
 
-      // 6. Resetowanie stanu plikĂłw lokalnych
+      // 6. Resetowanie stanu plików lokalnych
 
 setNewFiles({
   cover: null,
@@ -3007,7 +3085,7 @@ setNewFiles({
 
     } catch (err: any) {
       console.error("Critical Update Error:", err);
-      showNotification("BĹ‚Ä…d: " + err.message, 'error');
+      showNotification("Błąd: " + err.message, 'error');
     } finally {
       setUpdating(false);
     }
@@ -3046,20 +3124,20 @@ setNewFiles({
       setIsEditingSession(false);
       showNotification('Harmonogram zaktualizowany!', 'success');
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d: ' + err.message, 'error');
+      showNotification('Błąd: ' + err.message, 'error');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm('UsunÄ…Ä‡ tÄ™ sesjÄ™ z harmonogramu?')) return;
+    if (!confirm('Usunąć tę sesję z harmonogramu?')) return;
     try {
       await supabase.from('event_sessions').delete().eq('id', sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
-      showNotification('Sesja usuniÄ™ta', 'success');
+      showNotification('Sesja usunięta', 'success');
     } catch (err: any) {
-      showNotification('BĹ‚Ä…d usuwania: ' + err.message, 'error');
+      showNotification('Błąd usuwania: ' + err.message, 'error');
     }
   };
 
@@ -3101,7 +3179,7 @@ const handleSavePartner = async (e: React.FormEvent) => {
     setNewFiles({ ...newFiles, partnerPhoto: null });
     setIsEditingPartner(false);
     showNotification('Lekarz zapisany', 'success');
-  } catch (err: any) { showNotification('BĹ‚Ä…d zapisu lekarza: ' + (err?.message || 'nieznany bĹ‚Ä…d'), 'error'); } finally { setUpdating(false); }
+  } catch (err: any) { showNotification('Błąd zapisu lekarza: ' + (err?.message || 'nieznany błąd'), 'error'); } finally { setUpdating(false); }
 };
 
 const handleSavePreparation = async (e: React.FormEvent) => {
@@ -3144,20 +3222,20 @@ const handleSavePreparation = async (e: React.FormEvent) => {
     setNewFiles({ ...newFiles, partnerPhoto: null });
     showNotification('Preparat zapisany', 'success');
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d zapisu preparatu: ' + (err?.message || 'nieznany bĹ‚Ä…d'), 'error');
+    showNotification('Błąd zapisu preparatu: ' + (err?.message || 'nieznany błąd'), 'error');
   } finally {
     setUpdating(false);
   }
 };
 
 const handleDeletePartner = async (id: string) => {
-  if (!confirm('UsunÄ…Ä‡?')) return;
+  if (!confirm('Usunąć?')) return;
   try {
     const { error } = await supabase.from('event_partners').delete().eq('id', id);
     if (error) throw error;
     await loadPartners();
-    showNotification('UsuniÄ™to', 'success');
-  } catch (err: any) { showNotification('BĹ‚Ä…d usuwania: ' + (err?.message || 'nieznany bĹ‚Ä…d'), 'error'); }
+    showNotification('Usunięto', 'success');
+  } catch (err: any) { showNotification('Błąd usuwania: ' + (err?.message || 'nieznany błąd'), 'error'); }
 };
 
 const loadChecklist = useCallback(async () => {
@@ -3214,14 +3292,14 @@ const handleSaveChecklistGroup = async (e: React.FormEvent) => {
     setChecklistGroupForm({})
     showNotification('Lista zapisana', 'success')
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d zapisu listy: ' + err.message, 'error')
+    showNotification('Błąd zapisu listy: ' + err.message, 'error')
   } finally {
     setUpdating(false)
   }
 }
 
 const handleDeleteChecklistGroup = async (groupId: string) => {
-  if (!confirm('UsunÄ…Ä‡ tÄ™ listÄ™ razem ze wszystkimi zadaniami?')) return
+  if (!confirm('Usunąć tę listę razem ze wszystkimi zadaniami?')) return
 
   try {
     const { error: itemsError } = await supabase
@@ -3239,9 +3317,9 @@ const handleDeleteChecklistGroup = async (groupId: string) => {
     if (error) throw error
 
     await loadChecklist()
-    showNotification('Lista usuniÄ™ta', 'success')
+    showNotification('Lista usunięta', 'success')
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d usuwania listy: ' + err.message, 'error')
+    showNotification('Błąd usuwania listy: ' + err.message, 'error')
   }
 }
 
@@ -3253,7 +3331,7 @@ const handleSaveChecklistItem = async (e: React.FormEvent) => {
     const groupId = checklistItemForm.group_id || activeChecklistGroupId
 
     if (!groupId) {
-      showNotification('Najpierw wybierz listÄ™', 'error')
+      showNotification('Najpierw wybierz listę', 'error')
       return
     }
 
@@ -3293,7 +3371,7 @@ const handleSaveChecklistItem = async (e: React.FormEvent) => {
     setActiveChecklistGroupId(null)
     showNotification('Zadanie zapisane', 'success')
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d zapisu zadania: ' + err.message, 'error')
+    showNotification('Błąd zapisu zadania: ' + err.message, 'error')
   } finally {
     setUpdating(false)
   }
@@ -3321,12 +3399,12 @@ const handleToggleChecklistItem = async (item: any) => {
       )
     )
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d aktualizacji zadania', 'error')
+    showNotification('Błąd aktualizacji zadania', 'error')
   }
 }
 
 const handleDeleteChecklistItem = async (itemId: string) => {
-  if (!confirm('UsunÄ…Ä‡ to zadanie?')) return
+  if (!confirm('Usunąć to zadanie?')) return
 
   try {
     const { error } = await supabase
@@ -3337,9 +3415,9 @@ const handleDeleteChecklistItem = async (itemId: string) => {
     if (error) throw error
 
     setChecklistItems(prev => prev.filter(i => i.id !== itemId))
-    showNotification('Zadanie usuniÄ™te', 'success')
+    showNotification('Zadanie usunięte', 'success')
   } catch (err: any) {
-    showNotification('BĹ‚Ä…d usuwania zadania', 'error')
+    showNotification('Błąd usuwania zadania', 'error')
   }
 }
 
@@ -3356,7 +3434,7 @@ const toggleChecklistGroupOpen = async (group: any) => {
     .eq('id', group.id)
 }
 // ============================================================================
-// ----- 4.5. EFEKT GĹĂ“WNY (Ĺ‚adowanie danych) -----
+// ----- 4.5. EFEKT GŁÓWNY (ładowanie danych) -----
 // ============================================================================
 const loadEventData = useCallback(async () => {
     try {
@@ -3411,7 +3489,7 @@ const { data: checklistItemData } = await supabase
       calculateEcoMetrics(apps || [])
 
     } catch (error) {
-      showNotification('BĹ‚Ä…d Ĺ‚adowania danych', 'error')
+      showNotification('Błąd ładowania danych', 'error')
     } finally {
       setLoading(false)
     }
@@ -3433,13 +3511,13 @@ const transportAnalytics = useMemo(() => {
   const groups: Record<string, { total: number; guests: number; companions: number; kids: number }> = {};
 
   applications
-    .filter(a => a.status === 'approved' && a.transport !== 'WĹ‚asny dojazd' && a.transport_address)
+    .filter(a => a.status === 'approved' && a.transport !== 'Własny dojazd' && a.transport_address)
     .forEach(app => {
-      // Bezpieczne wyciÄ…gniÄ™cie miasta - ostatni czĹ‚on po przecinku, jeĹ›li brak przecinka - caĹ‚oĹ›Ä‡
+      // Bezpieczne wyciągnięcie miasta - ostatni człon po przecinku, jeśli brak przecinka - całość
       const raw = app.transport_address.trim();
       const parts = raw.split(',');
       let city = parts.length > 1 ? parts.pop()?.trim() : raw;
-      if (!city) city = 'NieokreĹ›lone';
+      if (!city) city = 'Nieokreślone';
 
       const compCount = parseCompanionCount(app.companion);
       const kidsCount = parseKidsCount(app.kids);
@@ -3590,7 +3668,7 @@ const transportAnalytics = useMemo(() => {
     return {
       meals: mealChoices.map((choice: any) => ({
         ...choice,
-        label: meals.find((meal: any) => meal.id === choice.meal_id)?.name || choice.meal_id || 'PosiĹ‚ek'
+        label: meals.find((meal: any) => meal.id === choice.meal_id)?.name || choice.meal_id || 'Posiłek'
       })),
       gadgets: gadgetChoiceRows.map((choice: any) => ({
         ...choice,
@@ -3861,7 +3939,7 @@ const transportAnalytics = useMemo(() => {
     const vegeMeals = safeMeals.filter((meal: any) => {
       const text = `${meal.dietary_category || ''} ${meal.meal_type || ''} ${meal.name || ''}`.toLowerCase()
 
-      return ['vege', 'vegetarian', 'wegetariaĹ„', 'vegan', 'wegan', 'plant'].some((word) =>
+      return ['vege', 'vegetarian', 'wegetariań', 'vegan', 'wegan', 'plant'].some((word) =>
         text.includes(word)
       )
     }).length
@@ -3943,99 +4021,99 @@ const transportAnalytics = useMemo(() => {
 
     if (foodWasteRisk > 25) {
       recommendations.push({
-        title: 'Domknij RSVP przed zamĂłwieniem cateringu',
-        description: 'CzÄ™Ĺ›Ä‡ osĂłb nie potwierdziĹ‚a obecnoĹ›ci, co zwiÄ™ksza ryzyko nadwyĹĽek jedzenia.',
+        title: 'Domknij RSVP przed zamówieniem cateringu',
+        description: 'Część osób nie potwierdziła obecności, co zwiększa ryzyko nadwyżek jedzenia.',
         impact: 'wysoki',
-        co2: 'Ĺ›rednia redukcja',
-        actionLabel: 'PrzejdĹş do zgĹ‚oszeĹ„',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do zgłoszeń',
         area: 'RSVP'
       })
     }
 
     if (foodWastePortionsRisk > 0) {
       recommendations.push({
-        title: 'Doprecyzuj liczbÄ™ porcji przed zamĂłwieniem cateringu',
+        title: 'Doprecyzuj liczbę porcji przed zamówieniem cateringu',
         description: `Szacunkowo ${foodWastePortionsRisk} porcji jest jeszcze obarczonych ryzykiem przez brak potwierdzenia RSVP.`,
         impact: 'wysoki',
         co2: 'redukcja food waste',
-        actionLabel: 'SprawdĹş RSVP',
+        actionLabel: 'Sprawdź RSVP',
         area: 'Catering'
       })
     }
 
     if (avoidedPrintsCount < totalApplications) {
       recommendations.push({
-        title: 'PrzenieĹ› wiÄ™cej materiaĹ‚Ăłw do wersji cyfrowej',
-        description: 'Im wiÄ™cej informacji trafia na stronÄ™ uczestnika i Event Pass, tym mniej wydrukĂłw trzeba przygotowaÄ‡.',
-        impact: 'Ĺ›redni',
+        title: 'Przenieś więcej materiałów do wersji cyfrowej',
+        description: 'Im więcej informacji trafia na stronę uczestnika i Event Pass, tym mniej wydruków trzeba przygotować.',
+        impact: 'średni',
         co2: 'papier i transport',
-        actionLabel: 'PrzejdĹş do strony uczestnika',
-        area: 'MateriaĹ‚y'
+        actionLabel: 'Przejdź do strony uczestnika',
+        area: 'Materiały'
       })
     }
 
     if (realCarpoolingChoices === 0 && activeParticipantsCount > 10) {
       recommendations.push({
         title: 'Uruchom carpooling lub transport zbiorowy',
-        description: 'Przy wiÄ™kszej liczbie uczestnikĂłw transport zwykle ma najwiÄ™kszy wpĹ‚yw na emisje.',
+        description: 'Przy większej liczbie uczestników transport zwykle ma największy wpływ na emisje.',
         impact: 'wysoki',
         co2: 'wysoka redukcja',
-        actionLabel: 'PrzejdĹş do transportu',
+        actionLabel: 'Przejdź do transportu',
         area: 'Transport'
       })
     }
 
     if (realCarpoolingChoices === 0 && activeCarpoolAds > 0) {
       recommendations.push({
-        title: 'Przypomnij goĹ›ciom o wspĂłlnych przejazdach',
-        description: 'Masz aktywne ogĹ‚oszenia carpooling, ale brak potwierdzonych wyborĂłw uczestnikĂłw.',
-        impact: 'Ĺ›redni',
-        co2: 'transport wspĂłĹ‚dzielony',
-        actionLabel: 'PrzejdĹş do transportu',
+        title: 'Przypomnij gościom o wspólnych przejazdach',
+        description: 'Masz aktywne ogłoszenia carpooling, ale brak potwierdzonych wyborów uczestników.',
+        impact: 'średni',
+        co2: 'transport współdzielony',
+        actionLabel: 'Przejdź do transportu',
         area: 'Transport'
       })
     }
 
     if (localSuppliersCount === 0 && safeContractors.length > 0) {
       recommendations.push({
-        title: 'Dodaj lokalnych podwykonawcĂłw',
-        description: 'Lokalni dostawcy mogÄ… ograniczyÄ‡ transport, koszty logistyczne i emisje.',
-        impact: 'Ĺ›redni',
-        co2: 'Ĺ›rednia redukcja',
-        actionLabel: 'PrzejdĹş do podwykonawcĂłw',
+        title: 'Dodaj lokalnych podwykonawców',
+        description: 'Lokalni dostawcy mogą ograniczyć transport, koszty logistyczne i emisje.',
+        impact: 'średni',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do podwykonawców',
         area: 'Podwykonawcy'
       })
     }
 
     if (localBudgetShare < 30 && safeContractors.length > 0) {
       recommendations.push({
-        title: 'ZwiÄ™ksz udziaĹ‚ lokalnych dostawcĂłw w budĹĽecie',
-        description: 'Lokalni podwykonawcy mogÄ… obniĹĽyÄ‡ logistykÄ™, czas dostaw i emisje zwiÄ…zane z transportem usĹ‚ug.',
-        impact: 'Ĺ›redni',
+        title: 'Zwiększ udział lokalnych dostawców w budżecie',
+        description: 'Lokalni podwykonawcy mogą obniżyć logistykę, czas dostaw i emisje związane z transportem usług.',
+        impact: 'średni',
         co2: 'logistyka lokalna',
-        actionLabel: 'PrzejdĹş do podwykonawcĂłw',
-        area: 'BudĹĽet'
+        actionLabel: 'Przejdź do podwykonawców',
+        area: 'Budżet'
       })
     }
 
     if (safeMeals.length > 0 && vegeMeals / safeMeals.length < 0.3) {
       recommendations.push({
-        title: 'ZwiÄ™ksz udziaĹ‚ menu roĹ›linnego',
-        description: 'WiÄ™kszy udziaĹ‚ opcji vege lub vegan moĹĽe ograniczyÄ‡ Ĺ›lad Ĺ›rodowiskowy cateringu.',
-        impact: 'Ĺ›redni',
-        co2: 'Ĺ›rednia redukcja',
-        actionLabel: 'PrzejdĹş do menu',
+        title: 'Zwiększ udział menu roślinnego',
+        description: 'Większy udział opcji vege lub vegan może ograniczyć ślad środowiskowy cateringu.',
+        impact: 'średni',
+        co2: 'średnia redukcja',
+        actionLabel: 'Przejdź do menu',
         area: 'Menu'
       })
     }
 
     if (circularityScore < 60) {
       recommendations.push({
-        title: 'PodnieĹ› wynik GOZ przez RSVP, carpooling i lokalnych dostawcĂłw',
-        description: 'NajwiÄ™kszy efekt dadzÄ…: domkniÄ™cie listy obecnoĹ›ci, transport wspĂłĹ‚dzielony oraz lokalny Ĺ‚aĹ„cuch dostaw.',
+        title: 'Podnieś wynik GOZ przez RSVP, carpooling i lokalnych dostawców',
+        description: 'Największy efekt dadzą: domknięcie listy obecności, transport współdzielony oraz lokalny łańcuch dostaw.',
         impact: 'wysoki',
         co2: 'systemowa redukcja',
-        actionLabel: 'Zobacz analizÄ™ obszarĂłw',
+        actionLabel: 'Zobacz analizę obszarów',
         area: 'GOZ'
       })
     }
@@ -4043,7 +4121,7 @@ const transportAnalytics = useMemo(() => {
     if (recommendations.length === 0) {
       recommendations.push({
         title: 'Brak krytycznych ryzyk',
-        description: 'Na podstawie aktualnych danych AI Eco Engine nie wykryĹ‚ pilnych ryzyk Ĺ›rodowiskowych.',
+        description: 'Na podstawie aktualnych danych AI Eco Engine nie wykrył pilnych ryzyk środowiskowych.',
         impact: 'niski',
         co2: 'monitoring',
         actionLabel: 'Kontynuuj monitoring',
@@ -4057,14 +4135,14 @@ const transportAnalytics = useMemo(() => {
         status: transportEfficiency > 60 || realCarpoolingChoices > 0 ? 'dobrze' : 'wymaga uwagi',
         value: `${transportEfficiency}%`,
         description: realCarpoolingChoices > 0
-          ? 'Wykryto realne wybory carpooling lub transport wspĂłĹ‚dzielony.'
-          : 'Warto zachÄ™ciÄ‡ uczestnikĂłw do wspĂłlnych przejazdĂłw.'
+          ? 'Wykryto realne wybory carpooling lub transport współdzielony.'
+          : 'Warto zachęcić uczestników do wspólnych przejazdów.'
       },
       {
         name: 'RSVP / Catering',
         status: foodWasteRisk > 25 ? 'ryzyko' : 'dobrze',
         value: `${foodWasteRisk}%`,
-        description: 'Ryzyko nadwyĹĽek jedzenia zaleĹĽne od niepotwierdzonych RSVP.'
+        description: 'Ryzyko nadwyżek jedzenia zależne od niepotwierdzonych RSVP.'
       },
       {
         name: 'Menu',
@@ -4073,28 +4151,28 @@ const transportAnalytics = useMemo(() => {
         description: 'Liczba pozycji vege / vegan wykrytych w menu.'
       },
       {
-        name: 'MateriaĹ‚y cyfrowe',
+        name: 'Materiały cyfrowe',
         status: avoidedPrintsCount > 0 ? 'dobrze' : 'monitoring',
         value: `${avoidedPrintsCount}`,
-        description: 'Szacowana liczba unikniÄ™tych wydrukĂłw dziÄ™ki stronie uczestnika i cyfrowemu Event Pass.'
+        description: 'Szacowana liczba unikniętych wydruków dzięki stronie uczestnika i cyfrowemu Event Pass.'
       },
       {
-        name: 'BudĹĽet',
-        status: estimatedCostSavings > 0 ? 'potencjaĹ‚ oszczÄ™dnoĹ›ci' : 'monitoring',
+        name: 'Budżet',
+        status: estimatedCostSavings > 0 ? 'potencjał oszczędności' : 'monitoring',
         value: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN`,
-        description: 'Potencjalne oszczÄ™dnoĹ›ci z cyfryzacji, mniejszych nadwyĹĽek i dokĹ‚adniejszego cateringu.'
+        description: 'Potencjalne oszczędności z cyfryzacji, mniejszych nadwyżek i dokładniejszego cateringu.'
       },
       {
         name: 'Podwykonawcy',
         status: localSuppliersCount > 0 ? 'dobrze' : 'wymaga uwagi',
         value: `${localSuppliersCount}`,
-        description: 'Liczba lokalnych lub wysoko ocenionych eco dostawcĂłw.'
+        description: 'Liczba lokalnych lub wysoko ocenionych eco dostawców.'
       },
       {
         name: 'ReSOLVE',
         status: circularityScore >= 70 ? 'mocny wynik' : 'do wzmocnienia',
         value: `${circularityScore}%`,
-        description: 'ĹÄ…czny wynik obiegu zamkniÄ™tego na podstawie Virtualize, Optimize/Share, Loop, Exchange i Regenerate.'
+        description: 'Łączny wynik obiegu zamkniętego na podstawie Virtualize, Optimize/Share, Loop, Exchange i Regenerate.'
       }
     ]
 
@@ -4102,7 +4180,7 @@ const transportAnalytics = useMemo(() => {
       current: {
         label: 'Obecny plan',
         co2: totalCo2Saved,
-        cost: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN potencjaĹ‚u`,
+        cost: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN potencjału`,
         waste: `${Math.max(foodWasteRisk, gadgetWasteRisk)}%`
       },
       optimized: {
@@ -4117,17 +4195,17 @@ const transportAnalytics = useMemo(() => {
       {
         label: 'Cyfrowe zaproszenia',
         value: `${digitalInvitesCo2Saved} kg`,
-        detail: `${totalApplications} zgĹ‚oszeĹ„ / zaproszeĹ„`
+        detail: `${totalApplications} zgłoszeń / zaproszeń`
       },
       {
         label: 'Transport',
         value: `${transportCo2Saved} kg`,
-        detail: `${realCarpoolingChoices} realnych wyborĂłw carpooling, ${activeCarpoolAds} aktywnych ogĹ‚oszeĹ„, flota: ${fleetCapacity} miejsc`
+        detail: `${realCarpoolingChoices} realnych wyborów carpooling, ${activeCarpoolAds} aktywnych ogłoszeń, flota: ${fleetCapacity} miejsc`
       },
       {
         label: 'Plastik i papier',
         value: `${plasticCo2Saved} kg`,
-        detail: 'cyfrowe materiaĹ‚y, event pass i ograniczenie wydrukĂłw'
+        detail: 'cyfrowe materiały, event pass i ograniczenie wydruków'
       },
       {
         label: 'Menu / catering',
@@ -4135,14 +4213,14 @@ const transportAnalytics = useMemo(() => {
         detail: `${vegeMeals} pozycji vege / vegan`
       },
       {
-        label: 'UnikniÄ™te wydruki',
+        label: 'Uniknięte wydruki',
         value: `${avoidedPrintsCount} szt.`,
-        detail: 'zaproszenia, identyfikatory, materiaĹ‚y i informacje przeniesione do kanaĹ‚Ăłw cyfrowych'
+        detail: 'zaproszenia, identyfikatory, materiały i informacje przeniesione do kanałów cyfrowych'
       },
       {
         label: 'Papier',
         value: `${paperSavedKg} kg`,
-        detail: 'szacunek masy papieru niewydrukowanego dziÄ™ki cyfrowemu flow'
+        detail: 'szacunek masy papieru niewydrukowanego dzięki cyfrowemu flow'
       },
       {
         label: 'Food waste',
@@ -4150,9 +4228,9 @@ const transportAnalytics = useMemo(() => {
         detail: 'porcje obarczone ryzykiem przez niepotwierdzone RSVP'
       },
       {
-        label: 'BudĹĽet / oszczÄ™dnoĹ›ci',
+        label: 'Budżet / oszczędności',
         value: `${estimatedCostSavings.toLocaleString('pl-PL')} PLN`,
-        detail: 'potencjaĹ‚ z wydrukĂłw, gadĹĽetĂłw i lepszego domkniÄ™cia cateringu'
+        detail: 'potencjał z wydruków, gadżetów i lepszego domknięcia cateringu'
       },
       {
         label: 'ReSOLVE',
@@ -4265,7 +4343,7 @@ const transportAnalytics = useMemo(() => {
 
 
 // ============================================================================
-// ----- 4.7. RENDEROWANIE (JEĹšLI ĹADOWANIE) -----
+// ----- 4.7. RENDEROWANIE (JEŚLI ŁADOWANIE) -----
 // ============================================================================
 
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -4292,7 +4370,7 @@ const organizerCalendarEvents = useMemo(() => {
         date: task.date,
         time: task.time || '',
         title: task.task || 'Zadanie',
-        source: 'MinutĂłwka',
+        source: 'Minutówka',
         isCritical: task.isCritical === true,
         color: task.isCritical ? 'bg-red-500' : 'bg-[#253a2a]'
       })
@@ -4322,7 +4400,7 @@ const organizerCalendarEvents = useMemo(() => {
         id: `payment-${contractor.id}`,
         date: contractor.payment_due_date,
         time: '12:00',
-        title: `PĹ‚atnoĹ›Ä‡: ${contractor.name || 'podwykonawca'} (${contractor.gross_amount || contractor.amount || 0} PLN)`,
+        title: `Płatność: ${contractor.name || 'podwykonawca'} (${contractor.gross_amount || contractor.amount || 0} PLN)`,
         source: 'Finanse',
         isCritical: true,
         color: 'bg-amber-500'
@@ -4342,7 +4420,7 @@ const organizerItems = useMemo(() => {
   const rosItems = (runOfShow || []).map((task: any) => ({
     id: task.id,
     source: 'run_of_show',
-    sourceLabel: 'MinutĂłwka',
+    sourceLabel: 'Minutówka',
     date: task.date || eventDate,
     time: task.time || '',
     title: task.task || 'Zadanie',
@@ -4418,41 +4496,41 @@ const aiOrganizerTips = useMemo(() => {
   const tips: string[] = []
 
   if (organizerStats.critical > 0) {
-    tips.push('Masz aktywne punkty krytyczne. Zacznij odprawÄ™ ekipy wĹ‚aĹ›nie od nich.')
+    tips.push('Masz aktywne punkty krytyczne. Zacznij odprawę ekipy właśnie od nich.')
   }
 
   if (organizerStats.pending > 8) {
-    tips.push('Lista operacyjna jest dĹ‚uga. Podziel zadania na osoby odpowiedzialne, ĹĽeby uniknÄ…Ä‡ chaosu w dniu eventu.')
+    tips.push('Lista operacyjna jest długa. Podziel zadania na osoby odpowiedzialne, żeby uniknąć chaosu w dniu eventu.')
   }
 
   if ((sessions || []).length > 0 && runOfShow.length === 0) {
-    tips.push('Masz agendÄ™, ale nie masz minutĂłwki technicznej. Warto przepisaÄ‡ najwaĹĽniejsze punkty agendy na zadania operacyjne.')
+    tips.push('Masz agendę, ale nie masz minutówki technicznej. Warto przepisać najważniejsze punkty agendy na zadania operacyjne.')
   }
 
   if (upcomingOrganizerItems.length === 0) {
-    tips.push('Brak najbliĹĽszych terminĂłw. Dodaj pierwsze zadania operacyjne, np. odbiĂłr dekoracji, kontakt z cateringiem lub prĂłbÄ™ technicznÄ….')
+    tips.push('Brak najbliższych terminów. Dodaj pierwsze zadania operacyjne, np. odbiór dekoracji, kontakt z cateringiem lub próbę techniczną.')
   }
 
   return tips.slice(0, 3)
 }, [organizerStats, sessions, runOfShow.length, upcomingOrganizerItems.length])
 // ============================================================================
-// ----- 4.7. RENDEROWANIE (JEĹšLI ĹADOWANIE) -----
+// ----- 4.7. RENDEROWANIE (JEŚLI ŁADOWANIE) -----
 // ============================================================================
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="text-center px-4">
         <RefreshCw size={48} className="animate-spin text-[#253a2a] mx-auto mb-4" />
-        <p className="font-black text-slate-700 text-lg">Ĺadowanie panelu operacyjnego...</p>
+        <p className="font-black text-slate-700 text-lg">Ładowanie panelu operacyjnego...</p>
         <p className="text-xs text-slate-500 mt-2">Przygotowujemy dane biznesowe</p>
       </div>
     </div>
   )
 // ============================================================================
-// ----- 4.8. KOMPONENT POMOCNICZY TabButton (wewnÄ…trz) -----
+// ----- 4.8. KOMPONENT POMOCNICZY TabButton (wewnątrz) -----
 // ============================================================================
 
-// PodmieĹ„ tÄ™ funkcjÄ™ w swoim pliku!
+// Podmień tę funkcję w swoim pliku!
 const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   tabId: TabModule, icon: any, label: string, count?: number, urgent?: boolean
 }) => {
@@ -4506,14 +4584,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
         { tabId: 'prelegenci' as TabModule, icon: Stethoscope, label: 'Lekarze', count: doctorProfiles.length },
         { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
-        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'ĹšcieĹĽka pacjenta', count: approvedApps.length }
+        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
     },
     {
       title: 'Pierwszy kontakt',
       desc: 'Leady, rejestracja i follow-up',
       items: [
-        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentĂłw', count: pendingApps.length, urgent: true },
+        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
         { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
@@ -4521,11 +4599,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ]
     },
     {
-      title: 'EfektywnoĹ›Ä‡ kliniki',
-      desc: 'KPI, finanse i zarzÄ…dzanie placĂłwkÄ…',
+      title: 'Efektywność kliniki',
+      desc: 'KPI, finanse i zarządzanie placówką',
       items: [
         { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
-        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'PĹ‚atnoĹ›ci i koszty' },
+        { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
         { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' }
       ]
     }
@@ -4534,7 +4612,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   const orderedNavGroups = [navGroups[1], navGroups[0], navGroups[2]]
 
   // ==========================================================================
-  // 5. RENDER GĹĂ“WNY nie zamykaj zamniesz wszystko
+  // 5. RENDER GŁÓWNY nie zamykaj zamniesz wszystko
   // ==========================================================================
 
  return (
@@ -4790,11 +4868,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-3">
                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
                     <span className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>
-                      {isMedicalDocumentAssistant ? 'Medical Document AI' : 'Asystent treĹ›ci AI'}
+                      {isMedicalDocumentAssistant ? 'Medical Document AI' : 'Asystent treści AI'}
                     </span>
                   </div>
                   <h3 className="text-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    {isMedicalDocumentAssistant ? 'Szkic dokumentu medycznego' : 'Magia sĹ‚Ăłw'}
+                    {isMedicalDocumentAssistant ? 'Szkic dokumentu medycznego' : 'Magia słów'}
                   </h3>
                   <p className={`text-xs mt-1 font-bold tracking-widest uppercase flex flex-wrap items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Edit3 size={12} /> Edytujesz:
@@ -4815,7 +4893,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="p-6 md:p-8 space-y-6">
                 {isMedicalDocumentAssistant && (
                   <div className={`rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed ${isDarkMode ? 'bg-amber-500/10 border-amber-500/25 text-amber-100' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-                    AI tworzy wyĹ‚Ä…cznie roboczy projekt dokumentu. Przed uĹĽyciem z pacjentem treĹ›Ä‡ musi zostaÄ‡ sprawdzona i zatwierdzona przez osobÄ™ uprawnionÄ… medycznie oraz, w razie potrzeby, prawnie.
+                    AI tworzy wyłącznie roboczy projekt dokumentu. Przed użyciem z pacjentem treść musi zostać sprawdzona i zatwierdzona przez osobę uprawnioną medycznie oraz, w razie potrzeby, prawnie.
                   </div>
                 )}
 
@@ -4851,23 +4929,23 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <option value="premium">Premium / luksusowy</option>
                       <option value="prosty">Prosty / klarowny</option>
                       <option value="formalny">Formalny / biznesowy</option>
-                      <option value="energiczny">Energiczny / angaĹĽujÄ…cy</option>
+                      <option value="energiczny">Energiczny / angażujący</option>
                       <option value="eco">Eco / odpowiedzialny</option>
                     </select>
                   </div>
                   )}
                   <div className="space-y-2">
                     <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
-                      <Type size={14} /> DĹ‚ugoĹ›Ä‡ tekstu
+                      <Type size={14} /> Długość tekstu
                     </label>
                     <select
                       className={`w-full rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white'}`}
                       value={aiTextLength}
                       onChange={e => setAiTextLength(e.target.value)}
                     >
-                      <option value="krĂłtka">ZwiÄ™zĹ‚a / krĂłtka</option>
-                      <option value="Ĺ›rednia">Ĺšrednia / optymalna</option>
-                      <option value="rozbudowana">Rozbudowana / dĹ‚uga</option>
+                      <option value="krótka">Zwięzła / krótka</option>
+                      <option value="średnia">Średnia / optymalna</option>
+                      <option value="rozbudowana">Rozbudowana / długa</option>
                     </select>
                   </div>
                 </div>
@@ -4879,7 +4957,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <textarea
                     rows={2}
                     className={`w-full rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40 placeholder-slate-500' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white placeholder-slate-400'}`}
-                    placeholder={isMedicalDocumentAssistant ? 'Np. zabieg laserowy CO2, przeciwwskazania, zalecenia, ryzyka, ton formalny dla pacjenta...' : 'Np. podkreĹ›l networking, ogranicz formalny ton, dodaj akcent eco...'}
+                    placeholder={isMedicalDocumentAssistant ? 'Np. zabieg laserowy CO2, przeciwwskazania, zalecenia, ryzyka, ton formalny dla pacjenta...' : 'Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco...'}
                     value={aiTextInstruction}
                     onChange={e => setAiTextInstruction(e.target.value)}
                   />
@@ -4894,16 +4972,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                     <span className="relative z-10 flex items-center gap-2.5">
                       {aiTextLoading ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} className="group-hover:animate-pulse" />}
-                    {aiTextLoading ? 'GenerujÄ™ szkic...' : (isMedicalDocumentAssistant ? 'Generuj szkic dokumentu' : 'Generuj treĹ›Ä‡')}
+                    {aiTextLoading ? 'Generuję szkic...' : (isMedicalDocumentAssistant ? 'Generuj szkic dokumentu' : 'Generuj treść')}
                     </span>
                   </button>
 
                 <div className="space-y-2 pt-2">
                   <label className={`text-[10px] font-black uppercase tracking-widest flex items-center justify-between gap-3 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> {isMedicalDocumentAssistant ? 'Roboczy szkic dokumentu' : 'Wygenerowana treĹ›Ä‡'}</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> {isMedicalDocumentAssistant ? 'Roboczy szkic dokumentu' : 'Wygenerowana treść'}</span>
                     {aiTextSuggestion && (
                       <span className={`text-[8px] px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-black/5 border-black/10 text-slate-500'}`}>
-                        {isMedicalDocumentAssistant ? 'Wymaga zatwierdzenia' : 'MoĹĽesz edytowaÄ‡ przed zapisem'}
+                        {isMedicalDocumentAssistant ? 'Wymaga zatwierdzenia' : 'Możesz edytować przed zapisem'}
                       </span>
                     )}
                   </label>
@@ -4911,7 +4989,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <textarea
                       rows={6}
                       className={`w-full rounded-2xl px-5 py-4 text-sm leading-relaxed outline-none resize-y transition-all border shadow-inner ${isDarkMode ? 'bg-black/40 border-emerald-500/30 text-emerald-50 focus:border-emerald-400 placeholder-slate-500' : 'bg-white border-emerald-200 text-slate-900 focus:border-emerald-500 placeholder-slate-400'}`}
-                      placeholder={aiTextAssistConfig.placeholder || (isMedicalDocumentAssistant ? 'Tu pojawi siÄ™ roboczy szkic dokumentu do weryfikacji...' : 'Tu pojawi siÄ™ gotowy tekst stworzony przez sztucznÄ… inteligencjÄ™...')}
+                      placeholder={aiTextAssistConfig.placeholder || (isMedicalDocumentAssistant ? 'Tu pojawi się roboczy szkic dokumentu do weryfikacji...' : 'Tu pojawi się gotowy tekst stworzony przez sztuczną inteligencję...')}
                       value={aiTextSuggestion}
                       onChange={e => setAiTextSuggestion(e.target.value)}
                     />
@@ -4925,13 +5003,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 {aiTextReason && (
                   <p className={`rounded-2xl border px-4 py-3 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-white/70 border-indigo-100 text-slate-600'}`}>
-                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>{isMedicalDocumentAssistant ? 'Uzasadnienie szkicu:' : 'AI uĹĽyĹ‚o:'}</span> {aiTextReason}
+                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>{isMedicalDocumentAssistant ? 'Uzasadnienie szkicu:' : 'AI użyło:'}</span> {aiTextReason}
                   </p>
                 )}
 
                 {aiTextMissingContext.length > 0 && (
                   <div className={`rounded-2xl border px-4 py-3 text-xs font-medium ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-                    <p className="font-black">BrakujÄ…ce dane, ktĂłre poprawiÄ… sugestiÄ™:</p>
+                    <p className="font-black">Brakujące dane, które poprawią sugestię:</p>
                     <ul className="mt-1 list-disc pl-4">
                       {aiTextMissingContext.map((item, index) => (
                         <li key={`${item}-${index}`}>{item}</li>
@@ -4955,7 +5033,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   disabled={!aiTextSuggestion.trim() || aiTextLoading}
                   className={`px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 border ${isDarkMode ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/40 hover:text-emerald-100' : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600'}`}
                 >
-                  {isMedicalDocumentAssistant ? 'Wstaw szkic do dokumentu' : 'Zastosuj treĹ›Ä‡'}
+                  {isMedicalDocumentAssistant ? 'Wstaw szkic do dokumentu' : 'Zastosuj treść'}
                 </button>
               </div>
             </div>
@@ -4971,13 +5049,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 p-5">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#253a2a]">
-                  AI podpowiedĹş treĹ›ci
+                  AI podpowiedź treści
                 </p>
                 <h3 className="mt-1 text-xl font-black text-slate-900">
                   {aiTextAssistConfig.sectionKey} / {aiTextAssistConfig.fieldKey}
                 </h3>
                 <p className="mt-1 text-xs font-medium text-slate-500">
-                  AI tylko proponuje tekst. Zapis nastÄ…pi dopiero po zapisaniu formularza.
+                  AI tylko proponuje tekst. Zapis nastąpi dopiero po zapisaniu formularza.
                 </p>
               </div>
               <button
@@ -5006,26 +5084,26 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">DĹ‚ugoĹ›Ä‡</label>
+                  <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Długość</label>
                   <select
                     value={aiTextLength}
                     onChange={e => setAiTextLength(e.target.value)}
                     className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-[#253a2a]"
                   >
-                    <option value="krĂłtka">krĂłtka</option>
-                    <option value="Ĺ›rednia">Ĺ›rednia</option>
+                    <option value="krótka">krótka</option>
+                    <option value="średnia">średnia</option>
                     <option value="rozbudowana">rozbudowana</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Dodatkowa wskazĂłwka dla AI</label>
+                <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">Dodatkowa wskazówka dla AI</label>
                 <textarea
                   rows={2}
                   value={aiTextInstruction}
                   onChange={e => setAiTextInstruction(e.target.value)}
-                  placeholder="Np. podkreĹ›l networking, ogranicz formalny ton, dodaj akcent eco..."
+                  placeholder="Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco..."
                   className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#253a2a]"
                 />
               </div>
@@ -5037,7 +5115,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#253a2a] px-5 py-4 text-xs font-black uppercase tracking-widest text-[#e8ce7a] shadow-sm transition hover:bg-[#1a291e] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <Sparkles size={15} className={aiTextLoading ? 'animate-pulse' : ''} />
-                {aiTextLoading ? 'GenerujÄ™ propozycjÄ™...' : 'Wygeneruj propozycjÄ™'}
+                {aiTextLoading ? 'Generuję propozycję...' : 'Wygeneruj propozycję'}
               </button>
 
               <div>
@@ -5046,20 +5124,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   rows={8}
                   value={aiTextSuggestion}
                   onChange={e => setAiTextSuggestion(e.target.value)}
-                  placeholder={aiTextAssistConfig.placeholder || 'Tutaj pojawi siÄ™ propozycja AI...'}
+                  placeholder={aiTextAssistConfig.placeholder || 'Tutaj pojawi się propozycja AI...'}
                   className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium leading-relaxed text-slate-900 outline-none focus:border-[#253a2a]"
                 />
               </div>
 
               {aiTextReason && (
                 <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600">
-                  <span className="font-black text-slate-900">AI uĹĽyĹ‚o:</span> {aiTextReason}
+                  <span className="font-black text-slate-900">AI użyło:</span> {aiTextReason}
                 </p>
               )}
 
               {aiTextMissingContext.length > 0 && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-900">
-                  <p className="font-black">BrakujÄ…ce dane, ktĂłre poprawiÄ… sugestiÄ™:</p>
+                  <p className="font-black">Brakujące dane, które poprawią sugestię:</p>
                   <ul className="mt-1 list-disc pl-4">
                     {aiTextMissingContext.map((item, index) => (
                       <li key={`${item}-${index}`}>{item}</li>
@@ -5166,10 +5244,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   Centrum pomocy
                 </p>
                 <h3 className={`text-sm font-black mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Instrukcje obsĹ‚ugi planera
+                  Instrukcje obsługi planera
                 </h3>
                 <p className={`text-[10px] font-medium mt-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Wybierz temat i otwĂłrz PDF w nowej karcie.
+                  Wybierz temat i otwórz PDF w nowej karcie.
                 </p>
               </div>
 
@@ -5254,7 +5332,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         )}
       </div>
 
-      {/* Znaczek ECO EVENT - Zaktualizowany na spĂłjne zĹ‚oto+grafit zamiast zieleni */}
+      {/* Znaczek ECO EVENT - Zaktualizowany na spójne złoto+grafit zamiast zieleni */}
       <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-colors ${
         isDarkMode
           ? 'bg-[#e8ce7a] text-[#0f172a]'
@@ -5270,7 +5348,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 <main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
 
  {/* ============================================================================ */}
-  {/* BANER LINKU / QR (Teraz z peĹ‚nym Dark Mode i bez starych kolorĂłw)  nie zamykaj zamniesz wszystko*/}
+  {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów)  nie zamykaj zamniesz wszystko*/}
  {/* ============================================================================ */}
         <div className={`rounded-[24px] md:rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-xl mb-6 md:mb-8 border transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-900 border-slate-800'}`}>
           <div className={`absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 rounded-full blur-3xl pointer-events-none ${isDarkMode ? 'bg-[#e8ce7a]/10' : 'bg-blue-500/20'}`}></div>
@@ -5284,7 +5362,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <Globe size={20} className="text-[#e8ce7a]" /> Centrum Dowodzenia ANM
                 </h3>
                 <p className="text-slate-400 text-xs md:text-sm mb-4 font-medium">
-                  UdostÄ™pnij link zaproszenia goĹ›ciom. QR na tym pasku prowadzi tylko do publicznej strony wydarzenia.
+                  Udostępnij link zaproszenia gościom. QR na tym pasku prowadzi tylko do publicznej strony wydarzenia.
                 </p>
                 <div className="bg-black/30 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Link zaproszenia</p>
@@ -5296,7 +5374,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <Copy size={14} /> Kopiuj link
                     </button>
                     <a href={publicLink} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-[#e8ce7a] hover:bg-[#d4b963] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5">
-                      <ExternalLink size={14} /> OtwĂłrz zaproszenie
+                      <ExternalLink size={14} /> Otwórz zaproszenie
                     </a>
                     <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 text-white">
                       <Printer size={14} /> Drukuj QR
@@ -5308,35 +5386,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className="xl:w-[340px] bg-black/30 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Link dla obsĹ‚ugi na miejscu</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Link dla obsługi na miejscu</p>
                 {quickStaffPassUrl ? (
                   <>
                     <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="block font-mono text-[11px] font-bold text-[#e8ce7a] truncate hover:underline mb-1">
                       {quickStaffPassShortUrl}
                     </a>
                     <p className="text-[10px] font-medium text-slate-400">
-                      Szybki dostÄ™p: {quickStaffAccess?.name || quickStaffAccess?.role || 'obsĹ‚uga'}
+                      Szybki dostęp: {quickStaffAccess?.name || quickStaffAccess?.role || 'obsługa'}
                     </p>
                   </>
                 ) : (
                   <div>
-                    <p className="text-xs font-bold text-slate-400">Brak dostÄ™pu obsĹ‚ugi</p>
+                    <p className="text-xs font-bold text-slate-400">Brak dostępu obsługi</p>
                   </div>
                 )}
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
                 {quickStaffPassUrl ? (
                   <>
-                    <button onClick={() => { navigator.clipboard.writeText(quickStaffPassUrl); showNotification('Link obsĹ‚ugi skopiowany', 'success') }} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
+                    <button onClick={() => { navigator.clipboard.writeText(quickStaffPassUrl); showNotification('Link obsługi skopiowany', 'success') }} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
                       <Copy size={14} /> Kopiuj
                     </button>
                     <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
-                      <ExternalLink size={14} /> OtwĂłrz
+                      <ExternalLink size={14} /> Otwórz
                     </a>
                   </>
                 ) : (
                   <button onClick={() => setActiveTab('eventpass')} className="w-full py-2.5 bg-[#e8ce7a] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider flex justify-center items-center gap-1.5">
-                    <ShieldCheck size={14} /> Skonfiguruj dostÄ™p
+                    <ShieldCheck size={14} /> Skonfiguruj dostęp
                   </button>
                 )}
               </div>
@@ -5345,7 +5423,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start">
 
-          {/* LEWY SIDEBAR (UĹĽywamy kolumn Grida zamiast pozycjonowania fixed!) */}
+          {/* LEWY SIDEBAR (Używamy kolumn Grida zamiast pozycjonowania fixed!) */}
           <aside className={`${isNavCollapsed ? 'lg:col-span-1 lg:w-[85px]' : 'lg:col-span-3'} lg:sticky lg:top-24 space-y-4 transition-all duration-300 z-20`}>
             <div className={`border rounded-[28px] backdrop-blur-xl transition-colors duration-300 ${isNavCollapsed ? 'p-2 shadow-sm' : 'p-4 shadow-sm'} ${isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}`}>
               <div className={`flex items-center justify-between ${isNavCollapsed ? 'mb-2' : 'mb-4'}`}>
@@ -5366,7 +5444,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   type="button"
                   onClick={() => setIsNavCollapsed(!isNavCollapsed)}
                   className={`${isNavCollapsed ? 'w-full' : 'ml-auto'} h-10 px-3 rounded-2xl transition-colors flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-                  title={isNavCollapsed ? 'PokaĹĽ menu' : 'Ukryj menu'}
+                  title={isNavCollapsed ? 'Pokaż menu' : 'Ukryj menu'}
                 >
                   {isNavCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
                 </button>
@@ -5397,7 +5475,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </aside>
 
-          {/* GĹ‚Ăłwna zawartoĹ›Ä‡ zajmuje caĹ‚Ä… dostÄ™pnÄ… szerokoĹ›Ä‡ po usuniÄ™ciu prawego panelu raportĂłw. */}
+          {/* Główna zawartość zajmuje całą dostępną szerokość po usunięciu prawego panelu raportów. */}
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
 
 {/* ============================================================================ */}
@@ -5406,7 +5484,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'strona_uczestnika' && (
   <form onSubmit={handleSaveParticipantPageSettings} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGĹĂ“WEK */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -5414,7 +5492,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Portal Pacjenta i e-Rejestracja
         </h3>
         <p className={`text-xs mt-1 font-medium max-w-2xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Skonfiguruj CyfrowÄ… ĹšcieĹĽkÄ™ Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje siÄ™ z informacjami o zabiegach.
+          Skonfiguruj Cyfrową Ścieżkę Pacjenta (Patient Experience). Wybierz sekcje widoczne w portalu, gdzie pacjent rezerwuje wizyty, pobiera zgody medyczne i zapoznaje się z informacjami o zabiegach.
         </p>
       </div>
 
@@ -5443,12 +5521,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Uwaga dla administratora systemu medycznego
         </p>
         <p className={`text-xs font-medium mt-1 leading-relaxed ${isDarkMode ? 'text-amber-500/80' : 'text-amber-900'}`}>
-          Ten edytor zarzÄ…dza strukturÄ… tabeli `b2b_events`. JeĹ›li integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych blokĂłw (np. historii zabiegowej), upewnij siÄ™, ĹĽe schemat SQL w Supabase zostaĹ‚ zaktualizowany.
+          Ten edytor zarządza strukturą tabeli `b2b_events`. Jeśli integracja z systemem rezerwacji (np. ZnanyLekarz/Booksy) lub nowym systemem CRM wymaga nowych bloków (np. historii zabiegowej), upewnij się, że schemat SQL w Supabase został zaktualizowany.
         </p>
       </div>
     </div>
 
-    {/* GĹĂ“WNA SIATKA SEKCJI PORTALU */}
+    {/* GŁÓWNA SIATKA SEKCJI PORTALU */}
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 md:gap-6">
       {publicSectionConfigs.map((section: any) => {
         const fields = getPublicSectionFields(section.key, section.actionField)
@@ -5482,7 +5560,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {section.label}
                   </h4>
                   <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                    Konfiguracja moduĹ‚u pacjenta
+                    Konfiguracja modułu pacjenta
                   </p>
                 </div>
               </div>
@@ -5503,10 +5581,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            {/* ZAWARTOĹšÄ† KAFELKA */}
+            {/* ZAWARTOŚĆ KAFELKA */}
             <div className={`p-5 md:p-6 space-y-5 transition-opacity ${!isSectionVisible && 'opacity-60 grayscale-[30%]'}`}>
 
-              {/* TOGGLES (WIDOCZNOĹšÄ† I AKCJA) */}
+              {/* TOGGLES (WIDOCZNOŚĆ I AKCJA) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
                   isSectionVisible
@@ -5515,7 +5593,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }`}>
                   <div className="pr-4">
                     <p className={`font-black text-sm ${isSectionVisible ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      PokaĹĽ w Portalu Pacjenta
+                      Pokaż w Portalu Pacjenta
                     </p>
                   </div>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -5568,7 +5646,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               {/* POLA TEKSTOWE */}
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuĹ‚ sekcji w Portalu</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł sekcji w Portalu</label>
                   <input
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={editForm?.[fields.title] || ''}
@@ -5586,7 +5664,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
 
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (PodtytuĹ‚)</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis dla pacjenta (Podtytuł)</label>
                   <textarea
                     rows={2}
                     className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -5612,13 +5690,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={editForm?.[fields.cta] || ''}
                       onChange={e => setEditForm({ ...editForm, [fields.cta]: e.target.value })}
-                      placeholder="np. UmĂłw konsultacjÄ™"
+                      placeholder="np. Umów konsultację"
                     />
                   </div>
 
-                  {/* ZdjÄ™cie TĹ‚a */}
+                  {/* Zdjęcie Tła */}
                   <div>
-                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjÄ™cie sekcji (np. gabinet, sprzÄ™t)</label>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie sekcji (np. gabinet, sprzęt)</label>
                     {fileKey ? (
                       <div className="relative">
                         <input
@@ -5638,7 +5716,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     )}
                     {editForm?.[fields.image] && (
                       <p className="text-[9px] font-mono mt-1.5 truncate text-blue-500 hover:underline cursor-help" title={editForm[fields.image]}>
-                        ZaĹ‚Ä…czony plik (kliknij by sprawdziÄ‡)
+                        Załączony plik (kliknij by sprawdzić)
                       </p>
                     )}
                   </div>
@@ -5660,7 +5738,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         }`}
       >
         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie struktury...' : 'Zapisz ukĹ‚ad Portalu Pacjenta'}
+        {updating ? 'Zapisywanie struktury...' : 'Zapisz układ Portalu Pacjenta'}
       </button>
     </div>
 
@@ -5673,20 +5751,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'edycja' && editForm && (
   <form onSubmit={handleUpdateEvent} className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* SEKCJA: TREĹšCI TEKSTOWE */}
+    {/* SEKCJA: TREŚCI TEKSTOWE */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="flex items-center gap-3 mb-6">
         <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
           <Globe size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          GĹ‚Ăłwne TreĹ›ci Strony
+          Główne Treści Strony
         </h3>
       </div>
 
       <div className="space-y-5">
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuĹ‚ wydarzenia</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł wydarzenia</label>
           <input
             className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
             value={editForm.title || ''}
@@ -5714,7 +5792,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             />
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spodziewana liczba goĹ›ci</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spodziewana liczba gości</label>
             <input
               type="number"
               className={`w-full border rounded-2xl px-4 py-3.5 font-bold outline-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -5725,13 +5803,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>PeĹ‚ny opis wydarzenia</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Pełny opis wydarzenia</label>
           <textarea
             rows={4}
             className={`w-full border rounded-2xl px-4 py-3.5 font-medium outline-none resize-none text-sm transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
             value={editForm.description || ''}
             onChange={e => setEditForm({...editForm, description: e.target.value})}
-            placeholder="Opisz krĂłtko czym jest to wydarzenie, kogo zapraszasz i czego moĹĽna siÄ™ spodziewaÄ‡."
+            placeholder="Opisz krótko czym jest to wydarzenie, kogo zapraszasz i czego można się spodziewać."
           />
           {/* NOWY PRZYCISK AI */}
           <AiTextAssistButton
@@ -5739,7 +5817,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             sectionKey="general"
             fieldKey="description"
             currentValue={editForm.description || ''}
-            placeholder="Skup siÄ™ na powitaniu goĹ›ci..."
+            placeholder="Skup się na powitaniu gości..."
             onApply={(text) => setEditForm({ ...editForm, description: text })}
           />
         </div>
@@ -5753,7 +5831,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <ImageIcon size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Multimedia (ZdjÄ™cia i Logo)
+          Multimedia (Zdjęcia i Logo)
         </h3>
       </div>
 
@@ -5771,7 +5849,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         {/* COVER/HERO */}
         <div className={`p-5 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjÄ™cie TĹ‚a (Hero)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie Tła (Hero)</label>
           <div className={`h-28 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             {getPreviewUrl(newFiles.cover, event?.cover_image_url) ? (
               <img src={getPreviewUrl(newFiles.cover, event?.cover_image_url)!} className="w-full h-full object-cover" alt="Hero preview" />
@@ -5782,7 +5860,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         {/* RSVP IMAGE */}
         <div className={`p-5 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjÄ™cie w RSVP</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie w RSVP</label>
           <div className={`h-28 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             {getPreviewUrl(newFiles.rsvpImg, event?.rsvp_image_url) ? (
               <img src={getPreviewUrl(newFiles.rsvpImg, event?.rsvp_image_url)!} className="w-full h-full object-cover" alt="RSVP preview" />
@@ -5797,7 +5875,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[1, 2, 3].map(num => (
             <div key={num} className={`p-4 rounded-2xl border-2 border-dashed transition-colors ${isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ZdjÄ™cie {num}</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie {num}</label>
               <div className={`h-24 w-full rounded-xl mb-4 overflow-hidden border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 {getPreviewUrl(newFiles[`img${num}` as keyof typeof newFiles], event?.[`image_${num}_url`]) ? (
                   <img src={getPreviewUrl(newFiles[`img${num}` as keyof typeof newFiles], event?.[`image_${num}_url`])!} className="w-full h-full object-cover" alt="Preview" />
@@ -5817,17 +5895,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <Palette size={22} />
         </div>
         <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          WyglÄ…d i Brand Book
+          Wygląd i Brand Book
         </h3>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-8">
         {[
-          { key: 'bg_color', label: 'TĹ‚o Strony' },
-          { key: 'card_bg_color', label: 'TĹ‚o KafelkĂłw' },
-          { key: 'heading_color', label: 'NagĹ‚Ăłwki' },
+          { key: 'bg_color', label: 'Tło Strony' },
+          { key: 'card_bg_color', label: 'Tło Kafelków' },
+          { key: 'heading_color', label: 'Nagłówki' },
           { key: 'text_color', label: 'Tekst (Akapity)' },
-          { key: 'primary_color', label: 'Akcent GĹ‚Ăłwny' },
+          { key: 'primary_color', label: 'Akcent Główny' },
           { key: 'secondary_color', label: 'Akcent Dodatkowy' }
         ].map(field => (
           <div key={field.key} className={`p-3 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
@@ -5842,7 +5920,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       <div className={`border-t pt-6 mb-8 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h4 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Kolory tĹ‚a konkretnych sekcji
+          Kolory tła konkretnych sekcji
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
@@ -5877,7 +5955,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Czcionka NagĹ‚ĂłwkĂłw</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Czcionka Nagłówków</label>
           <div className="space-y-2">
             <select
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
@@ -5893,7 +5971,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={getFontFamilyName(editForm.heading_font || 'Inter, sans-serif')}
               onChange={e => setEditForm({...editForm, heading_font: buildGoogleFontStack(e.target.value)})}
-              placeholder="Albo wpisz wĹ‚asnÄ… nazwÄ™"
+              placeholder="Albo wpisz własną nazwę"
             />
           </div>
         </div>
@@ -5915,21 +5993,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
               value={getFontFamilyName(editForm.body_font || 'Inter, sans-serif')}
               onChange={e => setEditForm({...editForm, body_font: buildGoogleFontStack(e.target.value)})}
-              placeholder="Albo wpisz wĹ‚asnÄ… nazwÄ™"
+              placeholder="Albo wpisz własną nazwę"
             />
           </div>
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KsztaĹ‚t ElementĂłw (Border Radius)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kształt Elementów (Border Radius)</label>
           <select
             className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
             value={editForm.element_shape || 'rounded-none'}
             onChange={e => setEditForm({...editForm, element_shape: e.target.value})}
           >
-            <option value="rounded-none">Ostre krawÄ™dzie (Kwadrat)</option>
-            <option value="rounded-xl">ZaokrÄ…glone (Soft)</option>
-            <option value="rounded-[40px]">Mocno zaokrÄ…glone (Pill)</option>
+            <option value="rounded-none">Ostre krawędzie (Kwadrat)</option>
+            <option value="rounded-xl">Zaokrąglone (Soft)</option>
+            <option value="rounded-[40px]">Mocno zaokrąglone (Pill)</option>
           </select>
         </div>
       </div>
@@ -5945,7 +6023,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         }`}
       >
         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-        {updating ? 'Zapisywanie plikĂłw...' : 'Zapisz Ustawienia Strony'}
+        {updating ? 'Zapisywanie plików...' : 'Zapisz Ustawienia Strony'}
       </button>
     </div>
 
@@ -5963,10 +6041,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <ShieldCheck size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          ZarzÄ…dzanie Pacjentem i DokumentacjÄ…
+          Zarządzanie Pacjentem i Dokumentacją
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Kontrola Karty 360, weryfikacja wywiadĂłw medycznych, wysyĹ‚ka zgĂłd i zarzÄ…dzanie historiÄ… leczenia.
+          Kontrola Karty 360, weryfikacja wywiadów medycznych, wysyłka zgód i zarządzanie historią leczenia.
         </p>
       </div>
 
@@ -5978,12 +6056,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Sparkles size={14} />
-          Kreator ZgĂłd AI
+          Kreator Zgód AI
         </button>
       </div>
     </div>
 
-    {/* SMART ALERT (Sygnalizacja bezpieczeĹ„stwa prawnego) */}
+    {/* SMART ALERT (Sygnalizacja bezpieczeństwa prawnego) */}
     <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors ${isDarkMode ? 'bg-gradient-to-r from-red-950/40 to-[#0f172a] border-red-900/50' : 'bg-gradient-to-r from-red-50 to-white border-red-100'}`}>
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}>
@@ -5997,7 +6075,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Wykryto braki w dokumentacji na dzisiejsze wizyty
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            System weryfikuje statusy na ĹĽywo. CzÄ™Ĺ›Ä‡ umĂłwionych pacjentĂłw nie uzupeĹ‚niĹ‚a wywiadu medycznego lub nie zaakceptowaĹ‚a zgody zabiegowej. Nie dopuszczaj ich do gabinetu przed uzupeĹ‚nieniem dokumentacji cyfrowej.
+            System weryfikuje statusy na żywo. Część umówionych pacjentów nie uzupełniła wywiadu medycznego lub nie zaakceptowała zgody zabiegowej. Nie dopuszczaj ich do gabinetu przed uzupełnieniem dokumentacji cyfrowej.
           </p>
         </div>
       </div>
@@ -6005,7 +6083,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-      {/* KOLUMNA 1: CENTRUM DOWODZENIA RECEPCJI (Wizyty i Baza PacjentĂłw) */}
+      {/* KOLUMNA 1: CENTRUM DOWODZENIA RECEPCJI (Wizyty i Baza Pacjentów) */}
       <div className="xl:col-span-2 space-y-6">
         
         {/* SEKCJA A: PACJENCI WYMAGAJACY DOKUMENTACJI */}
@@ -6041,39 +6119,43 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   const phone = String(patient.phone || '')
                   return fullName.includes(query) || pesel.includes(todayPatientSearch) || phone.includes(todayPatientSearch)
                 })
-                .filter(patient => (patientConsentsByPatientId[patient.id] || []).length < 2)
+                .filter(patient => {
+                  const consents = patientConsentsByPatientId[patient.id] || []
+                  const summary = getPatientDocumentSummary(consents)
+                  return consents.length === 0 || summary.hasPendingDocs || summary.hasMissingQuestionnaire
+                })
                 .map(patient => {
                   const rowKey = `docs-${patient.id}`
                   const isExpanded = expandedPatientDocs === rowKey
                   const consents = patientConsentsByPatientId[patient.id] || []
-                  const isMissingInterview = consents.length === 0
-                  const isMissingConsent = consents.length === 1
+                  const docSummary = getPatientDocumentSummary(consents)
+                  const isCritical = consents.length === 0 || docSummary.hasPendingDocs
+                  const warningLabel = consents.length === 0
+                    ? 'Brak dokumentacji pacjenta'
+                    : `${docSummary.pendingDocs.length} dokumentów do podpisu`
 
                   return (
                     <div key={patient.id} className={`rounded-[24px] border shadow-sm transition-colors overflow-hidden ${
-                      isMissingInterview ? (isDarkMode ? 'bg-[#1e293b] border-red-900/50' : 'bg-white border-red-200') :
-                      isMissingConsent ? (isDarkMode ? 'bg-[#1e293b] border-amber-700/50' : 'bg-white border-amber-200') :
-                      (isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-white border-emerald-100')
+                      isCritical ? (isDarkMode ? 'bg-[#1e293b] border-red-900/50' : 'bg-white border-red-200') :
+                      (isDarkMode ? 'bg-[#1e293b] border-amber-700/50' : 'bg-white border-amber-200')
                     }`}>
                       <div className="p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-start gap-4 min-w-0">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                            isMissingInterview ? (isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600') :
-                            isMissingConsent ? (isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600') :
-                            (isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
+                            isCritical ? (isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600') :
+                            (isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600')
                           }`}>
-                            {isMissingInterview ? <XCircle size={20} /> : isMissingConsent ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
+                            {isCritical ? <XCircle size={20} /> : <AlertTriangle size={20} />}
                           </div>
                           <div className="min-w-0">
                             <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                               {patient.first_name} {patient.last_name}
                             </h5>
                             <p className={`text-xs font-bold mt-0.5 ${
-                              isMissingInterview ? (isDarkMode ? 'text-red-400' : 'text-red-600') :
-                              isMissingConsent ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') :
-                              (isDarkMode ? 'text-emerald-400' : 'text-emerald-600')
+                              isCritical ? (isDarkMode ? 'text-red-400' : 'text-red-600') :
+                              (isDarkMode ? 'text-amber-400' : 'text-amber-600')
                             }`}>
-                              {isMissingInterview ? 'Brak wywiadu medycznego' : isMissingConsent ? 'Oczekuje na druga zgode / dokument' : 'Komplet dokumentow'}
+                              {warningLabel}
                             </p>
                             <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                               PESEL: {patient.pesel || 'brak'} | Tel: {patient.phone || 'brak'}
@@ -6083,7 +6165,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                         <div className="flex gap-2 shrink-0">
                           <button
-                            onClick={() => showNotification('Wybierz szablon z prawej kolumny i uĹĽyj opcji wysyĹ‚ki do pacjenta.', 'info')}
+                            onClick={() => showNotification('Wybierz szablon z prawej kolumny i użyj opcji wysyłki do pacjenta.', 'info')}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                           >
                             Wyslij zgode z panelu szablonow
@@ -6118,19 +6200,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <div className="space-y-2">
                             {consents.length === 0 ? (
                               <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak dokumentacji dla tego pacjenta.</p>
-                            ) : consents.map((consent: any) => (
-                              <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                            ) : consents.map((consent: any) => {
+                              const statusMeta = getConsentStatusMeta(consent)
+                              const StatusIcon = statusMeta.icon
+                              return (
+                              <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${statusMeta.cardClass}`}>
                                 <div className="min-w-0 flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                                    <FileText size={16} />
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${statusMeta.iconClass}`}>
+                                    <StatusIcon size={16} />
                                   </div>
                                   <div>
                                     <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                                       {getConsentTemplateTitle(consent)}
-                                      <span className="opacity-50 ml-2 text-[10px] uppercase">({consent.status || 'zapisany'})</span>
+                                      <span className={`ml-2 px-2 py-0.5 rounded-md border text-[9px] uppercase ${statusMeta.badgeClass}`}>{statusMeta.label}</span>
                                     </p>
                                     <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                                      Data: {getConsentDateLabel(consent)}
+                                      {isConsentConfirmed(consent) ? 'Potwierdzono' : 'Wysłano'}: {getConsentDateLabel(consent)}
                                     </p>
                                   </div>
                                 </div>
@@ -6140,7 +6225,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                   </a>
                                 )}
                               </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         </div>
                       )}
@@ -6150,21 +6236,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             )}
           </div>
         </div>
-        {/* SEKCJA B: PEĹNA BAZA PACJENTĂ“W (Mapowanie ĹĽywych danych z Supabase) */}
+        {/* SEKCJA B: PEŁNA BAZA PACJENTÓW (Mapowanie żywych danych z Supabase) */}
         <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors mt-8 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <div>
               <h4 className={`font-black flex items-center gap-2 text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <Users size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                Baza Wszystkich PacjentĂłw ({patients.length})
+                Baza Wszystkich Pacjentów ({patients.length})
               </h4>
-              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Archiwum zgĂłd i wywiadĂłw z poprzednich wizyt</p>
+              <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Archiwum zgód i wywiadów z poprzednich wizyt</p>
             </div>
             <div className="relative w-full xl:w-80 shrink-0">
               <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
               <input
                 type="text"
-                placeholder="Szukaj (ImiÄ™, Nazwisko, PESEL, Telefon)..."
+                placeholder="Szukaj (Imię, Nazwisko, PESEL, Telefon)..."
                 value={allPatientSearch}
                 onChange={e => setAllPatientSearch(e.target.value)}
                 className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
@@ -6187,7 +6273,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {patients.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-10 text-center font-bold text-sm text-slate-400">
-                      Ĺadowanie bazy pacjentĂłw lub brak danych...
+                      Ładowanie bazy pacjentów lub brak danych...
                     </td>
                   </tr>
                 ) : (
@@ -6202,7 +6288,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   .map(patient => {
                     const isExpanded = expandedPatientDocs === patient.id;
                     const consents = patientConsentsByPatientId[patient.id] || [];
-                    const hasValidInterview = consents.length > 0; // w uproszczeniu
+                    const docSummary = getPatientDocumentSummary(consents);
+                    const questionnaireStatus = docSummary.hasMissingQuestionnaire
+                      ? { label: 'Brak wywiadu', icon: XCircle, className: isDarkMode ? 'bg-red-900/20 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200' }
+                      : docSummary.hasPendingQuestionnaire
+                        ? { label: 'Wywiad do podpisu', icon: XCircle, className: isDarkMode ? 'bg-red-900/20 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200' }
+                        : { label: 'Potwierdzony', icon: CheckCircle2, className: isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                    const QuestionnaireIcon = questionnaireStatus.icon;
                     
                     return (
                       <React.Fragment key={patient.id}>
@@ -6216,18 +6308,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{patient.phone || '-'}</p>
                           </td>
                           <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                            {consents.length} dokumentĂłw
-                          </td>
-                          <td className="p-4 text-center">
-                            {hasValidInterview ? (
-                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                <CheckCircle2 size={10}/> Aktualny
-                              </span>
-                            ) : (
-                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${isDarkMode ? 'bg-red-900/20 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                <XCircle size={10}/> Brak wywiadu
+                            {consents.length} dokumentów
+                            {docSummary.pendingDocs.length > 0 && (
+                              <span className={isDarkMode ? 'block mt-1 text-red-400' : 'block mt-1 text-red-600'}>
+                                {docSummary.pendingDocs.length} do podpisu
                               </span>
                             )}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${questionnaireStatus.className}`}>
+                              <QuestionnaireIcon size={10}/> {questionnaireStatus.label}
+                            </span>
                           </td>
                           <td className="p-4 pr-6 text-right">
                             <button 
@@ -6239,7 +6330,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           </td>
                         </tr>
                         
-                        {/* Szufladka z peĹ‚nÄ… historiÄ… pacjenta */}
+                        {/* Szufladka z pełną historią pacjenta */}
                         {isExpanded && (
                           <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
                             <td colSpan={5} className="p-0 border-t-0">
@@ -6259,24 +6350,27 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                   </button>
                                 </div>
                                 
-                                {/* Prawdziwa Lista historycznych zgĂłd pacjenta */}
+                                {/* Prawdziwa Lista historycznych zgód pacjenta */}
                                 <div className="space-y-2">
                                   {consents.length === 0 ? (
-                                    <p className="text-xs text-slate-500 font-bold">Pacjent nie ma jeszcze wgranych ĹĽadnych zgĂłd ani wywiadĂłw.</p>
+                                    <p className="text-xs text-slate-500 font-bold">Pacjent nie ma jeszcze wgranych żadnych zgód ani wywiadów.</p>
                                   ) : (
-                                    consents.map((consent: any) => (
-                                      <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    consents.map((consent: any) => {
+                                      const statusMeta = getConsentStatusMeta(consent)
+                                      const StatusIcon = statusMeta.icon
+                                      return (
+                                      <div key={consent.id} className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${statusMeta.cardClass}`}>
                                         <div className="min-w-0 flex items-center gap-3">
-                                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                                            <FileText size={16} />
+                                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${statusMeta.iconClass}`}>
+                                            <StatusIcon size={16} />
                                           </div>
                                           <div>
                                             <p className={`font-black text-xs truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                                               {getConsentTemplateTitle(consent)}
-                                              <span className="opacity-50 ml-2 text-[10px] uppercase">({consent.status || 'zapisany'})</span>
+                                              <span className={`ml-2 px-2 py-0.5 rounded-md border text-[9px] uppercase ${statusMeta.badgeClass}`}>{statusMeta.label}</span>
                                             </p>
                                             <p className={`text-[9px] font-bold mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                                              Podpisano / wgrano: {getConsentDateLabel(consent)}
+                                              {isConsentConfirmed(consent) ? 'Potwierdzono' : 'Wysłano'}: {getConsentDateLabel(consent)}
                                             </p>
                                           </div>
                                         </div>
@@ -6286,7 +6380,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                           )}
                                         </div>
                                       </div>
-                                    ))
+                                      )
+                                    })
                                   )}
                                 </div>
                               </div>
@@ -6303,14 +6398,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      {/* KOLUMNA 2: BIBLIOTEKA SZABLONĂ“W (Pogrupowana Prawnie) */}
+      {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW (Pogrupowana Prawnie) */}
       <div className="xl:col-span-1 space-y-4">
         
-        {/* NAGĹĂ“WEK I WYSZUKIWARKA */}
+        {/* NAGŁÓWEK I WYSZUKIWARKA */}
         <div className={`p-5 rounded-[24px] border shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center justify-between mb-4">
             <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza SzablonĂłw
+              <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza Szablonów
             </h4>
             <span className={`px-2 py-1 text-[10px] font-black rounded-lg ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
               {consentTemplates.length} dok.
@@ -6329,18 +6424,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         
-        {/* LISTA SZABLONĂ“W POGRUPOWANA W KATEGORIE */}
+        {/* LISTA SZABLONÓW POGRUPOWANA W KATEGORIE */}
         <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
           {consentTemplates.length === 0 ? (
             <div className={`p-8 text-center border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-              <p className="text-xs font-bold">Brak szablonĂłw w bazie.</p>
-              <p className="text-[10px] mt-1">UtwĂłrz pierwszy wywiad lub zgodÄ™.</p>
+              <p className="text-xs font-bold">Brak szablonów w bazie.</p>
+              <p className="text-[10px] mt-1">Utwórz pierwszy wywiad lub zgodę.</p>
             </div>
           ) : (
             [
-              { title: '1. Dokumenty prawne (RODO / upowaĹĽnienia)', types: ['rodo', 'info'] },
+              { title: '1. Dokumenty prawne (RODO / upoważnienia)', types: ['rodo', 'info'] },
               { title: '2. Wywiady medyczne (kwalifikacja)', types: ['questionnaire'] },
-              { title: '3. Ĺšwiadome zgody na zabieg', types: ['consent'] }
+              { title: '3. Świadome zgody na zabieg', types: ['consent'] }
             ].map(group => {
               const groupTemplates = consentTemplates
                 .filter((template: any) => group.types.includes(template.document_type || 'consent'))
@@ -6374,7 +6469,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                 ? (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200')
                                 : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                           }`}>
-                            {template.document_type === 'questionnaire' ? 'Wywiad' : template.document_type === 'rodo' ? 'RODO' : template.document_type === 'info' ? 'UpowaĹĽnienie' : 'Zgoda'}
+                            {template.document_type === 'questionnaire' ? 'Wywiad' : template.document_type === 'rodo' ? 'RODO' : template.document_type === 'info' ? 'Upoważnienie' : 'Zgoda'}
                           </span>
                           
                           {template.is_global_required && (
@@ -6412,7 +6507,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       )}
                     </div>
                     
-                    {/* AKCJE (DRUKUJ / WYĹšLIJ) */}
+                    {/* AKCJE (DRUKUJ / WYŚLIJ) */}
                     <div className={`border-t flex ${isDarkMode ? 'border-slate-800/60 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
                       <button 
                         onClick={() => window.print()} 
@@ -6424,24 +6519,24 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <button 
                         onClick={() => setActiveTemplateSendId(isSendingMode ? null : template.id)} 
                         className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${isSendingMode ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]') : (isDarkMode ? 'text-[#e8ce7a] hover:bg-slate-800' : 'text-emerald-700 hover:bg-emerald-50')}`}
-                        title="WyĹ›lij cyfrowÄ… wersjÄ™ na urzÄ…dzenie pacjenta"
+                        title="Wyślij cyfrową wersję na urządzenie pacjenta"
                       >
-                        <Smartphone size={12}/> WyĹ›lij do podpisu
+                        <Smartphone size={12}/> Wyślij do podpisu
                       </button>
                     </div>
 
-                    {/* WYSUWANY PANEL WYSYĹKI DO PACJENTA */}
+                    {/* WYSUWANY PANEL WYSYŁKI DO PACJENTA */}
                     {isSendingMode && (
                       <div className={`p-4 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-950/50' : 'border-slate-200 bg-emerald-50/30'}`}>
                         <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                          Wybierz pacjenta (WyĹ›lij SMS / Na portal)
+                          Wybierz pacjenta (Wyślij SMS / Na portal)
                         </label>
                         <select
                           className={`w-full border rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all mb-3 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
                           value={selectedPatientForTemplate}
                           onChange={(e) => setSelectedPatientForTemplate(e.target.value)}
                         >
-                          <option value="">-- ZnajdĹş pacjenta... --</option>
+                          <option value="">-- Znajdź pacjenta... --</option>
                           {patients.map(patient => (
                             <option key={patient.id} value={patient.id}>
                               {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
@@ -6462,12 +6557,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                               if (error) throw error;
 
-                              showNotification('Dokument zostaĹ‚ wysĹ‚any do Portalu Pacjenta do podpisu.', 'success');
+                              showNotification('Dokument został wysłany do Portalu Pacjenta do podpisu.', 'success');
                               setActiveTemplateSendId(null);
                               setSelectedPatientForTemplate('');
                               await loadPatientConsents();
                             } catch (err: any) {
-                              showNotification('BĹ‚Ä…d wysyĹ‚ki dokumentu: ' + err.message, 'error');
+                              showNotification('Błąd wysyłki dokumentu: ' + err.message, 'error');
                             } finally {
                               setUpdating(false);
                             }
@@ -6476,7 +6571,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 disabled:opacity-60 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
                         >
                           {updating && activeTemplateSendId === template.id ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12}/>}
-                          {updating && activeTemplateSendId === template.id ? 'WysyĹ‚anie...' : 'WyĹ›lij dokument'}
+                          {updating && activeTemplateSendId === template.id ? 'Wysyłanie...' : 'Wyślij dokument'}
                         </button>
                       </div>
                     )}
@@ -6495,7 +6590,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onClick={openNewConsentTemplateCreator}
           className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] hover:bg-[#d8bd65]' : 'bg-slate-900 text-[#e8ce7a] hover:bg-black'}`}
         >
-          <Sparkles size={16} /> Kreator ZgĂłd AI
+          <Sparkles size={16} /> Kreator Zgód AI
         </button>
       </div>
     </div>
@@ -6530,7 +6625,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className={`rounded-2xl border flex items-center justify-center overflow-hidden bg-slate-100 ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-300'}`} style={{ minHeight: '250px' }}>
               {scanUploadForm.preview ? (
-                <img src={scanUploadForm.preview} alt="PodglÄ…d skanu" className="max-w-full max-h-[300px] object-contain" />
+                <img src={scanUploadForm.preview} alt="Podgląd skanu" className="max-w-full max-h-[300px] object-contain" />
               ) : (
                 <div className="text-center p-4 text-slate-400">
                   <FileIcon size={40} className="mx-auto mb-2 opacity-50" />
@@ -6564,12 +6659,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 if (error) throw error
 
-                showNotification('Dokument pomyĹ›lnie poĹ‚Ä…czony z KartÄ… Pacjenta!', 'success')
+                showNotification('Dokument pomyślnie połączony z Kartą Pacjenta!', 'success')
                 await loadPatientConsents()
                 setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
                 setIsScanUploadModalOpen(false)
               } catch (err: any) {
-                showNotification('BĹ‚Ä…d zapisu skanu: ' + err.message, 'error')
+                showNotification('Błąd zapisu skanu: ' + err.message, 'error')
               } finally {
                 setUpdating(false)
               }
@@ -6613,7 +6708,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  3. Plik / zdjÄ™cie dokumentu
+                  3. Plik / zdjęcie dokumentu
                 </label>
                 <input
                   type="file"
@@ -6635,7 +6730,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <ShieldCheck size={12}/> Audyt systemowy
                 </p>
                 <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
-                  Ten plik zostanie wgrany z Twoim podpisem cyfrowym jako pracownika weryfikujÄ…cego (Osoba z recepcji).
+                  Ten plik zostanie wgrany z Twoim podpisem cyfrowym jako pracownika weryfikującego (Osoba z recepcji).
                 </p>
               </div>
 
@@ -6653,7 +6748,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
 
     {/* ============================================================================ */}
-    {/* MODAL 2: KREATOR SZABLONĂ“W ZGĂ“D (Baza Managera) */}
+    {/* MODAL 2: KREATOR SZABLONÓW ZGÓD (Baza Managera) */}
     {/* ============================================================================ */}
     {isConsentTemplateModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
@@ -6665,7 +6760,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 Kreator Szablonu Dokumentu
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Dodaj nowy wzĂłr, ktĂłry pacjenci bÄ™dÄ… akceptowaÄ‡ w swoim panelu cyfrowym.
+                Dodaj nowy wzór, który pacjenci będą akceptować w swoim panelu cyfrowym.
               </p>
             </div>
             <button
@@ -6705,14 +6800,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   .eq('id', consentTemplateForm.id)
 
                 if (error) throw error
-                showNotification('Szablon dokumentu zostaĹ‚ zaktualizowany w bazie danych.', 'success')
+                showNotification('Szablon dokumentu został zaktualizowany w bazie danych.', 'success')
               } else {
                 const { error } = await supabase
                   .from('medical_consent_templates')
                   .insert([payload])
 
                 if (error) throw error
-                showNotification('Nowy szablon dokumentu zostaĹ‚ trwale zapisany w bazie.', 'success')
+                showNotification('Nowy szablon dokumentu został trwale zapisany w bazie.', 'success')
               }
 
               await loadConsentTemplates()
@@ -6720,8 +6815,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               setIsEditingConsentTemplate(false)
               setIsConsentTemplateModalOpen(false)
             } catch (err: any) {
-              console.error('BĹ‚Ä…d zapisu dokumentu:', err)
-              showNotification('Krytyczny bĹ‚Ä…d bazy danych: ' + (err?.message || 'Nieznany bĹ‚Ä…d'), 'error')
+              console.error('Błąd zapisu dokumentu:', err)
+              showNotification('Krytyczny błąd bazy danych: ' + (err?.message || 'Nieznany błąd'), 'error')
             } finally {
               setUpdating(false)
             }
@@ -6730,7 +6825,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  TytuĹ‚ dokumentu *
+                  Tytuł dokumentu *
                 </label>
                 <input
                   required
@@ -6750,7 +6845,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={consentTemplateForm.document_type || 'consent'}
                   onChange={e => setConsentTemplateForm({ ...consentTemplateForm, document_type: e.target.value })}
                 >
-                  <option value="consent">Zgoda na zabieg (OĹ›wiadczenie)</option>
+                  <option value="consent">Zgoda na zabieg (Oświadczenie)</option>
                   <option value="questionnaire">Wywiad Medyczny (Ankieta)</option>
                   <option value="rodo">Klauzula RODO / Regulamin</option>
                   <option value="info">Informacja / Zalecenia po</option>
@@ -6772,7 +6867,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  WaĹĽnoĹ›Ä‡ dokumentu (MiesiÄ…ce)
+                  Ważność dokumentu (Miesiące)
                 </label>
                 <input
                   type="number"
@@ -6800,12 +6895,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {
                   key: 'is_global_required',
                   title: 'Wymagane globalnie',
-                  desc: 'KaĹĽdy pacjent musi to podpisaÄ‡ (np. RODO)'
+                  desc: 'Każdy pacjent musi to podpisać (np. RODO)'
                 },
                 {
                   key: 'is_active',
                   title: 'Szablon Aktywny',
-                  desc: 'DostÄ™pny do wyboru przez recepcjÄ™ i pacjentĂłw'
+                  desc: 'Dostępny do wyboru przez recepcję i pacjentów'
                 }
               ].map(item => {
                 const isChecked = consentTemplateForm[item.key] === true;
@@ -6848,7 +6943,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="flex flex-col gap-3 mb-3">
                 <div className="flex items-center justify-between gap-3">
                   <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    TreĹ›Ä‡ Szablonu / Pytania
+                    Treść Szablonu / Pytania
                   </label>
                 </div>
                 <button
@@ -6861,15 +6956,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     relatedEntityTitle: consentTemplateForm.required_for_treatment || consentTemplateForm.title || '',
                     documentType: consentTemplateForm.document_type || 'consent',
                     mode: 'medical_document',
-                    placeholder: 'Tu pojawi siÄ™ roboczy szkic zgody, wywiadu lub zaleceĹ„ do zatwierdzenia.',
+                    placeholder: 'Tu pojawi się roboczy szkic zgody, wywiadu lub zaleceń do zatwierdzenia.',
                     onApply: (text: string) => setConsentTemplateForm((prev: any) => ({ ...prev, content_template: text }))
                   })}
                   className={`w-full rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] ${isDarkMode ? 'bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
                 >
-                  <Sparkles size={16} /> UtwĂłrz z pomocÄ… AI
+                  <Sparkles size={16} /> Utwórz z pomocą AI
                 </button>
                 <p className={`text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                  AI przygotuje roboczy szkic dokumentu medycznego. Przed uĹĽyciem z pacjentem zatwierdĹş treĹ›Ä‡ medycznie i prawnie.
+                  AI przygotuje roboczy szkic dokumentu medycznego. Przed użyciem z pacjentem zatwierdź treść medycznie i prawnie.
                 </p>
               </div>
               <textarea
@@ -6877,7 +6972,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-xl px-4 py-4 text-sm font-medium outline-none resize-y transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={consentTemplateForm.content_template || ''}
                 onChange={e => setConsentTemplateForm({ ...consentTemplateForm, content_template: e.target.value })}
-                placeholder="Tutaj wpisz treĹ›Ä‡ zgody (moĹĽesz uĹĽywaÄ‡ znacznikĂłw takich jak [IMIE_PACJENTA] czy [DATA] - system podmieni je automatycznie podczas generowania PDF)."
+                placeholder="Tutaj wpisz treść zgody (możesz używać znaczników takich jak [IMIE_PACJENTA] czy [DATA] - system podmieni je automatycznie podczas generowania PDF)."
               />
             </div>
 
@@ -6895,7 +6990,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
 {/* ============================================================================ */}
-{/* ZABIEGI I WIZYTY (ZarzÄ…dzanie Katalogiem i Rejestracja) - Wersja Ostateczna */}
+{/* ZABIEGI I WIZYTY (Zarządzanie Katalogiem i Rejestracja) - Wersja Ostateczna */}
 {/* ============================================================================ */}
 {activeTab === 'harmonogram' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -6916,13 +7011,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <div>
-              <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>UmĂłwione Wizyty</h4>
+              <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Umówione Wizyty</h4>
             </div>
             <button
               onClick={() => setIsBookingModalOpen(true)}
               className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
             >
-              <CalendarPlus size={14} /> UmĂłw Pacjenta
+              <CalendarPlus size={14} /> Umów Pacjenta
             </button>
           </div>
 
@@ -6955,7 +7050,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0 pt-3 md:pt-0">
                     <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${app.status === 'completed' ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
-                      {app.status === 'scheduled' ? 'Zaplanowana' : 'ZakoĹ„czona'}
+                      {app.status === 'scheduled' ? 'Zaplanowana' : 'Zakończona'}
                     </span>
                   </div>
                 </div>
@@ -6965,12 +7060,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      {/* PRAWA KOLUMNA: KATALOG ZABIEGĂ“W */}
+      {/* PRAWA KOLUMNA: KATALOG ZABIEGÓW */}
       <div className="xl:col-span-1 space-y-4">
         <div className={`p-5 rounded-[24px] border shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center justify-between mb-4">
             <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <ListChecks size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Katalog ZabiegĂłw
+              <ListChecks size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Katalog Zabiegów
             </h4>
           </div>
           
@@ -6994,7 +7089,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             }}
             className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition-all ${isDarkMode ? 'bg-slate-900 border-slate-700 hover:bg-slate-800 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800'}`}
           >
-            <Plus size={14} /> StwĂłrz Zabieg
+            <Plus size={14} /> Stwórz Zabieg
           </button>
         </div>
 
@@ -7035,7 +7130,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     {doctor && <p className="flex items-center gap-1.5"><Stethoscope size={12}/> {doctor.first_name} {doctor.last_name}</p>}
                     <p className="flex items-center gap-1.5">
                       <FileSignature size={12} className={requiredConsentsCount > 0 ? 'text-emerald-500' : 'opacity-50'}/> 
-                      Wymaga {requiredConsentsCount} zgĂłd
+                      Wymaga {requiredConsentsCount} zgód
                     </p>
                   </div>
                 </div>
@@ -7148,7 +7243,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
 
     {/* ============================================================================ */}
-    {/* MODAL: MEGA KREATOR ZABIEGU W KATALOGU (PeĹ‚ne definiowanie) */}
+    {/* MODAL: MEGA KREATOR ZABIEGU W KATALOGU (Pełne definiowanie) */}
     {/* ============================================================================ */}
     {isTreatmentModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
@@ -7157,7 +7252,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div>
               <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {isEditingTreatment ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Layers size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-                {isEditingTreatment ? 'Edytuj DefinicjÄ™ Zabiegu' : 'StwĂłrz Nowy Zabieg'}
+                {isEditingTreatment ? 'Edytuj Definicję Zabiegu' : 'Stwórz Nowy Zabieg'}
               </h3>
             </div>
             <button onClick={() => setIsTreatmentModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"><X size={20} /></button>
@@ -7174,10 +7269,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <input required value={treatmentForm.name || ''} onChange={e => setTreatmentForm({ ...treatmentForm, name: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usĹ‚ugi</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usługi</label>
                   <select value={treatmentForm.type || 'single'} onChange={e => setTreatmentForm({ ...treatmentForm, type: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="single">Pojedyncza wizyta</option>
-                    <option value="series">Seria zabiegĂłw</option>
+                    <option value="series">Seria zabiegów</option>
                   </select>
                 </div>
               </div>
@@ -7216,17 +7311,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             {/* 2. SPECYFIKACJA MEDYCZNA */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>2. Specyfikacja (SprzÄ™t i Personel)</h4>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>2. Specyfikacja (Sprzęt i Personel)</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DomyĹ›lny Lekarz *</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślny Lekarz *</label>
                   <select required value={treatmentForm.doctor_id || ''} onChange={e => setTreatmentForm({ ...treatmentForm, doctor_id: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="">-- Wybierz z personelu --</option>
                     {doctorsList.map((d: any) => <option key={d.id} value={d.id}>{d.first_name} {d.last_name} ({d.title})</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Preparat / SprzÄ™t</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Preparat / Sprzęt</label>
                   <select value={treatmentForm.preparation_id || ''} onChange={e => setTreatmentForm({ ...treatmentForm, preparation_id: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="">-- Opcjonalnie --</option>
                     {preparationsList.map((p: any) => (
@@ -7238,32 +7333,32 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </select>
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj inwazyjnoĹ›ci *</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj inwazyjności *</label>
                   <select required value={treatmentForm.treatment_category || 'standard'} onChange={e => setTreatmentForm({ ...treatmentForm, treatment_category: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="standard">Bezinwazyjny</option>
-                    <option value="needle">Iniekcja (IgĹ‚a)</option>
+                    <option value="needle">Iniekcja (Igła)</option>
                     <option value="scalpel">Chirurgia (Skalpel)</option>
                     <option value="laser">Laseroterapia</option>
                   </select>
                 </div>
               </div>
               <div className="mt-4">
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DomyĹ›lna Sala (Opcjonalnie)</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślna Sala (Opcjonalnie)</label>
                 <input value={treatmentForm.room || ''} onChange={e => setTreatmentForm({ ...treatmentForm, room: e.target.value })} placeholder="np. Gabinet 3" className={`w-full md:w-1/3 border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
               </div>
             </div>
 
             {/* 3. ZALECENIA (PRZED I PO) */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}><FileText size={16}/> 3. Szablony ZaleceĹ„</h4>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}><FileText size={16}/> 3. Szablony Zaleceń</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zalecenia PRZED zabiegiem</label>
-                  <textarea rows={4} value={treatmentForm.pre_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, pre_recommendations: e.target.value })} placeholder="Czego pacjent nie powinien robiÄ‡ przed..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                  <textarea rows={4} value={treatmentForm.pre_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, pre_recommendations: e.target.value })} placeholder="Czego pacjent nie powinien robić przed..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
                 </div>
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zalecenia PO zabiegu</label>
-                  <textarea rows={4} value={treatmentForm.post_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, post_recommendations: e.target.value })} placeholder="PielÄ™gnacja domowa..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
+                  <textarea rows={4} value={treatmentForm.post_recommendations || ''} onChange={e => setTreatmentForm({ ...treatmentForm, post_recommendations: e.target.value })} placeholder="Pielęgnacja domowa..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`} />
                 </div>
               </div>
             </div>
@@ -7274,15 +7369,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 4. Wymagane dokumenty dla tego zabiegu
               </label>
               <p className={`mb-3 text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                Zaznaczone szablony zostanÄ… automatycznie wygenerowane jako dokumenty pacjenta po zapisaniu go na ten zabieg.
+                Zaznaczone szablony zostaną automatycznie wygenerowane jako dokumenty pacjenta po zapisaniu go na ten zabieg.
               </p>
               <div className={`p-4 rounded-xl border space-y-5 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                 {consentTemplates.length === 0 ? (
-                  <p className="text-xs text-red-500 font-bold">Brak szablonĂłw w systemie.</p>
+                  <p className="text-xs text-red-500 font-bold">Brak szablonów w systemie.</p>
                 ) : [
                   { title: 'Dokumenty prawne', types: ['rodo', 'info'] },
                   { title: 'Wywiady medyczne', types: ['questionnaire'] },
-                  { title: 'Ĺšwiadome zgody na zabieg', types: ['consent'] }
+                  { title: 'Świadome zgody na zabieg', types: ['consent'] }
                 ].map(group => {
                   const groupTemplates = consentTemplates.filter((template: any) => group.types.includes(template.document_type || 'consent'))
                   if (groupTemplates.length === 0) return null
@@ -7331,7 +7426,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-              Zapisz Zabieg w SĹ‚owniku
+              Zapisz Zabieg w Słowniku
             </button>
           </form>
         </div>
@@ -7359,7 +7454,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               Lekarze
             </h3>
             <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              ZarzÄ…dzaj zespoĹ‚em medycznym. ID lekarza wykorzystamy przy umawianiu wizyt i przypisywaniu zabiegĂłw.
+              Zarządzaj zespołem medycznym. ID lekarza wykorzystamy przy umawianiu wizyt i przypisywaniu zabiegów.
             </p>
           </div>
         </div>
@@ -7407,7 +7502,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           <Stethoscope size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
           <p className="text-base mb-1">Brak lekarzy</p>
-          <p className="text-xs font-medium">Dodaj lekarza, zdjÄ™cie i specjalizacjÄ™, aby moĹĽna byĹ‚o przypisywaÄ‡ wizyty oraz zabiegi.</p>
+          <p className="text-xs font-medium">Dodaj lekarza, zdjęcie i specjalizację, aby można było przypisywać wizyty oraz zabiegi.</p>
         </div>
       ) : (
         <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
@@ -7435,22 +7530,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       )}
     </div>
 
-    {/* LISTA PREPARATĂ“W */}
+    {/* LISTA PREPARATÓW */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           Preparaty ({preparationProfiles.length})
         </h4>
         <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          ID i zdjÄ™cie preparatu
+          ID i zdjęcie preparatu
         </span>
       </div>
 
       {preparationProfiles.length === 0 ? (
         <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           <ImageIcon size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className="text-base mb-1">Brak preparatĂłw</p>
-          <p className="text-xs font-medium">Dodaj preparat, zdjÄ™cie i kategoriÄ™, aby pĂłĹşniej przypisywaÄ‡ go do zabiegĂłw.</p>
+          <p className="text-base mb-1">Brak preparatów</p>
+          <p className="text-xs font-medium">Dodaj preparat, zdjęcie i kategorię, aby później przypisywać go do zabiegów.</p>
         </div>
       ) : (
         <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
@@ -7506,7 +7601,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div>
                   <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Aktywny profil</p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>PokaĹĽ lekarza w systemie</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż lekarza w systemie</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
@@ -7525,7 +7620,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      ImiÄ™ *
+                      Imię *
                     </label>
                     <input
                       required
@@ -7565,13 +7660,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Gabinet / zespĂłĹ‚
+                      Gabinet / zespół
                     </label>
                     <input
                       className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                       value={partnerForm.company || ''}
                       onChange={e => setPartnerForm({ ...partnerForm, company: e.target.value })}
-                      placeholder="np. Klinika gĹ‚Ăłwna, zespĂłĹ‚ laseroterapii"
+                      placeholder="np. Klinika główna, zespół laseroterapii"
                     />
                   </div>
                 </div>
@@ -7585,7 +7680,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={partnerForm.bio || ''}
                     onChange={e => setPartnerForm({ ...partnerForm, bio: e.target.value })}
-                    placeholder="Opisz krĂłtko doĹ›wiadczenie lekarza, obszary zabiegowe i rolÄ™ w opiece nad pacjentem..."
+                    placeholder="Opisz krótko doświadczenie lekarza, obszary zabiegowe i rolę w opiece nad pacjentem..."
                   />
                   {/* Nowy Przycisk AI do szybkiego pisania Bio */}
                   <AiTextAssistButton
@@ -7596,11 +7691,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     relatedEntityId={partnerForm.id || undefined}
                     relatedEntityTitle={`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim()}
                     additionalInstruction={[
-                      `ImiÄ™ i nazwisko: ${`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim() || 'nie podano'}`,
+                      `Imię i nazwisko: ${`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim() || 'nie podano'}`,
                       `Specjalizacja / rola: ${partnerForm.title || 'nie podano'}`,
-                      `Gabinet / zespĂłĹ‚: ${partnerForm.company || 'nie podano'}`,
-                      'Napisz opis wyĹ‚Ä…cznie na podstawie tych danych i aktualnego pola bio.',
-                      'Nie wymyĹ›laj certyfikatĂłw, tytuĹ‚Ăłw, lat doĹ›wiadczenia, uczelni, nazw procedur ani efektĂłw leczenia.'
+                      `Gabinet / zespół: ${partnerForm.company || 'nie podano'}`,
+                      'Napisz opis wyłącznie na podstawie tych danych i aktualnego pola bio.',
+                      'Nie wymyślaj certyfikatów, tytułów, lat doświadczenia, uczelni, nazw procedur ani efektów leczenia.'
                     ].join('\n')}
                     placeholder="Profesjonalny opis lekarza oparty o podane dane..."
                     onApply={(text) => setPartnerForm({ ...partnerForm, bio: text })}
@@ -7608,10 +7703,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
             </div>
 
-            {/* SEKCJA ZDJÄCIA */}
+            {/* SEKCJA ZDJĘCIA */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                ZdjÄ™cie lekarza
+                Zdjęcie lekarza
               </label>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -7619,7 +7714,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className={`shrink-0 flex items-center justify-center overflow-hidden border w-20 h-20 rounded-2xl ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <img
                       src={getPreviewUrl(newFiles.partnerPhoto, partnerForm.photo_url)!}
-                      alt="PodglÄ…d"
+                      alt="Podgląd"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -7679,7 +7774,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`flex items-center justify-between pt-6 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
               <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                KolejnoĹ›Ä‡ wyĹ›wietlania
+                Kolejność wyświetlania
               </span>
               <input
                 type="number"
@@ -7732,7 +7827,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div>
                   <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Aktywny preparat</p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>PokaĹĽ preparat w systemie</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż preparat w systemie</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
@@ -7768,7 +7863,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                   value={preparationForm.sponsor_category || ''}
                   onChange={e => setPreparationForm({ ...preparationForm, sponsor_category: e.target.value })}
-                  placeholder="np. wypeĹ‚niacz, toksyna, peeling"
+                  placeholder="np. wypełniacz, toksyna, peeling"
                 />
               </div>
             </div>
@@ -7782,7 +7877,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={preparationForm.bio || ''}
                 onChange={e => setPreparationForm({ ...preparationForm, bio: e.target.value })}
-                placeholder="KrĂłtki opis preparatu, wskazania lub uwagi dla zespoĹ‚u."
+                placeholder="Krótki opis preparatu, wskazania lub uwagi dla zespołu."
               />
               <AiTextAssistButton
                 eventId={id}
@@ -7794,9 +7889,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 additionalInstruction={[
                   `Nazwa preparatu: ${preparationForm.sponsor_name || 'nie podano'}`,
                   `Kategoria / zastosowanie: ${preparationForm.sponsor_category || 'nie podano'}`,
-                  'Napisz opis wyĹ‚Ä…cznie na podstawie tych danych i aktualnego pola opisu.',
-                  'Nie wymyĹ›laj skĹ‚adu, wskazaĹ„ rejestracyjnych, certyfikatĂłw, producenta, przeciwwskazaĹ„ ani obietnic efektu, jeĹ›li nie zostaĹ‚y podane.',
-                  'JeĹĽeli danych jest za maĹ‚o, napisz neutralny opis roboczy i wskaĹĽ, co trzeba zweryfikowaÄ‡ w dokumentacji producenta.'
+                  'Napisz opis wyłącznie na podstawie tych danych i aktualnego pola opisu.',
+                  'Nie wymyślaj składu, wskazań rejestracyjnych, certyfikatów, producenta, przeciwwskazań ani obietnic efektu, jeśli nie zostały podane.',
+                  'Jeżeli danych jest za mało, napisz neutralny opis roboczy i wskaż, co trzeba zweryfikować w dokumentacji producenta.'
                 ].join('\n')}
                 placeholder="Neutralny opis preparatu zgodny z podanymi danymi..."
                 onApply={(text) => setPreparationForm({ ...preparationForm, bio: text })}
@@ -7805,7 +7900,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                ZdjÄ™cie preparatu
+                Zdjęcie preparatu
               </label>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -7813,7 +7908,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className={`shrink-0 flex items-center justify-center overflow-hidden border w-20 h-20 rounded-2xl ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <img
                       src={getPreviewUrl(newFiles.partnerPhoto, preparationForm.logo_url || preparationForm.photo_url)!}
-                      alt="PodglÄ…d preparatu"
+                      alt="Podgląd preparatu"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -7856,7 +7951,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Analityka finansowa kliniki
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Przychody z wizyt, pĹ‚atnoĹ›ci pacjentĂłw, koszty operacyjne, powracalnoĹ›Ä‡ i efektywnoĹ›Ä‡ zespoĹ‚u medycznego.
+          Przychody z wizyt, płatności pacjentów, koszty operacyjne, powracalność i efektywność zespołu medycznego.
         </p>
       </div>
 
@@ -7866,7 +7961,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onClick={() => { setBudgetTransferForm({ currency: 'PLN' }); setIsBudgetTransferModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
-          <ArrowRightLeft size={14} /> PrzenieĹ›
+          <ArrowRightLeft size={14} /> Przenieś
         </button>
         <button
           onClick={() => { setBudgetCategoryForm({ color: '#94a3b8', planned_budget: 0 }); setIsEditingBudgetCategory(false); setIsBudgetCategoryModalOpen(true) }}
@@ -7893,31 +7988,31 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             AI Clinic Intelligence
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Dane gotowe pod analizÄ™ dotacyjnÄ…
+            Dane gotowe pod analizę dotacyjną
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            UmĂłwione wizyty dajÄ… potencjalny przychĂłd <strong>{formatMoney(clinicAnalytics.totalVisitValue)}</strong>,
-            z czego opĹ‚acono <strong>{formatMoney(clinicAnalytics.paidVisitValue)}</strong>.
-            AI moĹĽe pĂłĹşniej liczyÄ‡ trendy pacjentĂłw, rentownoĹ›Ä‡ procedur i efektywnoĹ›Ä‡ lekarzy na podstawie tych samych danych.
+            Umówione wizyty dają potencjalny przychód <strong>{formatMoney(clinicAnalytics.totalVisitValue)}</strong>,
+            z czego opłacono <strong>{formatMoney(clinicAnalytics.paidVisitValue)}</strong>.
+            AI może później liczyć trendy pacjentów, rentowność procedur i efektywność lekarzy na podstawie tych samych danych.
           </p>
         </div>
       </div>
       {budgetSummary.isOverBudget && (
         <div className="shrink-0 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black flex items-center gap-2">
-          <AlertTriangle size={16} /> Koszty przekroczyĹ‚y plan o {formatMoney(Math.abs(budgetSummary.savings))}
+          <AlertTriangle size={16} /> Koszty przekroczyły plan o {formatMoney(Math.abs(budgetSummary.savings))}
         </div>
       )}
     </div>
 
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {[
-        { label: 'PotencjaĹ‚ wizyt', value: clinicAnalytics.totalVisitValue, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600', money: true },
-        { label: 'OpĹ‚acone wizyty', value: clinicAnalytics.paidVisitValue, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600', money: true },
+        { label: 'Potencjał wizyt', value: clinicAnalytics.totalVisitValue, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600', money: true },
+        { label: 'Opłacone wizyty', value: clinicAnalytics.paidVisitValue, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600', money: true },
         { label: 'Do pobrania', value: clinicAnalytics.unpaidVisitValue, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600', money: true },
-        { label: 'Ĺšr. wartoĹ›Ä‡ wizyty', value: clinicAnalytics.avgVisitValue, icon: Calculator, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600', money: true },
+        { label: 'Śr. wartość wizyty', value: clinicAnalytics.avgVisitValue, icon: Calculator, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600', money: true },
         { label: 'Nowi pacjenci 30 dni', value: clinicAnalytics.newPatients30d, icon: Users, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-700' },
-        { label: 'PowracajÄ…cy pacjenci', value: clinicAnalytics.returningPatients, icon: RefreshCw, color: isDarkMode ? 'text-violet-400' : 'text-violet-700' },
-        { label: 'PowracalnoĹ›Ä‡', value: clinicAnalytics.returnRate, suffix: '%', icon: Activity, color: isDarkMode ? 'text-rose-400' : 'text-rose-600' },
+        { label: 'Powracający pacjenci', value: clinicAnalytics.returningPatients, icon: RefreshCw, color: isDarkMode ? 'text-violet-400' : 'text-violet-700' },
+        { label: 'Powracalność', value: clinicAnalytics.returnRate, suffix: '%', icon: Activity, color: isDarkMode ? 'text-rose-400' : 'text-rose-600' },
         { label: 'Wynik operacyjny', value: clinicAnalytics.operatingResult, icon: Receipt, color: clinicAnalytics.operatingResult >= 0 ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-red-400' : 'text-red-600'), money: true },
       ].map((kpi: any) => (
         <div key={kpi.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -7942,7 +8037,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {budgetSummary.plannedBudget === 0 && (
       <div className={`rounded-2xl border p-4 text-xs font-black flex items-center gap-2 ${isDarkMode ? 'bg-amber-900/20 border-amber-800/50 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-        <AlertTriangle size={16}/> Ustaw plan kosztĂłw kategorii, aby widzieÄ‡ przekroczenia i wynik operacyjny kliniki.
+        <AlertTriangle size={16}/> Ustaw plan kosztów kategorii, aby widzieć przekroczenia i wynik operacyjny kliniki.
       </div>
     )}
 
@@ -7954,7 +8049,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <BadgeDollarSign size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Najpopularniejsze zabiegi
             </h4>
             <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Ranking procedur wedĹ‚ug liczby zapisĂłw i wartoĹ›ci wizyt.
+              Ranking procedur według liczby zapisów i wartości wizyt.
             </p>
           </div>
           {budgetCategories.length === 0 && (
@@ -7975,7 +8070,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`font-black tabular-nums ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{formatMoney(row.value)}</p>
-                    <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opĹ‚acone {formatMoney(row.paid)}</p>
+                    <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opłacone {formatMoney(row.paid)}</p>
                   </div>
                 </div>
                 <div className={`w-full h-1.5 rounded-full mt-3 overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
@@ -7984,13 +8079,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             )
           })}
-          {clinicAnalytics.treatmentRows.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wizyt z cenÄ…. UmĂłw pacjenta na zabieg, ĹĽeby zobaczyÄ‡ ranking.</p>}
+          {clinicAnalytics.treatmentRows.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wizyt z ceną. Umów pacjenta na zabieg, żeby zobaczyć ranking.</p>}
         </div>
       </div>
 
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <h4 className={`font-black text-sm md:text-base flex items-center gap-2 mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Stethoscope size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> EfektywnoĹ›Ä‡ lekarzy
+          <Stethoscope size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Efektywność lekarzy
         </h4>
         <div className="space-y-3">
           {clinicAnalytics.doctorRows.slice(0, 6).map((row: any) => (
@@ -8001,7 +8096,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div className="text-right shrink-0">
                 <p className={`font-black tabular-nums ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{formatMoney(row.value)}</p>
-                <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opĹ‚acone {formatMoney(row.paid)}</p>
+                <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opłacone {formatMoney(row.paid)}</p>
               </div>
             </div>
           ))}
@@ -8013,16 +8108,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <CalendarPlus size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Przychody z wizyt pacjentĂłw
+          <CalendarPlus size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Przychody z wizyt pacjentów
         </h4>
         <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          KaĹĽda umĂłwiona wizyta pokazuje potencjalny przychĂłd. Po pĹ‚atnoĹ›ci oznacz wizytÄ™ jako opĹ‚aconÄ….
+          Każda umówiona wizyta pokazuje potencjalny przychód. Po płatności oznacz wizytę jako opłaconą.
         </p>
       </div>
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className={`text-[9px] uppercase tracking-wider font-black border-b ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
-            <tr>{['Pacjent','Zabieg','Data','Cena','ZapĹ‚acono','Status','Akcja'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
+            <tr>{['Pacjent','Zabieg','Data','Cena','Zapłacono','Status','Akcja'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {appointmentsList.slice(0, 12).map((app: any) => {
@@ -8043,7 +8138,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(paid, app.currency || 'PLN')}</td>
                   <td className="p-4">
                     <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isPaid ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
-                      {isPaid ? 'opĹ‚acona' : 'do zapĹ‚aty'}
+                      {isPaid ? 'opłacona' : 'do zapłaty'}
                     </span>
                   </td>
                   <td className="p-4">
@@ -8053,19 +8148,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       disabled={isPaid || price <= 0}
                       className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
                     >
-                      OpĹ‚acone
+                      Opłacone
                     </button>
                   </td>
                 </tr>
               )
             })}
-            {appointmentsList.length === 0 && <tr><td colSpan={7} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak umĂłwionych wizyt do analizy przychodĂłw.</td></tr>}
+            {appointmentsList.length === 0 && <tr><td colSpan={7} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak umówionych wizyt do analizy przychodów.</td></tr>}
           </tbody>
         </table>
       </div>
     </div>
 
-    {/* KARTY KATEGORII BUDĹ»ETOWYCH */}
+    {/* KARTY KATEGORII BUDŻETOWYCH */}
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
       {categorySummaries.map((category: any) => (
         <div key={category.id} className={`rounded-[24px] border p-5 shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -8075,7 +8170,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h5 className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{category.name}</h5>
             </div>
             <div className="flex gap-1.5 shrink-0">
-              <button onClick={() => { setBudgetTransferForm({ currency: 'PLN', from_category_id: category.id }); setIsBudgetTransferModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900'}`} title="PrzenieĹ› z tej kategorii"><ArrowRightLeft size={14}/></button>
+              <button onClick={() => { setBudgetTransferForm({ currency: 'PLN', from_category_id: category.id }); setIsBudgetTransferModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900'}`} title="Przenieś z tej kategorii"><ArrowRightLeft size={14}/></button>
               <button onClick={() => { setBudgetCategoryForm(category); setIsEditingBudgetCategory(true); setIsBudgetCategoryModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><Edit3 size={14}/></button>
             </div>
           </div>
@@ -8084,13 +8179,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Plan</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.planned_budget)}</span></div>
             <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Wydano</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{formatMoney(category.used_budget)}</span></div>
 
-            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>ZapĹ‚acono</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(category.paid_amount)}</span></div>
-            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Do zapĹ‚aty</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(category.unpaid_amount)}</span></div>
+            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Zapłacono</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(category.paid_amount)}</span></div>
+            <div><span className={`block font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Do zapłaty</span><span className={`font-black tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{formatMoney(category.unpaid_amount)}</span></div>
           </div>
 
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
             <span className={`text-[10px] font-black uppercase tracking-wider ${category.remaining_budget < 0 ? 'text-red-500' : (isDarkMode ? 'text-emerald-400' : 'text-emerald-700')}`}>
-              {category.remaining_budget < 0 ? 'Przekroczono:' : 'ZostaĹ‚o:'} {formatMoney(Math.abs(category.remaining_budget))}
+              {category.remaining_budget < 0 ? 'Przekroczono:' : 'Zostało:'} {formatMoney(Math.abs(category.remaining_budget))}
             </span>
             <span className={`text-[10px] font-black ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{category.item_count} poz.</span>
           </div>
@@ -8102,11 +8197,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* TABELA POZYCJI BUDĹ»ETU */}
+    {/* TABELA POZYCJI BUDŻETU */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className={`p-5 md:p-6 border-b space-y-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Filter size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Pozycje budĹĽetu
+          <Filter size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Pozycje budżetu
         </h4>
         <div className="flex flex-wrap gap-2">
           <div className="relative">
@@ -8124,7 +8219,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <option value="all">Typy</option><option value="expense">Wydatki</option><option value="income">Przychody</option>
           </select>
           <select className={`border rounded-xl px-3 py-2 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={budgetFilterPaymentStatus} onChange={e => setBudgetFilterPaymentStatus(e.target.value)}>
-            <option value="all">Statusy pĹ‚atnoĹ›ci</option>
+            <option value="all">Statusy płatności</option>
             {['planned','advance_paid','partially_paid','paid','overdue'].map(v => <option key={v} value={v}>{v}</option>)}
           </select>
         </div>
@@ -8132,7 +8227,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className={`text-[9px] uppercase tracking-wider font-black border-b ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
-            <tr>{['Pozycja','Kategoria','ĹąrĂłdĹ‚o','Typ','Netto','VAT','Brutto','ZapĹ‚acono','Do zapĹ‚aty','Termin','Status','Akcje'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
+            <tr>{['Pozycja','Kategoria','Źródło','Typ','Netto','VAT','Brutto','Zapłacono','Do zapłaty','Termin','Status','Akcje'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredBudgetItems.map((item: any) => {
@@ -8172,7 +8267,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </tr>
               )
             })}
-            {filteredBudgetItems.length === 0 && <tr><td colSpan={12} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak pozycji budĹĽetu.</td></tr>}
+            {filteredBudgetItems.length === 0 && <tr><td colSpan={12} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak pozycji budżetu.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -8180,7 +8275,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ostatnie pĹ‚atnoĹ›ci</h4>
+        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ostatnie płatności</h4>
         <div className="space-y-3">
           {budgetPayments.slice(0,8).map((p: any) => {
             const item = budgetItems.find((i: any) => i.id === p.budget_item_id);
@@ -8197,12 +8292,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             )
           })}
-          {budgetPayments.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak zarejestrowanych pĹ‚atnoĹ›ci.</p>}
+          {budgetPayments.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak zarejestrowanych płatności.</p>}
         </div>
       </div>
 
       <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>PrzesuniÄ™cia Ĺ›rodkĂłw</h4>
+        <h4 className={`font-black text-base mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Przesunięcia środków</h4>
         <div className="space-y-3">
           {budgetTransfers.slice(0,8).map((t: any) => {
             const from = budgetCategories.find((c: any) => c.id === t.from_category_id);
@@ -8221,21 +8316,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             )
           })}
-          {budgetTransfers.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak przesuniÄ™Ä‡ budĹĽetowych.</p>}
+          {budgetTransfers.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak przesunięć budżetowych.</p>}
         </div>
       </div>
     </div>
   </div>
 )}
 
-{/* MODAL POZYCJI BUDĹ»ETU */}
+{/* MODAL POZYCJI BUDŻETU */}
 {activeTab === 'finanse' && isBudgetItemModalOpen && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
     <div className={`rounded-[32px] max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           {isEditingBudgetItem ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-          {isEditingBudgetItem ? 'Edytuj pozycjÄ™ budĹĽetu' : 'Dodaj pozycjÄ™ budĹĽetu'}
+          {isEditingBudgetItem ? 'Edytuj pozycję budżetu' : 'Dodaj pozycję budżetu'}
         </h3>
         <button onClick={() => setIsBudgetItemModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8247,7 +8342,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.type || 'expense'} onChange={e => setBudgetItemForm({ ...budgetItemForm, type: e.target.value })}>
               <option value="expense">Wydatek</option>
-              <option value="income">PrzychĂłd</option>
+              <option value="income">Przychód</option>
             </select>
           </div>
           <div>
@@ -8258,7 +8353,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </select>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ĹąrĂłdĹ‚o</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Źródło</label>
             <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. manual" value={budgetItemForm.source_type || 'manual'} onChange={e => setBudgetItemForm({ ...budgetItemForm, source_type: e.target.value })}/>
           </div>
           <div>
@@ -8268,12 +8363,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>TytuĹ‚ *</label>
-          <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="KrĂłtka nazwa" value={budgetItemForm.title || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, title: e.target.value })}/>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł *</label>
+          <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Krótka nazwa" value={budgetItemForm.title || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, title: e.target.value })}/>
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis szczegĂłĹ‚owy</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis szczegółowy</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Notatki" value={budgetItemForm.description || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, description: e.target.value })}/>
         </div>
 
@@ -8306,7 +8401,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>JuĹĽ zapĹ‚acono</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Już zapłacono</label>
             <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-blue-400 focus:border-blue-500 placeholder-slate-600' : 'bg-blue-50 border-blue-200 text-blue-800 focus:border-blue-500 placeholder-blue-300'}`} placeholder="0" value={budgetItemForm.paid_amount || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, paid_amount: Number(e.target.value || 0) })}/>
           </div>
           <div>
@@ -8318,16 +8413,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.advance_paid_at || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, advance_paid_at: e.target.value })}/>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin pĹ‚atnoĹ›ci</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin płatności</label>
             <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.due_date || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, due_date: e.target.value })}/>
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.payment_status || 'planned'} onChange={e => setBudgetItemForm({ ...budgetItemForm, payment_status: e.target.value })}>
               <option value="planned">Planowane</option>
-              <option value="advance_paid">Zaliczka opĹ‚acona</option>
-              <option value="partially_paid">CzÄ™Ĺ›ciowo opĹ‚acone</option>
-              <option value="paid">OpĹ‚acone caĹ‚oĹ›Ä‡</option>
+              <option value="advance_paid">Zaliczka opłacona</option>
+              <option value="partially_paid">Częściowo opłacone</option>
+              <option value="paid">Opłacone całość</option>
               <option value="overdue">Po terminie</option>
             </select>
           </div>
@@ -8335,9 +8430,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>WiÄ…zanie z dostawcÄ…</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wiązanie z dostawcą</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.contractor_id || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, contractor_id: e.target.value || null })}>
-              <option value="">Wybierz PodwykonawcÄ™ (opcja)</option>
+              <option value="">Wybierz Podwykonawcę (opcja)</option>
               {contractors.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
@@ -8352,7 +8447,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnÄ™trzne</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnętrzne</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Dodatkowe informacje..." value={budgetItemForm.notes || ''} onChange={e => setBudgetItemForm({ ...budgetItemForm, notes: e.target.value })}/>
         </div>
 
@@ -8373,7 +8468,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </label>
 
         <button type="submit" disabled={updating} className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          {updating ? 'Zapisywanie...' : 'Zapisz PozycjÄ™ BudĹĽetu'}
+          {updating ? 'Zapisywanie...' : 'Zapisz Pozycję Budżetu'}
         </button>
       </form>
     </div>
@@ -8387,7 +8482,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          {isEditingBudgetCategory ? 'Edytuj KategoriÄ™' : 'Dodaj KategoriÄ™'}
+          {isEditingBudgetCategory ? 'Edytuj Kategorię' : 'Dodaj Kategorię'}
         </h3>
         <button onClick={() => setIsBudgetCategoryModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8404,11 +8499,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>BudĹĽet Planowany</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Budżet Planowany</label>
             <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="0" value={budgetCategoryForm.planned_budget || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, planned_budget: Number(e.target.value || 0) })}/>
           </div>
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>KolejnoĹ›Ä‡ / Sortowanie</label>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kolejność / Sortowanie</label>
             <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="0" value={budgetCategoryForm.sort_order || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, sort_order: Number(e.target.value || 0) })}/>
           </div>
         </div>
@@ -8422,17 +8517,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
 
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki (widoczne dla zespoĹ‚u)</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki (widoczne dla zespołu)</label>
           <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Informacje..." value={budgetCategoryForm.notes || ''} onChange={e => setBudgetCategoryForm({ ...budgetCategoryForm, notes: e.target.value })}/>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button type="submit" disabled={updating} className={`flex-1 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-            Zapisz KategoriÄ™
+            Zapisz Kategorię
           </button>
           {isEditingBudgetCategory && (
             <button type="button" onClick={() => handleDeleteBudgetCategory(budgetCategoryForm.id)} className={`px-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}>
-              UsuĹ„
+              Usuń
             </button>
           )}
         </div>
@@ -8441,17 +8536,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-{/* MODAL PĹATNOĹšCI */}
+{/* MODAL PŁATNOŚCI */}
 {activeTab === 'finanse' && isBudgetPaymentModalOpen && selectedBudgetItem && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
     <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-start mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <div>
           <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <CreditCard size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Dodaj PĹ‚atnoĹ›Ä‡
+            <CreditCard size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Dodaj Płatność
           </h3>
           <p className={`text-xs font-bold mt-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Do zapĹ‚aty: <span className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{formatMoney(Math.max(Number(selectedBudgetItem.gross_amount || 0) - Number(selectedBudgetItem.paid_amount || 0), 0), selectedBudgetItem.currency)}</span> w ramach "{selectedBudgetItem.title}"
+            Do zapłaty: <span className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{formatMoney(Math.max(Number(selectedBudgetItem.gross_amount || 0) - Number(selectedBudgetItem.paid_amount || 0), 0), selectedBudgetItem.currency)}</span> w ramach "{selectedBudgetItem.title}"
           </p>
         </div>
         <button onClick={() => setIsBudgetPaymentModalOpen(false)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -8470,13 +8565,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data PĹ‚atnoĹ›ci</label>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data Płatności</label>
           <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetPaymentForm.paid_at || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, paid_at: e.target.value })}/>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Metoda PĹ‚atnoĹ›ci</label>
-            <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. Przelew, Karta, GotĂłwka" value={budgetPaymentForm.payment_method || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, payment_method: e.target.value })}/>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Metoda Płatności</label>
+            <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. Przelew, Karta, Gotówka" value={budgetPaymentForm.payment_method || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, payment_method: e.target.value })}/>
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Identyfikator (Referencja)</label>
@@ -8485,10 +8580,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         <div>
           <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodatkowe Notatki</label>
-          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Uwagi dla ksiÄ™gowoĹ›ci..." value={budgetPaymentForm.notes || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, notes: e.target.value })}/>
+          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Uwagi dla księgowości..." value={budgetPaymentForm.notes || ''} onChange={e => setBudgetPaymentForm({ ...budgetPaymentForm, notes: e.target.value })}/>
         </div>
         <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          ZatwierdĹş PĹ‚atnoĹ›Ä‡
+          Zatwierdź Płatność
         </button>
       </form>
     </div>
@@ -8501,7 +8596,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
       <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
         <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <ArrowRightLeft size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> PrzenieĹ› Ĺšrodki
+          <ArrowRightLeft size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Przenieś Środki
         </h3>
         <button onClick={() => setIsBudgetTransferModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
           <X size={20} />
@@ -8535,11 +8630,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>PowĂłd / Cel relokacji</label>
-          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. AI Eco-Budget zasugerowaĹ‚o inwestycjÄ™ w roĹ›linny catering..." value={budgetTransferForm.reason || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, reason: e.target.value })}/>
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Powód / Cel relokacji</label>
+          <textarea rows={2} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. AI Eco-Budget zasugerowało inwestycję w roślinny catering..." value={budgetTransferForm.reason || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, reason: e.target.value })}/>
         </div>
         <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-colors ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-          ZatwierdĹş RelokacjÄ™
+          Zatwierdź Relokację
         </button>
       </form>
     </div>
@@ -8552,15 +8647,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'dostawcy' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGĹĂ“WEK SEKCJI */}
+    {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Briefcase size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/>
-          Baza PodwykonawcĂłw
+          Baza Podwykonawców
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzÄ…dzaj firmami, umowami, przypisuj ich do moduĹ‚Ăłw (transport, prelegenci) i wliczaj do budĹĽetu.
+          Zarządzaj firmami, umowami, przypisuj ich do modułów (transport, prelegenci) i wliczaj do budżetu.
         </p>
       </div>
 
@@ -8574,7 +8669,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Dodaj wykonawcÄ™
+          <Plus size={14} /> Dodaj wykonawcę
         </button>
       </div>
     </div>
@@ -8595,16 +8690,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{contractors.length}</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">W budĹĽecie (Brutto)</p><BadgeDollarSign size={16} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{totalGross.toLocaleString('pl-PL')} zĹ‚</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">W budżecie (Brutto)</p><BadgeDollarSign size={16} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{totalGross.toLocaleString('pl-PL')} zł</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">ZapĹ‚acono</p><CheckCircle2 size={16} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{paid.toLocaleString('pl-PL')} zĹ‚</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Zapłacono</p><CheckCircle2 size={16} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{paid.toLocaleString('pl-PL')} zł</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">PozostaĹ‚o do spĹ‚aty</p><Clock size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{unpaid.toLocaleString('pl-PL')} zĹ‚</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Pozostało do spłaty</p><Clock size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{unpaid.toLocaleString('pl-PL')} zł</p>
           </div>
         </div>
       )
@@ -8613,7 +8708,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* LISTA Z WYSZUKIWANIEM I DETALAMI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
 
-      {/* Pasek narzÄ™dziowy / Filtry */}
+      {/* Pasek narzędziowy / Filtry */}
       <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row justify-between xl:items-center gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
         <div className="flex flex-wrap gap-2">
           <button
@@ -8674,14 +8769,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {filteredContractors.length === 0 ? (
-              <tr><td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wynikĂłw do wyĹ›wietlenia.</td></tr>
+              <tr><td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wyników do wyświetlenia.</td></tr>
             ) : (
               filteredContractors.map(contractor => {
                 const isExpanded = expandedContractorId === contractor.id;
 
                 return (
                   <React.Fragment key={contractor.id}>
-                    {/* Wiersz z podsumowaniem (Klikalny by rozwinÄ…Ä‡ szczegĂłĹ‚y) */}
+                    {/* Wiersz z podsumowaniem (Klikalny by rozwinąć szczegóły) */}
                     <tr
                       className={`transition-colors cursor-pointer group ${
                         isExpanded
@@ -8704,7 +8799,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         </p>
                         {contractor.include_in_budget === false && (
                           <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mt-1 inline-block ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                            Poza budĹĽetem
+                            Poza budżetem
                           </span>
                         )}
                       </td>
@@ -8713,8 +8808,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-white text-slate-800 border-slate-200 shadow-sm'}`}>
                             {contractor.operational_status || contractor.status || 'NOWY'}
                           </span>
-                          {contractor.payment_status === 'paid' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-700'}`}>OpĹ‚acone</span>}
-                          {contractor.payment_status === 'overdue' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700'}`}>ZalegĹ‚e</span>}
+                          {contractor.payment_status === 'paid' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-700'}`}>Opłacone</span>}
+                          {contractor.payment_status === 'overdue' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700'}`}>Zaległe</span>}
                           {contractor.contract_status === 'signed' && <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>Umowa OK</span>}
                         </div>
                       </td>
@@ -8730,7 +8825,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <td className="p-4 pr-6 text-right">
                         <div className="flex justify-end gap-1">
                           <button
-                            title={isExpanded ? 'ZwiĹ„ szczegĂłĹ‚y' : 'PokaĹĽ szczegĂłĹ‚y'}
+                            title={isExpanded ? 'Zwiń szczegóły' : 'Pokaż szczegóły'}
                             className={`p-2 rounded-lg transition-all ${isExpanded ? (isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-900') : (isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700')}`}
                           >
                             <ChevronDown size={18} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -8739,7 +8834,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </td>
                     </tr>
 
-                    {/* SZUFLADKA ZE SZCZEGĂ“ĹAMI (Quick View) */}
+                    {/* SZUFLADKA ZE SZCZEGÓŁAMI (Quick View) */}
                     {isExpanded && (
                       <tr className={isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50/30'}>
                         <td colSpan={5} className="p-0 border-t-0">
@@ -8768,7 +8863,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                                 {contractor.service_scope && (
                                   <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zakres usĹ‚ugi</span>
+                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zakres usługi</span>
                                     <p className={`text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{contractor.service_scope}</p>
                                   </div>
                                 )}
@@ -8776,17 +8871,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                               {/* Kolumna 2: Finanse, Dokumenty i Akcje */}
                               <div className="flex-1 space-y-4">
-                                <h4 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Finanse & PowiÄ…zania</h4>
+                                <h4 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Finanse & Powiązania</h4>
                                 <div className={`grid grid-cols-2 gap-3 p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                                   <div>
                                     <span className={`block text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Koszty</span>
-                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Netto: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.net_amount ? `${Number(contractor.net_amount).toLocaleString('pl-PL')} zĹ‚` : '-'}</strong></p>
-                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zaliczka: <strong className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{contractor.advance_amount ? `${Number(contractor.advance_amount).toLocaleString('pl-PL')} zĹ‚` : '0 zĹ‚'}</strong></p>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Netto: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.net_amount ? `${Number(contractor.net_amount).toLocaleString('pl-PL')} zł` : '-'}</strong></p>
+                                    <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zaliczka: <strong className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}>{contractor.advance_amount ? `${Number(contractor.advance_amount).toLocaleString('pl-PL')} zł` : '0 zł'}</strong></p>
                                     <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria: <strong className={isDarkMode ? 'text-slate-300' : 'text-slate-800'}>{contractor.budget_category || '-'}</strong></p>
                                   </div>
                                   <div>
-                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>PowiÄ…zania</span>
-                                    {contractor.fleet_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>ModuĹ‚ Floty</span>}
+                                    <span className={`block text-[9px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Powiązania</span>
+                                    {contractor.fleet_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Moduł Floty</span>}
                                     {contractor.speaker_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Prelegent</span>}
                                     {contractor.partner_id && <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border mb-1 w-full ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Sponsor/Partner</span>}
                                     {!contractor.fleet_id && !contractor.speaker_id && !contractor.partner_id && <p className={`text-xs italic ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Brak</p>}
@@ -8815,7 +8910,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                             {contractor.notes && (
                               <div className={`mt-4 p-4 rounded-2xl border ${isDarkMode ? 'bg-amber-900/10 border-amber-900/30' : 'bg-amber-50/50 border-amber-200/50'}`}>
-                                <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-amber-500' : 'text-amber-700'}`}>Notatka WewnÄ™trzna</span>
+                                <span className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-amber-500' : 'text-amber-700'}`}>Notatka Wewnętrzna</span>
                                 <p className={`text-xs font-medium ${isDarkMode ? 'text-amber-400/80' : 'text-amber-900/80'}`}>{contractor.notes}</p>
                               </div>
                             )}
@@ -8825,13 +8920,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                                 onClick={() => { setContractorForm(contractor); setIsEditingContractor(true); setIsContractorModalOpen(true); }}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-blue-400 border border-slate-700' : 'bg-white text-blue-700 border border-slate-200'}`}
                               >
-                                <Edit3 size={14} /> Edytuj peĹ‚ne dane
+                                <Edit3 size={14} /> Edytuj pełne dane
                               </button>
                               <button
                                 onClick={() => handleDeleteContractor(contractor.id)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-red-900/20 text-red-400 border border-red-900/30' : 'bg-red-50 text-red-600 border border-red-100'}`}
                               >
-                                <Trash2 size={14} /> UsuĹ„
+                                <Trash2 size={14} /> Usuń
                               </button>
                             </div>
                           </div>
@@ -8847,14 +8942,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* MODAL EDYCJI / DODAWANIA - PEĹNY DARK MODE */}
+    {/* MODAL EDYCJI / DODAWANIA - PEŁNY DARK MODE */}
     {isContractorModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
           <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {isEditingContractor ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-              {isEditingContractor ? 'Edytuj podwykonawcÄ™' : 'Dodaj podwykonawcÄ™'}
+              {isEditingContractor ? 'Edytuj podwykonawcę' : 'Dodaj podwykonawcę'}
             </h3>
             <button onClick={() => setIsContractorModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
               <X size={20} />
@@ -8868,7 +8963,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Dane Firmowe</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa firmy / imiÄ™ i nazwisko *</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa firmy / imię i nazwisko *</label>
                   <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.name || ''} onChange={e => setContractorForm({...contractorForm, name: e.target.value})} />
                 </div>
                 <div>
@@ -8915,13 +9010,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             </div>
 
-            {/* Zakres UsĹ‚ugi */}
+            {/* Zakres Usługi */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Zakres usĹ‚ugi i BudĹĽet</h4>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Zakres usługi i Budżet</h4>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usĹ‚ugodawcy</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ usługodawcy</label>
                   <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_type || ''} onChange={e => setContractorForm({...contractorForm, service_type: e.target.value, budget_category: contractorForm.budget_category || e.target.value})}>
                     <option value="">Wybierz...</option>
                     <option value="catering">Catering</option>
@@ -8935,13 +9030,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <option value="printing">Drukarnia</option>
                     <option value="venue_hotel">Hotel / obiekt</option>
                     <option value="marketing">Marketing</option>
-                    <option value="cleaning">SprzÄ…tanie</option>
+                    <option value="cleaning">Sprzątanie</option>
                     <option value="insurance">Ubezpieczenie</option>
                     <option value="other">Inne</option>
                   </select>
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria budĹĽetowa</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria budżetowa</label>
                   <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.budget_category || ''} onChange={e => setContractorForm({...contractorForm, budget_category: e.target.value})} placeholder="np. transport, scena, catering" />
                 </div>
 
@@ -8952,7 +9047,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 }`}>
                   <div>
                     <p className={`font-black text-sm ${contractorForm.include_in_budget !== false ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      Wliczaj do budĹĽetu
+                      Wliczaj do budżetu
                     </p>
                   </div>
                   <input type="checkbox" checked={contractorForm.include_in_budget !== false} onChange={e => setContractorForm({...contractorForm, include_in_budget: e.target.checked})} className="sr-only"/>
@@ -8963,13 +9058,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
 
               <div className="mt-5">
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>DokĹ‚adny opis usĹ‚ugi (Zakres)</label>
-                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_scope || ''} onChange={e => setContractorForm({...contractorForm, service_scope: e.target.value})} placeholder="Co dokĹ‚adnie dostarcza/realizuje ten podwykonawca..." />
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dokładny opis usługi (Zakres)</label>
+                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.service_scope || ''} onChange={e => setContractorForm({...contractorForm, service_scope: e.target.value})} placeholder="Co dokładnie dostarcza/realizuje ten podwykonawca..." />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-200 dark:border-slate-700/50">
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota ogĂłlna (wynagrodzenie)</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota ogólna (wynagrodzenie)</label>
                   <div className="flex gap-2">
                     <input type="number" step="0.01" className={`flex-1 border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.amount || ''} onChange={e => setContractorForm({...contractorForm, amount: parseFloat(e.target.value)})} />
                     <select className={`w-28 border rounded-xl px-3 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={contractorForm.currency || 'PLN'} onChange={e => setContractorForm({...contractorForm, currency: e.target.value})}>
@@ -8985,7 +9080,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
               </div>
 
-              {/* Pola budĹĽetowe ukryte w module "Finanse & Umowy" */}
+              {/* Pola budżetowe ukryte w module "Finanse & Umowy" */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
                 <div>
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kwota Netto</label>
@@ -9007,25 +9102,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-amber-400 focus:border-amber-500' : 'bg-amber-50 border-amber-200 text-amber-800 focus:border-amber-500'}`} value={contractorForm.advance_amount || ''} onChange={e => setContractorForm({...contractorForm, advance_amount: Number(e.target.value || 0)})} />
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin pĹ‚atnoĹ›ci</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Termin płatności</label>
                   <input type="date" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.payment_due_date || ''} onChange={e => setContractorForm({...contractorForm, payment_due_date: e.target.value})} />
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status pĹ‚atnoĹ›ci</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status płatności</label>
                   <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.payment_status || 'unpaid'} onChange={e => setContractorForm({...contractorForm, payment_status: e.target.value})}>
-                    <option value="unpaid">NieopĹ‚acone</option>
-                    <option value="advance_paid">Zaliczka zapĹ‚acona</option>
-                    <option value="paid">OpĹ‚acone w caĹ‚oĹ›ci</option>
+                    <option value="unpaid">Nieopłacone</option>
+                    <option value="advance_paid">Zaliczka zapłacona</option>
+                    <option value="paid">Opłacone w całości</option>
                     <option value="overdue">Po terminie</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* PowiÄ…zania, Umowy, Pliki */}
+            {/* Powiązania, Umowy, Pliki */}
             <div className={`p-5 md:p-6 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
-                <Link size={16} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}/> Tagi, PowiÄ…zania i Pliki
+                <Link size={16} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}/> Tagi, Powiązania i Pliki
               </h4>
 
               <div className="mb-5">
@@ -9097,8 +9192,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status operacyjny</label>
                   <select className={`w-full border rounded-xl px-4 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.operational_status || contractorForm.status || 'new_contact'} onChange={e => setContractorForm({...contractorForm, operational_status: e.target.value, status: e.target.value})}>
                     <option value="new_contact">Nowy kontakt</option>
-                    <option value="inquiry_sent">Zapytanie wysĹ‚ane</option>
-                    <option value="waiting_quote">Oczekuje na wycenÄ™</option>
+                    <option value="inquiry_sent">Zapytanie wysłane</option>
+                    <option value="waiting_quote">Oczekuje na wycenę</option>
                     <option value="quote_received">Wycena otrzymana</option>
                     <option value="negotiation">Negocjacje</option>
                     <option value="accepted">Zaakceptowany</option>
@@ -9113,7 +9208,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <select className={`w-full border rounded-xl px-4 py-2.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.contract_status || 'none'} onChange={e => setContractorForm({...contractorForm, contract_status: e.target.value})}>
                     <option value="none">Brak umowy</option>
                     <option value="draft">Projekt umowy</option>
-                    <option value="sent">WysĹ‚ana do podpisu</option>
+                    <option value="sent">Wysłana do podpisu</option>
                     <option value="signed">Podpisana</option>
                     <option value="cancelled">Anulowana</option>
                   </select>
@@ -9153,7 +9248,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   )}
                 </div>
                 <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnÄ™trzne</label>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatki wewnętrzne</label>
                   <textarea rows={3} className={`w-full border rounded-xl px-4 py-2.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={contractorForm.notes || ''} onChange={e => setContractorForm({...contractorForm, notes: e.target.value})} placeholder="Uwagi i ustalenia..." />
                 </div>
               </div>
@@ -9164,7 +9259,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
             >
-              {updating ? 'Zapisywanie...' : (isEditingContractor ? 'Zapisz zmiany w profilu' : 'Dodaj podwykonawcÄ™')}
+              {updating ? 'Zapisywanie...' : (isEditingContractor ? 'Zapisz zmiany w profilu' : 'Dodaj podwykonawcę')}
             </button>
           </form>
         </div>
@@ -9187,7 +9282,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Zadania recepcji i opiekuna pacjenta
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          TwĂłrz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
+          Twórz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
         </p>
       </div>
 
@@ -9224,12 +9319,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Asystent Organizacyjny
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Stan zadaĹ„ operacyjnych
+            Stan zadań operacyjnych
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadaĹ„ otwartych</strong>.
+            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadań otwartych</strong>.
             W tym <strong className={isDarkMode ? 'text-rose-400' : 'text-rose-600'}>{checklistItems.filter((item: any) => String(item.priority || '').toLowerCase() === 'high' && !item.is_done).length}</strong> oznaczonych jako pilne (priorytet wysoki).
-            System AI z czasem pomoĹĽe generowaÄ‡ powtarzalne listy np. dla dostawcĂłw.
+            System AI z czasem pomoże generować powtarzalne listy np. dla dostawców.
           </p>
         </div>
       </div>
@@ -9263,7 +9358,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
               <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Progres ZadaĹ„</p>
+                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Progres Zadań</p>
                 <CheckCircle2 size={14} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
               </div>
               <p className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{percent}%</p>
@@ -9278,7 +9373,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <Wallet size={14} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} />
               </div>
               <p className={`mt-3 text-xl md:text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                {estimatedCost.toLocaleString('pl-PL')} <span className="text-sm">zĹ‚</span>
+                {estimatedCost.toLocaleString('pl-PL')} <span className="text-sm">zł</span>
               </p>
             </div>
           </>
@@ -9292,7 +9387,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <ClipboardList size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
         <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Brak list operacyjnych</p>
         <p className={`text-sm mt-2 font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Dodaj pierwszÄ… listÄ™, np. â€žZakupy przed eventemâ€ť lub â€žLista rzeczy do spakowaniaâ€ť.
+          Dodaj pierwszą listę, np. „Zakupy przed eventem” lub „Lista rzeczy do spakowania”.
         </p>
       </div>
     ) : (
@@ -9307,7 +9402,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               key={group.id}
               className={`rounded-[24px] md:rounded-[28px] border shadow-sm overflow-hidden transition-all duration-300 ${isDarkMode ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-slate-300'}`}
             >
-              {/* NAGĹĂ“WEK KAFELKA */}
+              {/* NAGŁÓWEK KAFELKA */}
               <div
                 className={`p-5 cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-900/80 border-b border-slate-800' : 'hover:bg-slate-50 border-b border-slate-100'}`}
                 onClick={() => toggleChecklistGroupOpen(group)}
@@ -9328,7 +9423,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         </h4>
 
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          {items.length} zadaĹ„
+                          {items.length} zadań
                         </span>
 
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${percent === 100 ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
@@ -9408,12 +9503,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 </div>
               </div>
 
-              {/* ROZWIJANA ZAWARTOĹšÄ† LISTY */}
+              {/* ROZWIJANA ZAWARTOŚĆ LISTY */}
               {group.is_open && (
                 <div className={`p-4 md:p-5 ${isDarkMode ? 'bg-slate-900/40' : 'bg-slate-50/50'}`}>
                   {items.length === 0 ? (
                     <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                      Brak zadaĹ„ w tej liĹ›cie. Dodaj pierwszy podpunkt.
+                      Brak zadań w tej liście. Dodaj pierwszy podpunkt.
                     </div>
                   ) : (
                     <div className="space-y-2.5">
@@ -9489,7 +9584,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                                 {Number(item.estimated_cost || 0) > 0 && (
                                   <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                    <Wallet size={10} /> {Number(item.estimated_cost).toLocaleString('pl-PL')} zĹ‚
+                                    <Wallet size={10} /> {Number(item.estimated_cost).toLocaleString('pl-PL')} zł
                                   </span>
                                 )}
                               </div>
@@ -9538,10 +9633,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div>
               <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 <ClipboardList size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                {isEditingChecklistGroup ? 'Edytuj listÄ™' : 'Nowa lista'}
+                {isEditingChecklistGroup ? 'Edytuj listę' : 'Nowa lista'}
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                StwĂłrz katalog, np. â€žLista zakupĂłwâ€ť albo â€žDo zdzwonieniaâ€ť.
+                Stwórz katalog, np. „Lista zakupów” albo „Do zdzwonienia”.
               </p>
             </div>
 
@@ -9556,20 +9651,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <form onSubmit={handleSaveChecklistGroup} className="space-y-5">
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                TytuĹ‚ listy *
+                Tytuł listy *
               </label>
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={checklistGroupForm.title || ''}
                 onChange={e => setChecklistGroupForm({ ...checklistGroupForm, title: e.target.value })}
-                placeholder="np. OĹ›wietlenie sceny - braki"
+                placeholder="np. Oświetlenie sceny - braki"
               />
             </div>
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                KrĂłtki opis
+                Krótki opis
               </label>
               <textarea
                 rows={2}
@@ -9590,15 +9685,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={checklistGroupForm.category || 'general'}
                   onChange={e => setChecklistGroupForm({ ...checklistGroupForm, category: e.target.value })}
                 >
-                  <option value="general">OgĂłlne</option>
+                  <option value="general">Ogólne</option>
                   <option value="shopping">Zakupy</option>
                   <option value="calls">Do zdzwonienia</option>
                   <option value="suppliers">Dostawcy</option>
-                  <option value="decor">WystrĂłj / dekoracje</option>
+                  <option value="decor">Wystrój / dekoracje</option>
                   <option value="catering">Catering</option>
                   <option value="transport">Transport</option>
                   <option value="documents">Dokumenty</option>
-                  <option value="event_day">DzieĹ„ eventu</option>
+                  <option value="event_day">Dzień eventu</option>
                 </select>
               </div>
 
@@ -9627,7 +9722,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
             >
-              {updating ? 'Zapisywanie...' : 'Zapisz listÄ™'}
+              {updating ? 'Zapisywanie...' : 'Zapisz listę'}
             </button>
           </form>
         </div>
@@ -9645,7 +9740,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {isEditingChecklistItem ? 'Edytuj zadanie' : 'Nowe zadanie'}
               </h3>
               <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Podpunkt z moĹĽliwoĹ›ciÄ… przypisania osoby i oszacowania kosztu.
+                Podpunkt z możliwością przypisania osoby i oszacowania kosztu.
               </p>
             </div>
 
@@ -9667,13 +9762,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                 value={checklistItemForm.title || ''}
                 onChange={e => setChecklistItemForm({ ...checklistItemForm, title: e.target.value })}
-                placeholder="np. PotwierdziÄ‡ dostawÄ™ sceny"
+                placeholder="np. Potwierdzić dostawę sceny"
               />
             </div>
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                SzczegĂłĹ‚y / Notatka
+                Szczegóły / Notatka
               </label>
               <textarea
                 rows={2}
@@ -9687,7 +9782,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 sectionKey="checklist"
                 fieldKey="task_note"
                 currentValue={checklistItemForm.notes || ''}
-                placeholder="Napisz instrukcjÄ™ dla podwykonawcy..."
+                placeholder="Napisz instrukcję dla podwykonawcy..."
                 onApply={(text) => setChecklistItemForm({ ...checklistItemForm, notes: text })}
               />
             </div>
@@ -9702,7 +9797,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   value={checklistItemForm.group_id || activeChecklistGroupId || ''}
                   onChange={e => setChecklistItemForm({ ...checklistItemForm, group_id: e.target.value })}
                 >
-                  <option value="">Wybierz listÄ™</option>
+                  <option value="">Wybierz listę</option>
                   {checklistGroups.map(group => (
                     <option key={group.id} value={group.id}>
                       {group.title}
@@ -9753,7 +9848,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szacowany koszt (dla uĹ‚atwienia budĹĽetu)
+                Szacowany koszt (dla ułatwienia budżetu)
               </label>
               <input
                 type="number"
@@ -9811,20 +9906,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
 {/* ============================================================================ */}
-{/* REJESTRACJA PACJENTĂ“W (GĹ‚Ăłwna Baza) - ZastÄ™puje stare 'bilety' */}
+{/* REJESTRACJA PACJENTÓW (Główna Baza) - Zastępuje stare 'bilety' */}
 {/* ============================================================================ */}
 {activeTab === 'bilety' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* NAGĹĂ“WEK SEKCJI */}
+    {/* NAGŁÓWEK SEKCJI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <UserRoundPlus size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Rejestracja PacjentĂłw
+          Rejestracja Pacjentów
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          GĹ‚Ăłwna baza Twojej kliniki. Dodaj pacjenta tutaj, aby system mĂłgĹ‚ zaĹ‚oĹĽyÄ‡ mu cyfrowÄ… teczkÄ™, generowaÄ‡ zgody i historiÄ™ choroby.
+          Główna baza Twojej kliniki. Dodaj pacjenta tutaj, aby system mógł założyć mu cyfrową teczkę, generować zgody i historię choroby.
         </p>
       </div>
 
@@ -9869,7 +9964,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* LISTA PACJENTĂ“W (GĹ‚Ăłwny rejestr) */}
+    {/* LISTA PACJENTÓW (Główny rejestr) */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       
       {/* Pasek wyszukiwania */}
@@ -9893,16 +9988,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <th className="p-4 pl-6">Pacjent</th>
               <th className="p-4">PESEL</th>
               <th className="p-4">Kontakt</th>
-              <th className="p-4">Data doĹ‚Ä…czenia</th>
+              <th className="p-4">Data dołączenia</th>
               <th className="p-4">Status</th>
-              <th className="p-4 pr-6 text-right">ZarzÄ…dzaj</th>
+              <th className="p-4 pr-6 text-right">Zarządzaj</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {patients.length === 0 ? (
               <tr>
                 <td colSpan={6} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Brak pacjentĂłw w bazie. Dodaj pierwszÄ… osobÄ™!
+                  Brak pacjentów w bazie. Dodaj pierwszą osobę!
                 </td>
               </tr>
             ) : patients
@@ -9951,7 +10046,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     </button>
                     <button
                       onClick={() => handleDeletePatient(patient.id)}
-                      title="UsuĹ„ pacjenta"
+                      title="Usuń pacjenta"
                       className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-800/50' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}
                     >
                       <Trash2 size={16} />
@@ -9978,7 +10073,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {isEditingPatient ? 'Edytuj Pacjenta' : 'Zarejestruj Nowego Pacjenta'}
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Upewnij siÄ™, ĹĽe wpisujesz poprawny PESEL â€“ pacjent bÄ™dzie uĹĽywaĹ‚ go do logowania siÄ™ do swoich zgĂłd.
+                Upewnij się, że wpisujesz poprawny PESEL – pacjent będzie używał go do logowania się do swoich zgód.
               </p>
             </div>
             <button onClick={() => setIsPatientModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
@@ -9989,7 +10084,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <form onSubmit={handleSavePatient} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>ImiÄ™ *</label>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Imię *</label>
                 <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. Jan" value={patientForm.first_name || ''} onChange={e => setPatientForm({ ...patientForm, first_name: e.target.value })} />
               </div>
               <div>
@@ -10024,7 +10119,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <button type="submit" disabled={updating} className={`w-full mt-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}>
-              {updating ? 'Zapisywanie...' : (isEditingPatient ? 'Zapisz Zmiany' : 'UtwĂłrz Pacjenta')}
+              {updating ? 'Zapisywanie...' : (isEditingPatient ? 'Zapisz Zmiany' : 'Utwórz Pacjenta')}
             </button>
           </form>
         </div>
@@ -10038,11 +10133,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* =========================================================================== */}
 {activeTab === 'minutowka' && (() => {
 
-  // 1. AGREGACJA WSZYSTKICH WYDARZEĹ Z CAĹEGO PLANNERA
+  // 1. AGREGACJA WSZYSTKICH WYDARZEŃ Z CAŁEGO PLANNERA
   const aggregatedEvents = (() => {
     const allEvents: any[] = [];
 
-    // Z MinutĂłwki
+    // Z Minutówki
     runOfShow.forEach((task: any) => {
       if (task.date) {
         allEvents.push({
@@ -10050,7 +10145,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           date: task.date,
           time: task.time,
           title: task.task,
-          source: 'MinutĂłwka',
+          source: 'Minutówka',
           isCritical: task.isCritical,
           color: task.isCritical ? 'bg-red-500' : 'bg-[#253a2a]'
         });
@@ -10075,16 +10170,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       }
     });
 
-    // Z FinansĂłw (PĹ‚atnoĹ›ci dla podwykonawcĂłw)
+    // Z Finansów (Płatności dla podwykonawców)
     contractors.forEach((contractor: any) => {
       if (contractor.payment_due_date && contractor.payment_status !== 'paid') {
         allEvents.push({
           id: `payment-${contractor.id}`,
           date: contractor.payment_due_date,
-          time: '12:00', // DomyĹ›lna godzina dla terminĂłw pĹ‚atnoĹ›ci
-          title: `PĹ‚atnoĹ›Ä‡: ${contractor.name} (${contractor.gross_amount || contractor.amount} PLN)`,
+          time: '12:00', // Domyślna godzina dla terminów płatności
+          title: `Płatność: ${contractor.name} (${contractor.gross_amount || contractor.amount} PLN)`,
           source: 'Finanse',
-          isCritical: true, // PĹ‚atnoĹ›ci traktujemy jako waĹĽne
+          isCritical: true, // Płatności traktujemy jako ważne
           color: 'bg-amber-500'
         });
       }
@@ -10100,7 +10195,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  // Zabezpieczenie, aby poniedziaĹ‚ek byĹ‚ pierwszym dniem (0 to niedziela w JS)
+  // Zabezpieczenie, aby poniedziałek był pierwszym dniem (0 to niedziela w JS)
   const offsetDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   const nextMonth = () => {
@@ -10113,9 +10208,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     else setOrganizerCurrentMonth(currentMonth - 1);
   };
 
-  const monthNames = ['StyczeĹ„', 'Luty', 'Marzec', 'KwiecieĹ„', 'Maj', 'Czerwiec', 'Lipiec', 'SierpieĹ„', 'WrzesieĹ„', 'PaĹşdziernik', 'Listopad', 'GrudzieĹ„'];
+  const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
 
-  // Wydarzenia dla klikniÄ™tego dnia w kalendarzu
+  // Wydarzenia dla klikniętego dnia w kalendarzu
   const selectedDateEvents = aggregatedEvents.filter(e => e.date === selectedCalendarDate);
 
   return (
@@ -10135,8 +10230,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Centrum Dowodzenia Eventu
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            OĹ› czasu Twojego wydarzenia. Dodawaj zadania (minutĂłwkÄ™), a system automatycznie Ĺ›ciÄ…gnie tutaj rĂłwnieĹĽ
-            terminy pĹ‚atnoĹ›ci do podwykonawcĂłw oraz sesje z agendy. PeĹ‚na kontrola w jednym kalendarzu.
+            Oś czasu Twojego wydarzenia. Dodawaj zadania (minutówkę), a system automatycznie ściągnie tutaj również
+            terminy płatności do podwykonawców oraz sesje z agendy. Pełna kontrola w jednym kalendarzu.
           </p>
         </div>
 
@@ -10151,12 +10246,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </section>
 
-      {/* 2. STATYSTYKI GĹĂ“WNE */}
+      {/* 2. STATYSTYKI GŁÓWNE */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: 'Wszystkie Zdarzenia', value: aggregatedEvents.length, icon: Calendar, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
-          { label: 'OczekujÄ…ce PĹ‚atnoĹ›ci', value: aggregatedEvents.filter(e => e.source === 'Finanse').length, icon: Wallet, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-          { label: 'Zadania MinutĂłwki', value: runOfShow.length, icon: ClipboardList, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
+          { label: 'Oczekujące Płatności', value: aggregatedEvents.filter(e => e.source === 'Finanse').length, icon: Wallet, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+          { label: 'Zadania Minutówki', value: runOfShow.length, icon: ClipboardList, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
           { label: 'Punkty Agendy', value: sessions.length, icon: Clock, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' }
         ].map((item: any) => (
           <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -10201,19 +10296,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   {aggregatedEvents.filter(e => e.source === 'Finanse').length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                       <span className="text-amber-500 mt-0.5">/</span>
-                      Masz oczekujÄ…ce terminy pĹ‚atnoĹ›ci do podwykonawcĂłw. Upewnij siÄ™, ĹĽe budĹĽet jest zabezpieczony na te daty.
+                      Masz oczekujące terminy płatności do podwykonawców. Upewnij się, że budżet jest zabezpieczony na te daty.
                     </p>
                   )}
                   {aggregatedEvents.length === 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                       <span className="text-indigo-500 mt-0.5">/</span>
-                      TwĂłj kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogĹ‚o zaczÄ…Ä‡ Ĺ›ledziÄ‡ obĹ‚oĹĽenie pracÄ… przed eventem.
+                      Twój kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogło zacząć śledzić obłożenie pracą przed eventem.
                     </p>
                   )}
                   {aggregatedEvents.filter(e => e.isCritical).length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                       <span className="text-red-500 mt-0.5">/</span>
-                      W kalendarzu znajdujÄ… siÄ™ punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
+                      W kalendarzu znajdują się punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
                     </p>
                   )}
                 </div>
@@ -10234,25 +10329,25 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div className="grid grid-cols-7 gap-1 md:gap-2 text-center mb-2">
-              {['Pn', 'Wt', 'Ĺšr', 'Cz', 'Pt', 'Sb', 'Nd'].map(d => (
+              {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'].map(d => (
                 <div key={d} className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{d}</div>
               ))}
             </div>
 
             <div className="grid grid-cols-7 gap-1 md:gap-2">
-              {/* Puste dni na poczÄ…tku miesiÄ…ca */}
+              {/* Puste dni na początku miesiąca */}
               {Array.from({ length: offsetDays }).map((_, i) => (
                 <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0"></div>
               ))}
 
-              {/* Dni miesiÄ…ca */}
+              {/* Dni miesiąca */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isSelected = selectedCalendarDate === formattedDate;
                 const isToday = todayIso === formattedDate;
 
-                // Szukamy zdarzeĹ„ na dany dzieĹ„ (do oznaczenia kropek)
+                // Szukamy zdarzeń na dany dzień (do oznaczenia kropek)
                 const dayEvents = aggregatedEvents.filter(e => e.date === formattedDate);
                 const hasCritical = dayEvents.some(e => e.isCritical);
                 const hasFinance = dayEvents.some(e => e.source === 'Finanse');
@@ -10272,7 +10367,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   >
                     <span className="text-xs md:text-sm font-black">{day}</span>
 
-                    {/* WskaĹşniki zdarzeĹ„ pod numerem dnia */}
+                    {/* Wskaźniki zdarzeń pod numerem dnia */}
                     {dayEvents.length > 0 && (
                       <div className="absolute bottom-1.5 flex gap-0.5">
                         {hasCritical && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
@@ -10294,7 +10389,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-1">
                 {selectedDateEvents.length === 0 ? (
                   <p className={`text-xs font-medium italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Brak zaplanowanych zadaĹ„, pĹ‚atnoĹ›ci i agendy na ten dzieĹ„.
+                    Brak zaplanowanych zadań, płatności i agendy na ten dzień.
                   </p>
                 ) : (
                   selectedDateEvents.map((ev: any) => (
@@ -10315,7 +10410,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
 
-        {/* PRAWA KOLUMNA: DODAWANIE MINUTĂ“WKI I LISTA */}
+        {/* PRAWA KOLUMNA: DODAWANIE MINUTÓWKI I LISTA */}
         <div className="xl:col-span-7 space-y-6">
 
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -10325,7 +10420,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
               <div>
                 <h4 className={`font-black text-sm uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Dodaj Zadanie Operacyjne (MinutĂłwka)
+                  Dodaj Zadanie Operacyjne (Minutówka)
                 </h4>
               </div>
             </div>
@@ -10358,7 +10453,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <textarea
                   rows={2}
                   className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  placeholder="Np. odbiĂłr dekoracji, briefing ekipy AV..."
+                  placeholder="Np. odbiór dekoracji, briefing ekipy AV..."
                   value={newRosTask.task}
                   onChange={e => setNewRosTask({ ...newRosTask, task: e.target.value })}
                 />
@@ -10381,7 +10476,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <input
                     type="text"
                     className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    placeholder="np. Foyer GĹ‚Ăłwne"
+                    placeholder="np. Foyer Główne"
                     value={newRosTask.location}
                     onChange={e => setNewRosTask({ ...newRosTask, location: e.target.value })}
                   />
@@ -10426,16 +10521,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </div>
 
-          {/* LISTA ZADAĹ W MINUTĂ“WCE */}
+          {/* LISTA ZADAŃ W MINUTÓWCE */}
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
             <h4 className={`font-black text-sm uppercase tracking-wider mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Lista MinutĂłwki ({runOfShow.length})
+              Lista Minutówki ({runOfShow.length})
             </h4>
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
               {runOfShow.length === 0 ? (
                 <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                  Brak punktĂłw w minutĂłwce operacyjnej.
+                  Brak punktów w minutówce operacyjnej.
                 </div>
               ) : (
                 runOfShow
@@ -10530,7 +10625,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================ */}
 {activeTab === 'eventpass' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    {/* NAGĹĂ“WEK */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -10538,7 +10633,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Identyfikacja pacjenta i check-in QR
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          ZarzÄ…dzaj kodami QR pacjentĂłw, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunĂłw.
+          Zarządzaj kodami QR pacjentów, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunów.
         </p>
       </div>
 
@@ -10552,7 +10647,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
-          <RefreshCw size={14} /> OdĹ›wieĹĽ
+          <RefreshCw size={14} /> Odśwież
         </button>
 
         <button
@@ -10578,7 +10673,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         ['QR wygenerowane', patientQrMetrics.qrGenerated, QrCode],
         ['Check-in wizyt', patientQrMetrics.checkedIn, ScanLine],
         ['Identyfikatory wydane', patientQrMetrics.idsIssued, BadgeCheck],
-        ['Wizyty zamkniÄ™te', patientQrMetrics.visitsClosed, CheckCircle2],
+        ['Wizyty zamknięte', patientQrMetrics.visitsClosed, CheckCircle2],
         ['Role personelu', staffAccessList.length, ShieldCheck],
       ].map(([label, value, Icon]: any) => (
         <div key={label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -10608,7 +10703,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           Raport check-in LIVE
         </h4>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Statusy pacjentĂłw na podstawie QR, check-inu i dziaĹ‚aĹ„ personelu.
+          Statusy pacjentów na podstawie QR, check-inu i działań personelu.
         </p>
       </div>
 
@@ -10617,7 +10712,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           { label: 'QR aktywne', value: patientQrMetrics.qrGenerated, total: patientQrMetrics.totalPatients, color: 'bg-blue-500' },
           { label: 'Check-in', value: patientQrMetrics.checkedIn, total: patientQrMetrics.qrGenerated, color: 'bg-emerald-500' },
           { label: 'ID wydane', value: patientQrMetrics.idsIssued, total: patientQrMetrics.qrGenerated, color: 'bg-indigo-500' },
-          { label: 'ZamkniÄ™te wizyty', value: patientQrMetrics.visitsClosed, total: patientQrMetrics.idsIssued, color: 'bg-slate-500' },
+          { label: 'Zamknięte wizyty', value: patientQrMetrics.visitsClosed, total: patientQrMetrics.idsIssued, color: 'bg-slate-500' },
         ].map(({ label, value, total, color }: any) => {
           const percent = Number(total || 0) > 0 ? Math.min(Math.round((Number(value || 0) / Number(total || 1)) * 100), 100) : 0
           return (
@@ -10637,7 +10732,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* LISTA PACJENTĂ“W */}
+    {/* LISTA PACJENTÓW */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <div className="relative flex-1 min-w-[200px]">
@@ -10660,14 +10755,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <option value="qr">Z QR</option>
           <option value="checked_in">Po check-in</option>
           <option value="id_issued">Z wydanym ID</option>
-          <option value="closed">ZamkniÄ™te wizyty</option>
+          <option value="closed">Zamknięte wizyty</option>
         </select>
       </div>
 
       <div className="space-y-4 p-4 md:p-5">
         {filteredPatientRows.length === 0 ? (
           <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            Brak pacjentĂłw pasujÄ…cych do filtrĂłw.
+            Brak pacjentów pasujących do filtrów.
           </div>
         ) : filteredPatientRows.map(({ patient, unit }: any) => {
           const isExpanded = expandedPatientIds[patient.id] === true
@@ -10697,7 +10792,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                     {unit?.wristband_returned && (
                       <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        Wizyta zamkniÄ™ta
+                        Wizyta zamknięta
                       </span>
                     )}
                   </div>
@@ -10739,7 +10834,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         }}
                         className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                       >
-                        <Eye size={14} /> PodglÄ…d QR
+                        <Eye size={14} /> Podgląd QR
                       </button>
 
                       <button
@@ -10790,7 +10885,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       </button>
 
                       <button onClick={() => handleReturnWristband(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                        <CheckCircle2 size={12}/> Zamknij wizytÄ™
+                        <CheckCircle2 size={12}/> Zamknij wizytę
                       </button>
 
                       <button onClick={() => handleResetUnitStatus(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-red-900/20 border-red-800/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}`}>
@@ -10812,10 +10907,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="min-w-0">
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-            Role personelu i dostÄ™p QR
+            Role personelu i dostęp QR
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            TwĂłrz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
+            Twórz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
           </p>
         </div>
 
@@ -10830,14 +10925,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14}/> Dodaj rolÄ™
+          <Plus size={14}/> Dodaj rolę
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {staffAccessList.length === 0 ? (
           <div className={`col-span-full p-10 text-center font-bold text-sm border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak zdefiniowanych rĂłl personelu QR.
+            Brak zdefiniowanych ról personelu QR.
           </div>
         ) : staffAccessList.map((staff: any) => {
           const staffPassUrl = staff.access_token ? getStaffPassUrl(staff.access_token) : ''
@@ -10846,9 +10941,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             staff.can_entry_checkin && 'Check-in wizyty',
             staff.can_meal_redemption && 'Dokumenty',
             staff.can_gadget_redemption && 'Pakiet pacjenta',
-            staff.can_transport_checkin && 'ĹšcieĹĽka pacjenta',
+            staff.can_transport_checkin && 'Ścieżka pacjenta',
             staff.can_wristband_issue && 'Wydanie identyfikatora',
-            staff.can_wristband_return && 'ZamkniÄ™cie wizyty',
+            staff.can_wristband_return && 'Zamknięcie wizyty',
           ].filter(Boolean).join(' / ')
 
           return (
@@ -10859,13 +10954,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{getClinicStaffRoleLabel(staff.role)}</p>
                 </div>
                 <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${staff.is_active !== false ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')}`}>
-                  {staff.is_active !== false ? 'Aktywny' : 'WyĹ‚Ä…czony'}
+                  {staff.is_active !== false ? 'Aktywny' : 'Wyłączony'}
                 </span>
               </div>
 
               <div className="mt-3">
                 <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Uprawnienia QR</p>
-                <p className={`text-[10px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{permissions || 'Brak uprawnieĹ„'}</p>
+                <p className={`text-[10px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{permissions || 'Brak uprawnień'}</p>
               </div>
 
               <div className={`mt-5 p-4 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
@@ -10879,14 +10974,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(staffPassUrl)
-                          showNotification('Link dla obsĹ‚ugi skopiowany', 'success')
+                          showNotification('Link dla obsługi skopiowany', 'success')
                         }}
                         className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
                       >
                         <Copy size={14}/> Kopiuj Link
                       </button>
                       <a href={staffPassUrl} target="_blank" rel="noopener noreferrer" className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 border ${isDarkMode ? 'bg-[#e8ce7a]/10 border-[#e8ce7a]/30 text-[#e8ce7a] hover:bg-[#e8ce7a]/20' : 'bg-slate-900 border-slate-900 text-[#e8ce7a] hover:bg-black'}`}>
-                        <ExternalLink size={14}/> OtwĂłrz
+                        <ExternalLink size={14}/> Otwórz
                       </a>
                     </div>
                   </>
@@ -10910,7 +11005,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {selectedAttendeeUnit.display_name}
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Karta i kod QR pacjenta do wydruku lub wysyĹ‚ki rÄ™cznej.
+                Karta i kod QR pacjenta do wydruku lub wysyłki ręcznej.
               </p>
             </div>
             <button onClick={() => setSelectedAttendeeUnit(null)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -10960,7 +11055,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               ['Typ', selectedAttendeeUnit.unit_type],
               ['Pacjent ID', selectedAttendeeUnit.patient_id || 'Brak'],
               ['ID identyfikatora', selectedAttendeeUnit.wristband_code || 'Brak'],
-              ['Status wizyty', selectedAttendeeUnit.checked_in ? 'Po check-in' : 'OczekujÄ…cy'],
+              ['Status wizyty', selectedAttendeeUnit.checked_in ? 'Po check-in' : 'Oczekujący'],
             ].map(([label, value]) => (
               <div key={label} className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
                 <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{label}</p>
@@ -10980,7 +11075,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
       {consents.length === 0 ? (
         <p className={`text-xs mt-3 font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Brak podpisanych zgĂłd dla tego pacjenta.
+          Brak podpisanych zgód dla tego pacjenta.
         </p>
       ) : (
         <div className="mt-4 space-y-2">
@@ -11002,7 +11097,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   rel="noopener noreferrer"
                   className={`shrink-0 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                 >
-                  OtwĂłrz
+                  Otwórz
                 </a>
               )}
             </div>
@@ -11018,7 +11113,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     )}
 
-    {/* MODAL: DODAWANIE OBSĹUGI */}
+    {/* MODAL: DODAWANIE OBSŁUGI */}
     {isStaffAccessModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -11029,7 +11124,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 Nowa rola personelu
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                StwĂłrz limitowany panel QR zaleĹĽny od roli osoby skanujÄ…cej.
+                Stwórz limitowany panel QR zależny od roli osoby skanującej.
               </p>
             </div>
             <button onClick={() => setIsStaffAccessModalOpen(false)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -11043,7 +11138,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <input
                 required
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                placeholder="np. Recepcja gĹ‚Ăłwna"
+                placeholder="np. Recepcja główna"
                 value={staffAccessForm.name || ''}
                 onChange={e => setStaffAccessForm({ ...staffAccessForm, name: e.target.value })}
               />
@@ -11070,9 +11165,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   ['can_entry_checkin', 'Check-in wizyty'],
                   ['can_meal_redemption', 'Dokumenty'],
                   ['can_gadget_redemption', 'Pakiet pacjenta'],
-                  ['can_transport_checkin', 'ĹšcieĹĽka pacjenta'],
+                  ['can_transport_checkin', 'Ścieżka pacjenta'],
                   ['can_wristband_issue', 'Wydanie ID'],
-                  ['can_wristband_return', 'ZamkniÄ™cie wizyty'],
+                  ['can_wristband_return', 'Zamknięcie wizyty'],
                 ].map(([key, label]) => (
                   <label key={key} className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                     !!staffAccessForm[key]
@@ -11097,7 +11192,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
-              UtwĂłrz dostÄ™p
+              Utwórz dostęp
             </button>
           </form>
         </div>
@@ -11118,29 +11213,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       {[
         {
           label: 'Zaopatrzenie barowe',
-          value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osĂłb`,
+          value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osób`,
           sub: 'Wymaga zakupu alkoholu',
           icon: <Truck size={16} />,
           color: 'from-purple-600 to-purple-800'
         },
         {
           label: 'Diety specjalne',
-          value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osĂłb`,
-          sub: 'Wymaga osobnych oznaczeĹ„',
+          value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osób`,
+          sub: 'Wymaga osobnych oznaczeń',
           icon: <UtensilsCrossed size={16} />,
           color: 'from-amber-500 to-amber-700'
         },
         {
           label: 'Rooming list',
-          value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osĂłb`,
+          value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osób`,
           sub: 'Rezerwacje potwierdzone',
           icon: <Bed size={16} />,
           color: 'from-blue-600 to-blue-800'
         },
         {
           label: 'Zapotrzebowanie na shuttle',
-          value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osĂłb`,
-          sub: 'Flota do zamĂłwienia',
+          value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osób`,
+          sub: 'Flota do zamówienia',
           icon: <Bus size={16} />,
           color: 'from-emerald-600 to-emerald-800'
         },
@@ -11160,19 +11255,19 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* === 2. ANALITYKA ZASOBĂ“W === */}
+    {/* === 2. ANALITYKA ZASOBÓW === */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* ObĹ‚oĹĽenie noclegowe */}
+      {/* Obłożenie noclegowe */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-2 mb-4">
           <Bed size={18} className="text-[#253a2a]" />
-          <h3 className="font-black text-slate-800">Live - ObĹ‚oĹĽenie noclegowe</h3>
+          <h3 className="font-black text-slate-800">Live - Obłożenie noclegowe</h3>
         </div>
         <div className="space-y-5">
           {[
-            { label: 'Pokoje 1-osobowe', current: approvedApps.filter(a => a.accommodation === 'PokĂłj 1-os').length, total: 30 },
-            { label: 'Pokoje 2-osobowe', current: approvedApps.filter(a => a.accommodation === 'PokĂłj 2-os').length, total: 20 },
+            { label: 'Pokoje 1-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 1-os').length, total: 30 },
+            { label: 'Pokoje 2-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 2-os').length, total: 20 },
           ].map((item, idx) => (
             <div key={idx}>
               <div className="flex justify-between text-xs font-bold mb-1">
@@ -11206,7 +11301,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="space-y-3">
           {[
             { label: 'Wino czerwone', key: 'wino_czerwone', color: 'bg-red-700' },
-            { label: 'Wino biaĹ‚e', key: 'wino_biale', color: 'bg-amber-300' },
+            { label: 'Wino białe', key: 'wino_biale', color: 'bg-amber-300' },
             { label: 'Piwo', key: 'piwo', color: 'bg-yellow-600' },
             { label: 'Bezalkoholowe', key: 'none', color: 'bg-slate-400' },
           ].map((item) => {
@@ -11240,7 +11335,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             Registry Operations Control
           </h3>
           <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
-            ZarzÄ…dzanie detalami logistycznymi goĹ›ci zaakceptowanych
+            Zarządzanie detalami logistycznymi gości zaakceptowanych
           </p>
         </div>
         <div className="flex gap-2">
@@ -11260,7 +11355,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500">
-              <th className="p-4">GoĹ›Ä‡ / Firma</th>
+              <th className="p-4">Gość / Firma</th>
               <th className="p-4 text-center">RSVP</th>
               <th className="p-4">Dieta / Alergie</th>
               <th className="p-4">Bar & Nocleg</th>
@@ -11361,7 +11456,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     {/* 1. STATUS KOMUNIKACJI - METRYKI */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">DostarczalnoĹ›Ä‡</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dostarczalność</p>
         <p className="text-xl font-black text-emerald-600 uppercase">99.8%</p>
         <div className="w-full bg-slate-100 h-1 mt-2 rounded-full overflow-hidden">
           <div className="bg-emerald-500 h-full w-[99%]"></div>
@@ -11373,7 +11468,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <p className="text-[10px] text-slate-400 font-bold">Wymaga pilnego kontaktu</p>
       </div>
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">WysĹ‚ane powiadomienia</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Wysłane powiadomienia</p>
         <p className="text-xl font-black text-slate-900">{approvedApps.length * 2} <span className="text-xs text-slate-400 font-bold">Logi systemowe</span></p>
       </div>
     </div>
@@ -11383,10 +11478,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-[#e8ce7a]">AI-ready</p>
           <h3 className="mt-1 font-black text-lg flex items-center gap-2">
-            <Sparkles size={18} /> AI asystent wiadomoĹ›ci
+            <Sparkles size={18} /> AI asystent wiadomości
           </h3>
           <p className="mt-2 text-xs text-white/70 font-medium">
-            W przyszĹ‚ym kroku wygeneruje treĹ›ci SMS, e-maili, zaleceĹ„ i follow-upĂłw na podstawie statusĂłw pacjentĂłw, wizyt i segmentĂłw opieki.
+            W przyszłym kroku wygeneruje treści SMS, e-maili, zaleceń i follow-upów na podstawie statusów pacjentów, wizyt i segmentów opieki.
           </p>
         </div>
         <span className="rounded-full bg-white/10 px-3 py-1 text-[9px] font-black uppercase text-[#e8ce7a]">
@@ -11395,40 +11490,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* 2. CENTRUM WYSYĹKI */}
+    {/* 2. CENTRUM WYSYŁKI */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* KANAĹ: EMAIL MASOWY */}
+      {/* KANAŁ: EMAIL MASOWY */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-900 text-white flex items-center gap-3">
           <div className="p-2 bg-white/10 rounded-lg"><Mail size={18} className="text-[#e8ce7a]"/></div>
           <div>
             <h3 className="font-black text-sm uppercase">Global Broadcast</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">WysyĹ‚ka do wszystkich zatwierdzonych ({approvedApps.length})</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">Wysyłka do wszystkich zatwierdzonych ({approvedApps.length})</p>
           </div>
         </div>
         <div className="p-6 space-y-4 bg-slate-50 flex-1">
           <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Temat wiadomoĹ›ci</label>
-            <input className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#253a2a]" placeholder="np. WaĹĽne informacje organizacyjne - Event ANM" />
+            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Temat wiadomości</label>
+            <input className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#253a2a]" placeholder="np. Ważne informacje organizacyjne - Event ANM" />
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">TreĹ›Ä‡ (Markdown/HTML)</label>
-            <textarea className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none focus:border-[#253a2a]" rows={6} placeholder="Szanowni PaĹ„stwo..." />
+            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Treść (Markdown/HTML)</label>
+            <textarea className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none focus:border-[#253a2a]" rows={6} placeholder="Szanowni Państwo..." />
           </div>
           <button className="w-full py-4 bg-[#253a2a] hover:bg-black text-white rounded-xl font-black text-xs uppercase shadow-lg transition-all flex items-center justify-center gap-2">
-            <Send size={14} className="text-[#e8ce7a]"/> WyĹ›lij komunikat zbiorczy
+            <Send size={14} className="text-[#e8ce7a]"/> Wyślij komunikat zbiorczy
           </button>
         </div>
       </div>
 
-      {/* KANAĹ: AUTOMATYKA FOLLOW-UP */}
+      {/* KANAŁ: AUTOMATYKA FOLLOW-UP */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-5 bg-slate-50 border-b border-slate-200 flex items-center gap-3 text-slate-900">
           <div className="p-2 bg-amber-100 rounded-lg text-amber-700"><Zap size={18}/></div>
           <div>
             <h3 className="font-black text-sm uppercase">Smart Reminders</h3>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Automatyczne dogonienie brakujÄ…cych danych</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Automatyczne dogonienie brakujących danych</p>
           </div>
         </div>
         <div className="p-6 flex flex-col justify-between flex-1">
@@ -11437,7 +11532,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <AlertTriangle size={14}/> Segmentacja: brak follow-upu
             </h4>
             <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-              System wykryĹ‚ <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentĂłw</strong>, ktĂłrzy wymagajÄ… potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
+              System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentów</strong>, którzy wymagają potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
             </p>
           </div>
 
@@ -11456,13 +11551,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">Email follow-up z linkiem pacjenta</span>
               </div>
               <button className="text-[10px] font-black text-white bg-[#253a2a] px-3 py-1 rounded-lg uppercase shadow-sm hover:scale-105 transition-all">
-                WyĹ›lij teraz
+                Wyślij teraz
               </button>
             </div>
           </div>
 
           <p className="text-[9px] text-slate-400 text-center mt-6 font-bold uppercase tracking-widest">
-            Logi wysyĹ‚ki: Ostatni reminder 2h temu
+            Logi wysyłki: Ostatni reminder 2h temu
           </p>
         </div>
       </div>
@@ -11472,7 +11567,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
     {!['rekrutacja', 'logistyka', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
-  <PlaceholderView icon={FileText} title="ModuĹ‚ w przygotowaniu" desc="Pracujemy nad wdroĹĽeniem tej funkcjonalnoĹ›ci." />
+  <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
 )}
    </div>
         </div>
@@ -11482,12 +11577,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl border border-slate-200 flex flex-col">
             <div className="p-5 md:p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
-              <div><h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2"><Edit3 size={20} className="text-[#253a2a]"/> Edytuj ZgĹ‚oszenie</h3><p className="text-xs text-slate-500 font-medium">{editingGuest.first_name} {editingGuest.last_name}</p></div>
+              <div><h3 className="font-black text-lg md:text-xl text-slate-900 flex items-center gap-2"><Edit3 size={20} className="text-[#253a2a]"/> Edytuj Zgłoszenie</h3><p className="text-xs text-slate-500 font-medium">{editingGuest.first_name} {editingGuest.last_name}</p></div>
               <button onClick={() => setEditingGuest(null)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors"><X size={20} /></button>
             </div>
             <form onSubmit={saveGuestChanges} className="p-5 md:p-6 space-y-6 bg-slate-50">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Dane Osobowe</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">ImiÄ™</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.first_name} onChange={e => setEditingGuest({...editingGuest, first_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nazwisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.last_name} onChange={e => setEditingGuest({...editingGuest, last_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Firma</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.company_name} onChange={e => setEditingGuest({...editingGuest, company_name: e.target.value})} /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Stanowisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.position} onChange={e => setEditingGuest({...editingGuest, position: e.target.value})} /></div></div></div>
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Wybory i Preferencje (RSVP)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Status RSVP</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.rsvp_status || 'oczekuje'} onChange={e => setEditingGuest({...editingGuest, rsvp_status: e.target.value})}><option value="oczekuje">Oczekuje / Brak</option><option value="potwierdzone">Potwierdzone</option><option value="odrzucone">ZrezygnowaĹ‚</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dieta</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.diet || ''} onChange={e => setEditingGuest({...editingGuest, diet: e.target.value})} placeholder="np. Wege, Bez glutenu" /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Alkohol</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.alcohol_preference || ''} onChange={e => setEditingGuest({...editingGuest, alcohol_preference: e.target.value})}><option value="">Wybierz...</option><option value="wino_czerwone">Wino Czerwone</option><option value="wino_biale">Wino BiaĹ‚e</option><option value="piwo">Piwo</option><option value="tylko_bezalkoholowe">Tylko Bezalkoholowe</option><option value="none">Brak alkoholu</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">SĹ‚odycze</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.sweets_preference || ''} onChange={e => setEditingGuest({...editingGuest, sweets_preference: e.target.value})}><option value="">Wybierz...</option><option value="czekolada">Czekolada</option><option value="owoce">Owoce</option><option value="ciasta">Ciasta</option><option value="wszystko">Wszystko</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Transport</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.transport || ''} onChange={e => setEditingGuest({...editingGuest, transport: e.target.value})}><option value="">Wybierz...</option><option value="WĹ‚asny dojazd">WĹ‚asny dojazd</option><option value="Carpooling">Carpooling (Szukam miejsca)</option><option value="Carpooling_driver">Carpooling (OferujÄ™ miejsce)</option><option value="Transfer">Transfer Organizatora</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nocleg</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.accommodation || ''} onChange={e => setEditingGuest({...editingGuest, accommodation: e.target.value})}><option value="">Wybierz...</option><option value="Brak">Brak</option><option value="PokĂłj 1-os">PokĂłj 1-osobowy</option><option value="PokĂłj 2-os">PokĂłj 2-osobowy</option></select></div></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dodatkowe uwagi (Alergie itp.)</label><textarea rows={2} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none resize-none focus:border-[#253a2a]" value={editingGuest.extra_notes || ''} onChange={e => setEditingGuest({...editingGuest, extra_notes: e.target.value})} placeholder="np. uczulenie na orzechy..." /></div></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Dane Osobowe</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Imię</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.first_name} onChange={e => setEditingGuest({...editingGuest, first_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nazwisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.last_name} onChange={e => setEditingGuest({...editingGuest, last_name: e.target.value})} required /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Firma</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.company_name} onChange={e => setEditingGuest({...editingGuest, company_name: e.target.value})} /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Stanowisko</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.position} onChange={e => setEditingGuest({...editingGuest, position: e.target.value})} /></div></div></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4"><h4 className="font-black text-slate-800 text-sm border-b pb-2 mb-3">Wybory i Preferencje (RSVP)</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Status RSVP</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.rsvp_status || 'oczekuje'} onChange={e => setEditingGuest({...editingGuest, rsvp_status: e.target.value})}><option value="oczekuje">Oczekuje / Brak</option><option value="potwierdzone">Potwierdzone</option><option value="odrzucone">Zrezygnował</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dieta</label><input className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.diet || ''} onChange={e => setEditingGuest({...editingGuest, diet: e.target.value})} placeholder="np. Wege, Bez glutenu" /></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Alkohol</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.alcohol_preference || ''} onChange={e => setEditingGuest({...editingGuest, alcohol_preference: e.target.value})}><option value="">Wybierz...</option><option value="wino_czerwone">Wino Czerwone</option><option value="wino_biale">Wino Białe</option><option value="piwo">Piwo</option><option value="tylko_bezalkoholowe">Tylko Bezalkoholowe</option><option value="none">Brak alkoholu</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Słodycze</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.sweets_preference || ''} onChange={e => setEditingGuest({...editingGuest, sweets_preference: e.target.value})}><option value="">Wybierz...</option><option value="czekolada">Czekolada</option><option value="owoce">Owoce</option><option value="ciasta">Ciasta</option><option value="wszystko">Wszystko</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Transport</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.transport || ''} onChange={e => setEditingGuest({...editingGuest, transport: e.target.value})}><option value="">Wybierz...</option><option value="Własny dojazd">Własny dojazd</option><option value="Carpooling">Carpooling (Szukam miejsca)</option><option value="Carpooling_driver">Carpooling (Oferuję miejsce)</option><option value="Transfer">Transfer Organizatora</option></select></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Nocleg</label><select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-[#253a2a]" value={editingGuest.accommodation || ''} onChange={e => setEditingGuest({...editingGuest, accommodation: e.target.value})}><option value="">Wybierz...</option><option value="Brak">Brak</option><option value="Pokój 1-os">Pokój 1-osobowy</option><option value="Pokój 2-os">Pokój 2-osobowy</option></select></div></div><div><label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Dodatkowe uwagi (Alergie itp.)</label><textarea rows={2} className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none resize-none focus:border-[#253a2a]" value={editingGuest.extra_notes || ''} onChange={e => setEditingGuest({...editingGuest, extra_notes: e.target.value})} placeholder="np. uczulenie na orzechy..." /></div></div>
               <div className="flex gap-3 pt-2"><button type="button" onClick={() => setEditingGuest(null)} className="flex-1 py-3.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-black text-sm transition-colors hover:bg-slate-50">Anuluj</button><button type="submit" disabled={updating} className="flex-1 py-3.5 bg-[#253a2a] hover:bg-[#1a291e] text-[#e8ce7a] rounded-xl font-black text-sm shadow-md transition-colors">{updating ? 'Zapisywanie...' : 'Zapisz Zmiany'}</button></div>
             </form>
           </div>
