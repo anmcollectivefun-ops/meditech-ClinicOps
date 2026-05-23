@@ -1181,6 +1181,22 @@ const loadPatientConsents = useCallback(async () => {
   setPatientConsents(data || [])
 }, [id, supabase])
 
+const loadConsentTemplates = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('medical_consent_templates')
+    .select('*')
+    .eq('event_id', id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.warn('Błąd ładowania szablonów z bazy:', error.message);
+    setConsentTemplates([]);
+    return;
+  }
+  setConsentTemplates(data || []);
+}, [id, supabase]);
+
+
   const buildAttendeeUnitRows = (app: any) => {
     const baseName = `${app.first_name || ''} ${app.last_name || ''}`.trim()
     const accessStatus = app.access_status || app.status || 'pending'
