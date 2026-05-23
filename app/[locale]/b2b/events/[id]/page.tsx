@@ -733,6 +733,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
             ? (selectedTreatment?.price_amount ?? null)
             : Number(appointmentForm.price_amount || 0),
           currency: appointmentForm.currency || selectedTreatment?.currency || 'PLN',
+          paid_amount: 0,
+          payment_status: 'unpaid',
           appointment_date: appointmentForm.appointment_date,
           status: 'scheduled'
         }])
@@ -2337,16 +2339,16 @@ const patientQrMetrics = useMemo(() => ({
 
   const handleCreateDefaultBudgetCategories = async () => {
     const defaults = [
-      { name: 'Catering', slug: 'catering', planned_budget: 0, color: '#f59e0b', sort_order: 1 },
-      { name: 'Transport', slug: 'transport', planned_budget: 0, color: '#3b82f6', sort_order: 2 },
-      { name: 'Gadżety', slug: 'gadgets', planned_budget: 0, color: '#10b981', sort_order: 3 },
-      { name: 'Podwykonawcy', slug: 'contractors', planned_budget: 0, color: '#6366f1', sort_order: 4 },
-      { name: 'Obiekt / lokalizacja', slug: 'venue', planned_budget: 0, color: '#8b5cf6', sort_order: 5 },
-      { name: 'Marketing', slug: 'marketing', planned_budget: 0, color: '#ec4899', sort_order: 6 },
-      { name: 'Dekoracje', slug: 'decor', planned_budget: 0, color: '#eab308', sort_order: 7 },
-      { name: 'Technika', slug: 'technical', planned_budget: 0, color: '#64748b', sort_order: 8 },
-      { name: 'Inne', slug: 'other', planned_budget: 0, color: '#94a3b8', sort_order: 9 },
-      { name: 'Przychody', slug: 'income', planned_budget: 0, color: '#22c55e', sort_order: 10 }
+      { name: 'Personel medyczny', slug: 'medical_team', planned_budget: 0, color: '#0f766e', sort_order: 1 },
+      { name: 'Preparaty i materiały', slug: 'preparations', planned_budget: 0, color: '#7c3aed', sort_order: 2 },
+      { name: 'Sprzęt i serwis', slug: 'equipment', planned_budget: 0, color: '#2563eb', sort_order: 3 },
+      { name: 'Diagnostyka i laboratoria', slug: 'diagnostics', planned_budget: 0, color: '#0891b2', sort_order: 4 },
+      { name: 'Marketing i pierwszy kontakt', slug: 'marketing', planned_budget: 0, color: '#db2777', sort_order: 5 },
+      { name: 'Administracja i recepcja', slug: 'administration', planned_budget: 0, color: '#64748b', sort_order: 6 },
+      { name: 'Czynsz i media', slug: 'facility', planned_budget: 0, color: '#ca8a04', sort_order: 7 },
+      { name: 'IT i systemy', slug: 'it_systems', planned_budget: 0, color: '#475569', sort_order: 8 },
+      { name: 'Inne koszty kliniki', slug: 'other', planned_budget: 0, color: '#94a3b8', sort_order: 9 },
+      { name: 'Przychody z wizyt', slug: 'visit_income', planned_budget: 0, color: '#16a34a', sort_order: 10 }
     ].map(category => ({ ...category, event_id: id }))
     const { error } = await supabase.from('event_budget_categories').insert(defaults)
     if (error) return showNotification('Błąd tworzenia kategorii: ' + error.message, 'error')
@@ -2505,6 +2507,27 @@ const patientQrMetrics = useMemo(() => ({
     setBudgetPaymentForm({})
     setSelectedBudgetItem(null)
     showNotification('Płatność dodana', 'success')
+  }
+
+  const handleMarkAppointmentPaid = async (appointment: any) => {
+    const price = Number(appointment.price_amount || 0)
+    if (!appointment?.id || price <= 0) {
+      return showNotification('Ta wizyta nie ma ustawionej ceny do rozliczenia.', 'error')
+    }
+
+    const { error } = await supabase
+      .from('appointments')
+      .update({
+        paid_amount: price,
+        payment_status: 'paid',
+        paid_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', appointment.id)
+
+    if (error) return showNotification('Błąd oznaczania wizyty jako zapłaconej: ' + error.message, 'error')
+    await loadAppointments()
+    showNotification('Wizyta oznaczona jako opłacona', 'success')
   }
 
   const hasBudgetSource = (sourceType: string, sourceId: string) =>
@@ -3959,6 +3982,84 @@ const transportAnalytics = useMemo(() => {
     const savings = plannedBudget - totalExpenses
     return { plannedBudget, totalExpenses, totalIncome, paidExpenses, unpaidExpenses, receivedIncome, totalVat, eventResult, costPerParticipant, savings, isOverBudget: plannedBudget > 0 && totalExpenses > plannedBudget }
   }, [activeBudgetItems, budgetCategories, activeParticipants])
+
+  const clinicAnalytics = useMemo(() => {
+    const visits = appointmentsList || []
+    const totalVisitValue = visits.reduce((sum: number, app: any) => sum + Number(app.price_amount || 0), 0)
+    const paidVisitValue = visits.reduce((sum: number, app: any) => {
+      const price = Number(app.price_amount || 0)
+      return sum + Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+    }, 0)
+    const unpaidVisitValue = visits.reduce((sum: number, app: any) => {
+      const price = Number(app.price_amount || 0)
+      const paid = Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+      return sum + Math.max(price - paid, 0)
+    }, 0)
+    const scheduledVisits = visits.filter((app: any) => app.status !== 'cancelled').length
+    const avgVisitValue = scheduledVisits ? totalVisitValue / scheduledVisits : 0
+    const expenses = activeBudgetItems.filter((item: any) => item.type === 'expense')
+    const totalClinicCosts = expenses.reduce((sum: number, item: any) => sum + Number(item.gross_amount || 0), 0)
+    const operatingResult = paidVisitValue - totalClinicCosts
+    const appointmentCountsByPatient = visits.reduce((acc: Record<string, number>, app: any) => {
+      if (app.patient_id) acc[app.patient_id] = (acc[app.patient_id] || 0) + 1
+      return acc
+    }, {})
+    const returningPatientIds = new Set([
+      ...patients.filter((p: any) => Number(p.total_visits || 0) > 1).map((p: any) => p.id),
+      ...Object.entries(appointmentCountsByPatient).filter(([, count]) => Number(count) > 1).map(([patientId]) => patientId)
+    ])
+    const newPatients30d = patients.filter((p: any) => p.created_at && new Date(p.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length
+    const returningPatients = returningPatientIds.size
+    const returnRate = patients.length ? Math.round((returningPatients / patients.length) * 100) : 0
+
+    const treatmentRows = Object.values(visits.reduce((acc: Record<string, any>, app: any) => {
+      const key = app.treatment_id || app.treatment_name || 'unknown'
+      if (!acc[key]) {
+        acc[key] = { id: key, name: app.treatment_name || treatments.find((t: any) => t.id === app.treatment_id)?.name || 'Zabieg bez nazwy', count: 0, value: 0, paid: 0 }
+      }
+      const price = Number(app.price_amount || 0)
+      const paid = Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+      acc[key].count += 1
+      acc[key].value += price
+      acc[key].paid += paid
+      return acc
+    }, {})).sort((a: any, b: any) => b.count - a.count || b.value - a.value)
+
+    const doctorRows = Object.values(visits.reduce((acc: Record<string, any>, app: any) => {
+      const key = app.doctor_id || 'unassigned'
+      const doctor = doctorsList.find((d: any) => d.id === app.doctor_id)
+      if (!acc[key]) {
+        acc[key] = {
+          id: key,
+          name: doctor ? `${doctor.first_name || ''} ${doctor.last_name || ''}`.trim() : 'Bez lekarza',
+          count: 0,
+          value: 0,
+          paid: 0
+        }
+      }
+      const price = Number(app.price_amount || 0)
+      const paid = Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+      acc[key].count += 1
+      acc[key].value += price
+      acc[key].paid += paid
+      return acc
+    }, {})).sort((a: any, b: any) => b.value - a.value)
+
+    return {
+      totalVisitValue,
+      paidVisitValue,
+      unpaidVisitValue,
+      scheduledVisits,
+      avgVisitValue,
+      totalClinicCosts,
+      operatingResult,
+      newPatients30d,
+      returningPatients,
+      returnRate,
+      treatmentRows,
+      doctorRows
+    }
+  }, [appointmentsList, activeBudgetItems, patients, treatments, doctorsList])
 
   const categorySummaries = useMemo(() => budgetCategories.map((category: any) => {
     const items = activeBudgetItems.filter((item: any) => item.category === category.slug && item.type === 'expense')
@@ -8825,10 +8926,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Wallet size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Płatności i koszty procedur
+          Analityka finansowa kliniki
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Płatności pacjentów, zaliczki, VAT, koszty procedur i kontrola rentowności kliniki.
+          Przychody z wizyt, płatności pacjentów, koszty operacyjne, powracalność i efektywność zespołu medycznego.
         </p>
       </div>
 
@@ -8850,12 +8951,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           onClick={() => { setBudgetItemForm({ type: 'expense', category: 'other', currency: 'PLN', vat_rate: 23, payment_status: 'planned', is_active: true }); setIsEditingBudgetItem(false); setIsBudgetItemModalOpen(true) }}
           className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Wydatek
+          <Plus size={14} /> Koszt kliniki
         </button>
       </div>
     </div>
 
-    {/* AI ECO-BUDGET GUARD (Zamiast niebieskiego alertu) */}
     <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors ${isDarkMode ? 'bg-gradient-to-r from-indigo-950/40 to-[#0f172a] border-indigo-900/50' : 'bg-gradient-to-r from-indigo-50 to-white border-indigo-100'}`}>
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
@@ -8863,36 +8963,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         <div>
           <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-            AI Finance Advisor
+            AI Clinic Intelligence
           </p>
           <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Finanse kliniki pod kontrolą
+            Dane gotowe pod analizę dotacyjną
           </h4>
           <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong>{formatMoney(budgetSummary.unpaidExpenses)}</strong> do zapłaty.
-            Gdy wprowadzisz więcej danych (catering, druk), AI przeanalizuje wydatki i wskaże,
-            gdzie relokacja środków da najwyższy "Green ROI" (najwięcej uratowanego CO2 na każdą wydaną złotówkę).
+            Umówione wizyty dają potencjalny przychód <strong>{formatMoney(clinicAnalytics.totalVisitValue)}</strong>,
+            z czego opłacono <strong>{formatMoney(clinicAnalytics.paidVisitValue)}</strong>.
+            AI może później liczyć trendy pacjentów, rentowność procedur i efektywność lekarzy na podstawie tych samych danych.
           </p>
         </div>
       </div>
       {budgetSummary.isOverBudget && (
         <div className="shrink-0 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black flex items-center gap-2">
-          <AlertTriangle size={16} /> Przekroczono o {formatMoney(Math.abs(budgetSummary.savings))}
+          <AlertTriangle size={16} /> Koszty przekroczyły plan o {formatMoney(Math.abs(budgetSummary.savings))}
         </div>
       )}
     </div>
 
-    {/* NOWOCZESNE KAFELKI KPI (Redesign) */}
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {[
-        { label: 'Budżet planowany', value: budgetSummary.plannedBudget, icon: Wallet, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
-        { label: 'Koszty brutto', value: budgetSummary.totalExpenses, icon: TrendingDown, color: isDarkMode ? 'text-red-400' : 'text-red-600' },
-        { label: 'Zapłacono', value: budgetSummary.paidExpenses, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
-        { label: 'Do zapłaty', value: budgetSummary.unpaidExpenses, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-        { label: 'Przychody', value: budgetSummary.totalIncome, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
-        { label: 'Wynik eventu', value: budgetSummary.eventResult, icon: Calculator, color: budgetSummary.eventResult >= 0 ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-red-400' : 'text-red-600') },
-        { label: 'Koszt / uczestnik', value: budgetSummary.costPerParticipant, icon: Users, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' },
-        { label: 'Suma VAT', value: budgetSummary.totalVat, icon: Receipt, color: isDarkMode ? 'text-purple-400' : 'text-purple-600' },
+        { label: 'Potencjał wizyt', value: clinicAnalytics.totalVisitValue, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600', money: true },
+        { label: 'Opłacone wizyty', value: clinicAnalytics.paidVisitValue, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600', money: true },
+        { label: 'Do pobrania', value: clinicAnalytics.unpaidVisitValue, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600', money: true },
+        { label: 'Śr. wartość wizyty', value: clinicAnalytics.avgVisitValue, icon: Calculator, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600', money: true },
+        { label: 'Nowi pacjenci 30 dni', value: clinicAnalytics.newPatients30d, icon: Users, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-700' },
+        { label: 'Powracający pacjenci', value: clinicAnalytics.returningPatients, icon: RefreshCw, color: isDarkMode ? 'text-violet-400' : 'text-violet-700' },
+        { label: 'Powracalność', value: clinicAnalytics.returnRate, suffix: '%', icon: Activity, color: isDarkMode ? 'text-rose-400' : 'text-rose-600' },
+        { label: 'Wynik operacyjny', value: clinicAnalytics.operatingResult, icon: Receipt, color: clinicAnalytics.operatingResult >= 0 ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-red-400' : 'text-red-600'), money: true },
       ].map((kpi: any) => (
         <div key={kpi.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
@@ -8907,7 +9006,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <kpi.icon size={14} className={kpi.color} />
             </div>
             <p className={`mt-3 text-xl md:text-2xl font-black tabular-nums tracking-tight truncate ${kpi.color}`}>
-              {formatMoney(kpi.value)}
+              {kpi.money ? formatMoney(kpi.value) : `${Number(kpi.value || 0).toLocaleString('pl-PL')}${kpi.suffix || ''}`}
             </p>
           </div>
         </div>
@@ -8916,40 +9015,126 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
     {budgetSummary.plannedBudget === 0 && (
       <div className={`rounded-2xl border p-4 text-xs font-black flex items-center gap-2 ${isDarkMode ? 'bg-amber-900/20 border-amber-800/50 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-        <AlertTriangle size={16}/> Ustaw budżety kategorii, aby widzieć oszczędności i wskaźniki przekroczeń.
+        <AlertTriangle size={16}/> Ustaw plan kosztów kategorii, aby widzieć przekroczenia i wynik operacyjny kliniki.
       </div>
     )}
 
-    {/* AGREGACJA / IMPORT */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-        <div>
-          <h4 className={`font-black text-sm md:text-base flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <BadgeDollarSign size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Import kosztów
-          </h4>
-          <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Zaciągnij koszty z innych modułów. System nie dubluje pozycji.
-          </p>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div>
+            <h4 className={`font-black text-sm md:text-base flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <BadgeDollarSign size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Najpopularniejsze zabiegi
+            </h4>
+            <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Ranking procedur według liczby zapisów i wartości wizyt.
+            </p>
+          </div>
+          {budgetCategories.length === 0 && (
+            <button onClick={handleCreateDefaultBudgetCategories} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+              Kategorie kliniki
+            </button>
+          )}
         </div>
-        {budgetCategories.length === 0 && (
-          <button onClick={handleCreateDefaultBudgetCategories} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            Utwórz domyślne kategorie
-          </button>
-        )}
+        <div className="space-y-3">
+          {clinicAnalytics.treatmentRows.slice(0, 6).map((row: any) => {
+            const width = clinicAnalytics.totalVisitValue ? Math.round((row.value / clinicAnalytics.totalVisitValue) * 100) : 0
+            return (
+              <div key={row.id} className={`rounded-2xl border p-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0">
+                    <p className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.name}</p>
+                    <p className={isDarkMode ? 'text-slate-500' : 'text-slate-500'}>{row.count} wizyt</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`font-black tabular-nums ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{formatMoney(row.value)}</p>
+                    <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opłacone {formatMoney(row.paid)}</p>
+                  </div>
+                </div>
+                <div className={`w-full h-1.5 rounded-full mt-3 overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                  <div className="h-full bg-blue-500" style={{ width: `${Math.min(width, 100)}%` }} />
+                </div>
+              </div>
+            )
+          })}
+          {clinicAnalytics.treatmentRows.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak wizyt z ceną. Umów pacjenta na zabieg, żeby zobaczyć ranking.</p>}
+        </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {[
-          { label: 'Podwykonawcy', action: handleImportContractorsToBudget },
-          { label: 'Gadżety', action: handleImportGadgetsToBudget },
-          { label: 'Checklista', action: handleImportChecklistToBudget },
-        ].map(btn => (
-          <button key={btn.label} onClick={btn.action} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
-            {btn.label}
-          </button>
-        ))}
-        <button onClick={handleImportTicketsIncomeToBudget} className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}>
-          Przychody z biletów
-        </button>
+
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <h4 className={`font-black text-sm md:text-base flex items-center gap-2 mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+          <Stethoscope size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/> Efektywność lekarzy
+        </h4>
+        <div className="space-y-3">
+          {clinicAnalytics.doctorRows.slice(0, 6).map((row: any) => (
+            <div key={row.id} className={`flex items-center justify-between gap-4 rounded-2xl border p-3 text-xs ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="min-w-0">
+                <p className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.name}</p>
+                <p className={isDarkMode ? 'text-slate-500' : 'text-slate-500'}>{row.count} wizyt</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={`font-black tabular-nums ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{formatMoney(row.value)}</p>
+                <p className={`text-[10px] ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>opłacone {formatMoney(row.paid)}</p>
+              </div>
+            </div>
+          ))}
+          {clinicAnalytics.doctorRows.length === 0 && <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak danych lekarzy z wizyt.</p>}
+        </div>
+      </div>
+    </div>
+
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+      <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <h4 className={`font-black flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+          <CalendarPlus size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Przychody z wizyt pacjentów
+        </h4>
+        <p className={`text-[10px] md:text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+          Każda umówiona wizyta pokazuje potencjalny przychód. Po płatności oznacz wizytę jako opłaconą.
+        </p>
+      </div>
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse">
+          <thead className={`text-[9px] uppercase tracking-wider font-black border-b ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
+            <tr>{['Pacjent','Zabieg','Data','Cena','Zapłacono','Status','Akcja'].map(h => <th key={h} className="p-4 whitespace-nowrap">{h}</th>)}</tr>
+          </thead>
+          <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+            {appointmentsList.slice(0, 12).map((app: any) => {
+              const price = Number(app.price_amount || 0)
+              const paid = Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+              const isPaid = app.payment_status === 'paid' || (price > 0 && paid >= price)
+              return (
+                <tr key={app.id} className={`transition-colors ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
+                  <td className="p-4 min-w-[180px]">
+                    <p className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {app.patients?.first_name} {app.patients?.last_name}
+                    </p>
+                    <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{app.patients?.pesel || app.patients?.phone || '-'}</p>
+                  </td>
+                  <td className={`p-4 text-xs font-bold min-w-[180px] ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{app.treatment_name || '-'}</td>
+                  <td className={`p-4 text-xs whitespace-nowrap ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{app.appointment_date ? new Date(app.appointment_date).toLocaleString('pl-PL') : '-'}</td>
+                  <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{formatMoney(price, app.currency || 'PLN')}</td>
+                  <td className={`p-4 text-xs font-black tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatMoney(paid, app.currency || 'PLN')}</td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isPaid ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
+                      {isPaid ? 'opłacona' : 'do zapłaty'}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <button
+                      type="button"
+                      onClick={() => handleMarkAppointmentPaid(app)}
+                      disabled={isPaid || price <= 0}
+                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                    >
+                      Opłacone
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+            {appointmentsList.length === 0 && <tr><td colSpan={7} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak umówionych wizyt do analizy przychodów.</td></tr>}
+          </tbody>
+        </table>
       </div>
     </div>
 
