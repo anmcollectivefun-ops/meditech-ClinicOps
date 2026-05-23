@@ -6582,7 +6582,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-     {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW (Centrum Dowodzenia) */}
+      {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW (Pogrupowana Prawnie) */}
       <div className="xl:col-span-1 space-y-4">
         
         {/* NAGŁÓWEK I WYSZUKIWARKA */}
@@ -6608,17 +6608,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </div>
         
-        {/* LISTA SZABLONÓW */}
-        <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+        {/* LISTA SZABLONÓW POGRUPOWANA W KATEGORIE */}
+        <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
           {consentTemplates.length === 0 ? (
             <div className={`p-8 text-center border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
               <p className="text-xs font-bold">Brak szablonów w bazie.</p>
               <p className="text-[10px] mt-1">Utwórz pierwszy wywiad lub zgodę.</p>
             </div>
           ) : (
-            consentTemplates
-              .filter(t => (t.title || '').toLowerCase().includes(templateSearch.toLowerCase()) || (t.document_type || '').toLowerCase().includes(templateSearch.toLowerCase()))
-              .map((template: any) => {
+            [
+              { title: '1. Dokumenty prawne (RODO / upoważnienia)', types: ['rodo', 'info'] },
+              { title: '2. Wywiady medyczne (kwalifikacja)', types: ['questionnaire'] },
+              { title: '3. Świadome zgody na zabieg', types: ['consent'] }
+            ].map(group => {
+              const groupTemplates = consentTemplates
+                .filter((template: any) => group.types.includes(template.document_type || 'consent'))
+                .filter((template: any) =>
+                  (template.title || '').toLowerCase().includes(templateSearch.toLowerCase())
+                  || (template.document_type || '').toLowerCase().includes(templateSearch.toLowerCase())
+                )
+
+              if (groupTemplates.length === 0) return null
+
+              return (
+                <div key={group.title} className="space-y-3">
+                  <h6 className={`text-[10px] font-black uppercase tracking-widest pl-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {group.title}
+                  </h6>
+
+                  {groupTemplates.map((template: any) => {
                 const isSendingMode = activeTemplateSendId === template.id;
                 
                 return (
@@ -6631,11 +6649,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                           <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                             template.document_type === 'questionnaire' 
                               ? (isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-100 text-indigo-700 border-indigo-200')
-                              : template.document_type === 'rodo'
+                                : template.document_type === 'rodo' || template.document_type === 'info'
                                 ? (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200')
                                 : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                           }`}>
-                            {template.document_type === 'questionnaire' ? 'Wywiad' : template.document_type === 'rodo' ? 'RODO' : 'Zgoda'}
+                            {template.document_type === 'questionnaire' ? 'Wywiad' : template.document_type === 'rodo' ? 'RODO' : template.document_type === 'info' ? 'Upoważnienie' : 'Zgoda'}
                           </span>
                           
                           {template.is_global_required && (
@@ -6744,6 +6762,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                   </div>
                 )
+                  })}
+                </div>
+              )
             })
           )}
         </div>
@@ -7466,29 +7487,61 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             {/* 4. ZGODY MEDYCZNE Z BAZY */}
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>4. Wymagane Zgody (Wybierz z biblioteki szablonów)</label>
-              <div className={`p-4 rounded-xl border grid grid-cols-1 sm:grid-cols-2 gap-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                4. Wymagane dokumenty dla tego zabiegu
+              </label>
+              <p className={`mb-3 text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                Zaznaczone szablony zostaną automatycznie wygenerowane jako dokumenty pacjenta po zapisaniu go na ten zabieg.
+              </p>
+              <div className={`p-4 rounded-xl border space-y-5 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                 {consentTemplates.length === 0 ? (
                   <p className="text-xs text-red-500 font-bold">Brak szablonów w systemie.</p>
-                ) : consentTemplates.map((template: any) => {
-                  const isChecked = selectedTemplatesForTreatment.includes(template.id);
+                ) : [
+                  { title: 'Dokumenty prawne', types: ['rodo', 'info'] },
+                  { title: 'Wywiady medyczne', types: ['questionnaire'] },
+                  { title: 'Świadome zgody na zabieg', types: ['consent'] }
+                ].map(group => {
+                  const groupTemplates = consentTemplates.filter((template: any) => group.types.includes(template.document_type || 'consent'))
+                  if (groupTemplates.length === 0) return null
+
                   return (
-                    <label key={template.id} className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : (isDarkMode ? 'border-slate-600 bg-slate-900 group-hover:border-emerald-500/50' : 'border-slate-300 bg-white group-hover:border-emerald-500/50')}`}>
-                        {isChecked && <CheckCircle2 size={14} />}
+                    <div key={group.title} className="space-y-2">
+                      <h6 className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                        {group.title}
+                      </h6>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {groupTemplates.map((template: any) => {
+                          const isChecked = selectedTemplatesForTreatment.includes(template.id);
+                          const prefix = template.document_type === 'rodo'
+                            ? 'RODO'
+                            : template.document_type === 'info'
+                              ? 'PRAWNE'
+                              : template.document_type === 'questionnaire'
+                                ? 'WYWIAD'
+                                : 'ZGODA'
+
+                          return (
+                            <label key={template.id} className="flex items-center gap-3 cursor-pointer group">
+                              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : (isDarkMode ? 'border-slate-600 bg-slate-900 group-hover:border-emerald-500/50' : 'border-slate-300 bg-white group-hover:border-emerald-500/50')}`}>
+                                {isChecked && <CheckCircle2 size={14} />}
+                              </div>
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) setSelectedTemplatesForTreatment([...selectedTemplatesForTreatment, template.id]);
+                                  else setSelectedTemplatesForTreatment(selectedTemplatesForTreatment.filter(id => id !== template.id));
+                                }}
+                              />
+                              <span className={`text-sm font-bold line-clamp-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                                {prefix}: {template.title}
+                              </span>
+                            </label>
+                          )
+                        })}
                       </div>
-                      <input 
-                        type="checkbox" className="sr-only" checked={isChecked}
-                        onChange={(e) => {
-                          if (e.target.checked) setSelectedTemplatesForTreatment([...selectedTemplatesForTreatment, template.id]);
-                          else setSelectedTemplatesForTreatment(selectedTemplatesForTreatment.filter(id => id !== template.id));
-                        }}
-                      />
-                      <span className={`text-sm font-bold line-clamp-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                        {template.document_type === 'rodo' ? 'RODO: ' : template.document_type === 'questionnaire' ? 'WYWIAD: ' : 'ZGODA: '} 
-                        {template.title}
-                      </span>
-                    </label>
+                    </div>
                   )
                 })}
               </div>
