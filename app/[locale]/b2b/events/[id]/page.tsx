@@ -472,7 +472,10 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
     co2ReductionPercent: 0
   });
 }, [fleet, carpoolingAds]);
-
+// --- STANY DLA ZAKŁADKI DOKUMENTACJI ---
+  const [templateSearch, setTemplateSearch] = useState('')
+  const [activeTemplateSendId, setActiveTemplateSendId] = useState<string | null>(null)
+  const [selectedPatientForTemplate, setSelectedPatientForTemplate] = useState<string>('')
 // ==========================================
   // STANY prelegenci
   // ==========================================
@@ -6118,50 +6121,159 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW */}
-      <div className="xl:col-span-1 space-y-6">
-        <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza Szablonów
-        </h4>
-
-        <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-          {/* Przykładowe Szablony (Docelowo zmapujemy tu 'consentTemplates' pobrane z bazy) */}
-          <div className={`p-4 rounded-[20px] border shadow-sm ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/20 to-slate-900 border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-200'}`}>
-            <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-100 text-indigo-700 border-indigo-200'}`}>Kwestionariusz</span>
-              <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-white text-slate-500'}`}><Edit3 size={14}/></button>
-            </div>
-            <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Pełny Wywiad Medyczny</h5>
-            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Inteligentna ankieta zdrowotna, wymuszana co 6 miesięcy.</p>
+     {/* KOLUMNA 2: BIBLIOTEKA SZABLONÓW (Centrum Dowodzenia) */}
+      <div className="xl:col-span-1 space-y-4">
+        
+        {/* NAGŁÓWEK I WYSZUKIWARKA */}
+        <div className={`p-5 rounded-[24px] border shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <FileIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}/> Baza Szablonów
+            </h4>
+            <span className={`px-2 py-1 text-[10px] font-black rounded-lg ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+              {consentTemplates.length} dok.
+            </span>
           </div>
-
-          <div className={`p-4 rounded-[20px] border shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-            <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Zgoda Zabiegowa</span>
-              <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500'}`}><Edit3 size={14}/></button>
-            </div>
-            <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Laser frakcyjny CO2</h5>
-            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Obejmuje przeciwwskazania (izotretynoina, opalenizna) oraz zalecenia pozabiegowe.</p>
-          </div>
-
-          <div className={`p-4 rounded-[20px] border shadow-sm transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-            <div className="flex justify-between items-start mb-2">
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>Globalne / RODO</span>
-              <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500'}`}><Edit3 size={14}/></button>
-            </div>
-            <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Zgoda RODO & Marketing</h5>
-            <p className={`text-[10px] mt-1.5 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zgoda na publikację wizerunku (zdjęcia przed/po), kontakt SMS oraz newsletter.</p>
+          
+          <div className="relative">
+            <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+            <input
+              type="text"
+              placeholder="Szukaj zgody / wywiadu..."
+              value={templateSearch}
+              onChange={e => setTemplateSearch(e.target.value)}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all border ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            />
           </div>
         </div>
+        
+        {/* LISTA SZABLONÓW */}
+        <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+          {consentTemplates.length === 0 ? (
+            <div className={`p-8 text-center border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+              <p className="text-xs font-bold">Brak szablonów w bazie.</p>
+              <p className="text-[10px] mt-1">Utwórz pierwszy wywiad lub zgodę.</p>
+            </div>
+          ) : (
+            consentTemplates
+              .filter(t => (t.title || '').toLowerCase().includes(templateSearch.toLowerCase()) || (t.document_type || '').toLowerCase().includes(templateSearch.toLowerCase()))
+              .map((template: any) => {
+                const isSendingMode = activeTemplateSendId === template.id;
+                
+                return (
+                  <div key={template.id} className={`rounded-[20px] border shadow-sm transition-all overflow-hidden ${!template.is_active ? (isDarkMode ? 'opacity-60 bg-slate-900 border-slate-800' : 'opacity-70 bg-slate-50 border-slate-200') : (isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300')}`}>
+                    
+                    {/* INFO O SZABLONIE */}
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex flex-wrap gap-1">
+                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                            template.document_type === 'questionnaire' 
+                              ? (isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-100 text-indigo-700 border-indigo-200')
+                              : template.document_type === 'rodo'
+                                ? (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200')
+                                : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                          }`}>
+                            {template.document_type === 'questionnaire' ? 'Wywiad' : template.document_type === 'rodo' ? 'RODO' : 'Zgoda'}
+                          </span>
+                          
+                          {template.is_global_required && (
+                            <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-rose-900/30 text-rose-400 border-rose-800/50' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                              Wymagane
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-1 shrink-0">
+                          <button 
+                            onClick={() => {
+                              let parsedQuestions = [];
+                              if (template.document_type === 'questionnaire') {
+                                  try { parsedQuestions = JSON.parse(template.content_template); } catch(e) {}
+                                  if(!Array.isArray(parsedQuestions)) parsedQuestions = [];
+                              }
+                              setConsentTemplateForm({ ...template, questions: parsedQuestions });
+                              setIsEditingConsentTemplate(true);
+                              setIsConsentTemplateModalOpen(true);
+                            }}
+                            className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                            title="Edytuj szablon"
+                          >
+                            <Edit3 size={14}/>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <h5 className={`font-black text-sm mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{template.title}</h5>
+                      {template.description && (
+                        <p className={`text-[10px] mt-1 font-medium leading-relaxed line-clamp-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {template.description}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* AKCJE (DRUKUJ / WYŚLIJ) */}
+                    <div className={`border-t flex ${isDarkMode ? 'border-slate-800/60 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
+                      <button 
+                        onClick={() => window.print()} 
+                        className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors border-r ${isDarkMode ? 'border-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                        title="Wydrukuj czysty formularz (np. dla pacjenta w poczekalni)"
+                      >
+                        <Printer size={12}/> Drukuj Pusty
+                      </button>
+                      <button 
+                        onClick={() => setActiveTemplateSendId(isSendingMode ? null : template.id)} 
+                        className={`flex-1 p-2.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${isSendingMode ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-[#253a2a] text-[#e8ce7a]') : (isDarkMode ? 'text-[#e8ce7a] hover:bg-slate-800' : 'text-emerald-700 hover:bg-emerald-50')}`}
+                        title="Wyślij cyfrową wersję na urządzenie pacjenta"
+                      >
+                        <Smartphone size={12}/> Wyślij do podpisu
+                      </button>
+                    </div>
 
-        <button
+                    {/* WYSUWANY PANEL WYSYŁKI DO PACJENTA */}
+                    {isSendingMode && (
+                      <div className={`p-4 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-950/50' : 'border-slate-200 bg-emerald-50/30'}`}>
+                        <label className={`text-[9px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                          Wybierz pacjenta (Wyślij SMS / Na portal)
+                        </label>
+                        <select
+                          className={`w-full border rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all mb-3 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                          value={selectedPatientForTemplate}
+                          onChange={(e) => setSelectedPatientForTemplate(e.target.value)}
+                        >
+                          <option value="">-- Znajdź pacjenta... --</option>
+                          {/* Tu mapujemy pacjentów z dzisiejszej listy */}
+                          <option value="1">Anna Kowalska (14:30)</option>
+                          <option value="2">Michał Nowak (15:00)</option>
+                        </select>
+                        <button 
+                          onClick={() => {
+                            if (!selectedPatientForTemplate) return showNotification('Wybierz pacjenta z listy', 'error');
+                            showNotification('Link do podpisania dokumentu został wysłany do pacjenta.', 'success');
+                            setActiveTemplateSendId(null);
+                          }}
+                          className={`w-full py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
+                        >
+                          <Send size={12}/> Wyślij dokument
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                )
+            })
+          )}
+        </div>
+        
+        <button 
           onClick={() => {
-            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false })
+            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false, content_template: '', questions: [] })
+            setIsEditingConsentTemplate(false)
             setIsConsentTemplateModalOpen(true)
           }}
           className={`w-full py-4 border-2 border-dashed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${isDarkMode ? 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 bg-slate-900/50' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 bg-slate-50'}`}
         >
-          <Plus size={16} /> Nowy Szablon Zgody
+          <Plus size={16} /> Nowy Szablon (Ręcznie)
         </button>
       </div>
     </div>
