@@ -40,6 +40,8 @@ export default function PatientPortal() {
   const [activeTab, setActiveTab] = useState<'start' | 'dokumenty' | 'wizyty' | 'kontakt'>('start')
   const [consents, setConsents] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
+  const [portalRequests, setPortalRequests] = useState<any[]>([])
+  const [portalMessages, setPortalMessages] = useState<any[]>([])
   const [selectedConsentToSign, setSelectedConsentToSign] = useState<any>(null)
   const [isSigning, setIsSigning] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, any>>({})
@@ -101,6 +103,36 @@ export default function PatientPortal() {
     return result.data || []
   }
 
+  const loadRequestsForPatient = async (patientId: string) => {
+    const result = await supabase
+      .from('patient_portal_requests')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false })
+
+    if (result.error) {
+      console.warn('Patient portal requests unavailable:', result.error.message)
+      return []
+    }
+
+    return result.data || []
+  }
+
+  const loadMessagesForPatient = async (patientId: string) => {
+    const result = await supabase
+      .from('patient_portal_messages')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: true })
+
+    if (result.error) {
+      console.warn('Patient portal messages unavailable:', result.error.message)
+      return []
+    }
+
+    return result.data || []
+  }
+
   const loadPatientDirectly = async (normalizedPesel: string) => {
     const exact = await supabase.from('patients').select('*').eq('pesel', normalizedPesel).limit(1)
     if (exact.error) throw exact.error
@@ -115,12 +147,14 @@ export default function PatientPortal() {
 
     if (!foundPatient) return null
 
-    const [patientConsents, patientAppointments] = await Promise.all([
+    const [patientConsents, patientAppointments, patientRequests, patientMessages] = await Promise.all([
       loadConsentsForPatient(foundPatient.id),
       loadAppointmentsForPatient(foundPatient.id),
+      loadRequestsForPatient(foundPatient.id),
+      loadMessagesForPatient(foundPatient.id),
     ])
 
-    return { patient: foundPatient, consents: patientConsents, appointments: patientAppointments }
+    return { patient: foundPatient, consents: patientConsents, appointments: patientAppointments, requests: patientRequests, messages: patientMessages }
   }
 
   const refreshPortal = async () => {
@@ -131,6 +165,8 @@ export default function PatientPortal() {
     setPatient(refreshed.patient)
     setConsents(refreshed.consents)
     setAppointments(refreshed.appointments)
+    setPortalRequests(refreshed.requests)
+    setPortalMessages(refreshed.messages)
   }
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -154,6 +190,8 @@ export default function PatientPortal() {
       setPatient(portalData.patient)
       setConsents(portalData.consents)
       setAppointments(portalData.appointments)
+      setPortalRequests(portalData.requests)
+      setPortalMessages(portalData.messages)
       setIsLoggedIn(true)
     } catch (err: any) {
       setLoginError('Nie udało się połączyć z portalem: ' + (err?.message || 'błąd'))
@@ -168,6 +206,8 @@ export default function PatientPortal() {
     setLoginPesel('')
     setConsents([])
     setAppointments([])
+    setPortalRequests([])
+    setPortalMessages([])
     setRequestSuccess('')
   }
 
@@ -225,15 +265,28 @@ export default function PatientPortal() {
       subject: requestForm.subject || (requestForm.type === 'appointment_request' ? 'Prośba o wizytę' : 'Pytanie pacjenta'),
       message: requestForm.message,
       status: 'new',
-    }])
+    }]).select('id').single()
 
     if (insert.error) {
       setRequestSuccess('Nie udało się wysłać zgłoszenia: ' + insert.error.message)
       return
     }
 
+    const messageInsert = await supabase.from('patient_portal_messages').insert([{
+      request_id: insert.data?.id,
+      patient_id: patient.id,
+      sender_type: 'patient',
+      sender_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Pacjent',
+      body: requestForm.message,
+    }])
+
+    if (messageInsert.error) {
+      console.warn('Patient portal message insert error:', messageInsert.error.message)
+    }
+
     setRequestForm({ type: 'post_treatment_question', subject: '', message: '' })
     setRequestSuccess('Wiadomość trafiła do recepcji. Odpowiemy możliwie szybko.')
+    await refreshPortal()
   }
 
   const renderInteractiveContent = (text: string) => {
@@ -509,6 +562,64 @@ export default function PatientPortal() {
                     <Send size={15} /> Wyślij do recepcji
                   </button>
                 </form>
+
+                <div className="mt-8 border-t border-white/10 pt-6">
+                  <div className="mb-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">Masz wiadomości</p>
+                    <h3 className="mt-1 text-lg font-black">Historia rozmowy z recepcją</h3>
+                  </div>
+
+                  {portalRequests.length === 0 ? (
+                    <EmptyState icon={MessageSquare} title="Brak wiadomości" text="Kiedy wyślesz pytanie lub recepcja odpowie, rozmowa pojawi się tutaj." />
+                  ) : (
+                    <div className="space-y-4">
+                      {portalRequests.map((request: any) => {
+                        const requestMessages = portalMessages.filter((message: any) => message.request_id === request.id)
+                        const statusLabel = request.status === 'answered'
+                          ? 'Odpowiedziano'
+                          : request.status === 'closed'
+                            ? 'Zamknięte'
+                            : request.status === 'in_progress'
+                              ? 'W trakcie'
+                              : 'Nowe'
+
+                        return (
+                          <div key={request.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+                            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{statusLabel}</p>
+                                <h4 className="mt-1 font-black">{request.subject || 'Wiadomość do recepcji'}</h4>
+                              </div>
+                              <p className="text-[10px] font-bold text-slate-500">{formatDateTime(request.created_at)}</p>
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                              {(requestMessages.length > 0 ? requestMessages : [{
+                                id: `${request.id}-fallback`,
+                                sender_type: 'patient',
+                                sender_name: 'Ty',
+                                body: request.message,
+                                created_at: request.created_at,
+                              }]).map((message: any) => {
+                                const isStaff = message.sender_type === 'staff'
+                                return (
+                                  <div key={message.id} className={`flex ${isStaff ? 'justify-start' : 'justify-end'}`}>
+                                    <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? 'border-cyan-200/20 bg-cyan-200/10 text-cyan-50' : 'border-white/10 bg-[#071016] text-slate-200'}`}>
+                                      <p className="mb-1 text-[9px] font-black uppercase tracking-widest opacity-60">
+                                        {isStaff ? (message.sender_name || 'Recepcja') : 'Ty'} · {formatDateTime(message.created_at)}
+                                      </p>
+                                      <p className="whitespace-pre-wrap">{message.body}</p>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </Panel>
             </motion.section>
           )}

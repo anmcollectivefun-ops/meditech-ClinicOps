@@ -298,6 +298,9 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const [event, setEvent] = useState<any>(null)
   const [applications, setApplications] = useState<Guest[]>([])
   const [patientPortalRequests, setPatientPortalRequests] = useState<any[]>([])
+  const [patientPortalMessages, setPatientPortalMessages] = useState<any[]>([])
+  const [patientReplyDrafts, setPatientReplyDrafts] = useState<Record<string, string>>({})
+  const [aiReplyLoadingId, setAiReplyLoadingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabModule>('rekrutacja')
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
@@ -1608,6 +1611,21 @@ const loadPatientPortalRequests = useCallback(async () => {
   }
 
   setPatientPortalRequests(data || [])
+}, [supabase])
+
+const loadPatientPortalMessages = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('patient_portal_messages')
+    .select('*')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.warn('Patient portal messages load error:', error.message)
+    setPatientPortalMessages([])
+    return
+  }
+
+  setPatientPortalMessages(data || [])
 }, [supabase])
 
 const loadPatientConsents = useCallback(async () => {
@@ -3050,6 +3068,70 @@ const patientQrMetrics = useMemo(() => ({
     showNotification('Zgłoszenie pacjenta zaktualizowane', 'success')
   }
 
+  const generateReceptionReplyDraft = (request: any) => {
+    const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim()
+    const greeting = patientName ? `Dzień dobry Panie/Pani ${patientName},` : 'Dzień dobry,'
+    const context = request.request_type === 'appointment_request'
+      ? 'dziękujemy za wiadomość w sprawie umówienia wizyty. Sprawdzimy najbliższe dostępne terminy i wrócimy z propozycją.'
+      : request.request_type === 'followup_request'
+        ? 'dziękujemy za wiadomość w sprawie konsultacji kontrolnej. Przekażemy informację do zespołu medycznego i pomożemy ustalić dalszy krok.'
+        : 'dziękujemy za opisanie sytuacji po zabiegu. Przekażemy wiadomość do osoby prowadzącej i wrócimy z informacją, co zrobić dalej.'
+
+    return `${greeting}\n\n${context}\n\nJeśli objawy są nagłe, nasilają się albo budzą niepokój, prosimy o pilny kontakt telefoniczny z kliniką lub najbliższą pomocą medyczną.\n\nPozdrawiamy serdecznie,\nRecepcja ClinicOps`
+  }
+
+  const handleGeneratePatientReplyDraft = async (request: any) => {
+    setAiReplyLoadingId(request.id)
+    try {
+      setPatientReplyDrafts(prev => ({
+        ...prev,
+        [request.id]: generateReceptionReplyDraft(request),
+      }))
+      showNotification('AI przygotowało uprzejmy szkic odpowiedzi do edycji.', 'success')
+    } finally {
+      setAiReplyLoadingId(null)
+    }
+  }
+
+  const handleSendPatientReply = async (request: any) => {
+    const reply = (patientReplyDrafts[request.id] || '').trim()
+    if (!reply) return showNotification('Wpisz odpowiedź dla pacjenta albo wygeneruj szkic AI.', 'error')
+
+    setUpdating(true)
+    try {
+      const { error: messageError } = await supabase.from('patient_portal_messages').insert([{
+        request_id: request.id,
+        patient_id: request.patient_id,
+        sender_type: 'staff',
+        sender_name: 'Recepcja',
+        body: reply,
+      }])
+
+      if (messageError) throw messageError
+
+      const { error: requestError } = await supabase
+        .from('patient_portal_requests')
+        .update({ status: 'answered', response: reply, updated_at: new Date().toISOString() })
+        .eq('id', request.id)
+
+      if (requestError) {
+        const fallback = await supabase
+          .from('patient_portal_requests')
+          .update({ status: 'answered', updated_at: new Date().toISOString() })
+          .eq('id', request.id)
+        if (fallback.error) throw fallback.error
+      }
+
+      setPatientReplyDrafts(prev => ({ ...prev, [request.id]: '' }))
+      await Promise.all([loadPatientPortalRequests(), loadPatientPortalMessages()])
+      showNotification('Odpowiedź zapisana i widoczna w Portalu Pacjenta.', 'success')
+    } catch (err: any) {
+      showNotification('Błąd wysyłania odpowiedzi: ' + (err?.message || 'nieznany błąd'), 'error')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
     const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
@@ -3571,6 +3653,7 @@ const { data: checklistItemData } = await supabase
       await loadEventPassData()
       await loadPatients()
       await loadPatientPortalRequests()
+      await loadPatientPortalMessages()
       await loadPatientConsents()
       await loadConsentTemplates() // <--- DODANO TUTAJ
       await loadTreatmentsCatalog()
@@ -3585,7 +3668,7 @@ const { data: checklistItemData } = await supabase
     } finally {
       setLoading(false)
     }
-  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientConsents, loadConsentTemplates])
+  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates])
 
   useEffect(() => {
     loadEventData()
@@ -11413,6 +11496,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 ? 'Konsultacja kontrolna'
                 : 'Pytanie po zabiegu'
             const isNew = request.status === 'new'
+            const requestMessages = patientPortalMessages.filter((message: any) => message.request_id === request.id)
+            const visibleMessages = requestMessages.length > 0 ? requestMessages : [{
+              id: `${request.id}-fallback`,
+              sender_type: 'patient',
+              sender_name: patientName,
+              body: request.message,
+              created_at: request.created_at,
+            }]
 
             return (
               <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
@@ -11448,6 +11539,61 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
                     >
                       Zamknij
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`mt-5 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Historia rozmowy
+                  </p>
+                  <div className="space-y-3">
+                    {visibleMessages.map((message: any) => {
+                      const isStaff = message.sender_type === 'staff'
+                      return (
+                        <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'bg-blue-900/30 border-blue-800/60 text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-950') : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800')}`}>
+                            <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {isStaff ? (message.sender_name || 'Recepcja') : (message.sender_name || patientName)} · {message.created_at ? new Date(message.created_at).toLocaleString('pl-PL') : ''}
+                            </p>
+                            <p className="whitespace-pre-wrap">{message.body}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
+                      Odpowiedź recepcji
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleGeneratePatientReplyDraft(request)}
+                      disabled={aiReplyLoadingId === request.id}
+                      className={`w-fit inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
+                    >
+                      <Sparkles size={13} className={aiReplyLoadingId === request.id ? 'animate-pulse' : ''} />
+                      {aiReplyLoadingId === request.id ? 'Piszę szkic...' : 'Szkic AI'}
+                    </button>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={patientReplyDrafts[request.id] || ''}
+                    onChange={(event) => setPatientReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
+                    placeholder="Napisz odpowiedź, którą pacjent zobaczy w swoim Portalu Pacjenta..."
+                    className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  />
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSendPatientReply(request)}
+                      disabled={updating || !(patientReplyDrafts[request.id] || '').trim()}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                    >
+                      <Send size={13} /> Wyślij odpowiedź
                     </button>
                   </div>
                 </div>
