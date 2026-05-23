@@ -560,7 +560,81 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [isEditingPatient, setIsEditingPatient] = useState(false)
   const [patientForm, setPatientForm] = useState<any>({})
   const [registrySearch, setRegistrySearch] = useState('')
+// --- STANY DLA NOWEGO MODUŁU WIZYT I ZABIEGÓW ---
+  const [treatments, setTreatments] = useState<any[]>([])
+  const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
+  const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '' })
 
+  // POBIERANIE KATALOGU (Dodaj to tam, gdzie masz inne funkcje ładujące np. loadPatients)
+  const loadTreatmentsCatalog = async () => {
+    const { data: tData } = await supabase.from('treatments').select('*').eq('is_active', true);
+    if (tData) setTreatments(tData);
+
+    const { data: mData } = await supabase.from('treatment_consent_templates').select('*');
+    if (mData) setTreatmentMappings(mData);
+  }
+
+  // GŁÓWNA FUNKCJA: TWORZY WIZYTĘ I GENERUJE ZGODY
+  const handleBookAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appointmentForm.patient_id || !appointmentForm.treatment_id || !appointmentForm.appointment_date) {
+      return showNotification('Wypełnij wszystkie pola', 'error');
+    }
+    
+    setUpdating(true);
+    try {
+      // 1. Znajdź nazwę zabiegu w słowniku
+      const selectedTreatment = treatments.find(t => t.id === appointmentForm.treatment_id);
+
+      // 2. Utwórz nową wizytę w bazie
+      const { data: newAppointment, error: appError } = await supabase
+        .from('appointments')
+        .insert([{
+          patient_id: appointmentForm.patient_id,
+          event_id: id, // Globalne ID środowiska
+          treatment_id: appointmentForm.treatment_id,
+          treatment_name: selectedTreatment?.name || 'Zabieg medyczny',
+          appointment_date: appointmentForm.appointment_date,
+          status: 'scheduled'
+        }])
+        .select()
+        .single();
+
+      if (appError) throw appError;
+
+      // 3. Sprawdź, jakich zgód wymaga ten zabieg w tabeli łącznikowej
+      const requiredTemplates = treatmentMappings
+        .filter(m => m.treatment_id === appointmentForm.treatment_id)
+        .map(m => m.template_id);
+
+      // 4. AUTOMATYZACJA: Wygeneruj wymagane zgody i przypnij je do wizyty!
+      if (requiredTemplates.length > 0) {
+        const consentsToInsert = requiredTemplates.map(templateId => ({
+          event_id: id,
+          patient_id: appointmentForm.patient_id,
+          template_id: templateId,
+          appointment_id: newAppointment.id, // Tu dzieje się magia spajająca!
+          status: 'pending' // Gotowe dla pacjenta na Portal
+        }));
+
+        const { error: consentsError } = await supabase.from('patient_consents').insert(consentsToInsert);
+        if (consentsError) throw consentsError;
+      }
+
+      showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgód.`, 'success');
+      setIsBookingModalOpen(false);
+      setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '' });
+      
+      // Odśwież widoki (wywołaj funkcje, które masz w kodzie)
+      // await loadPatientConsents();
+      // await loadAppointments(); // Jeśli już masz taką funkcję
+      
+    } catch (err: any) {
+      showNotification('Błąd zapisu: ' + err.message, 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
  
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
@@ -3405,6 +3479,7 @@ const { data: checklistItemData } = await supabase
       await loadPatients()
       await loadPatientConsents()
       await loadConsentTemplates() // <--- DODANO TUTAJ
+      await loadTreatmentsCatalog()
 
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
@@ -7046,7 +7121,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
     
-    {/* MODAL: ZAPISYWANIE PACJENTA (Tymczasowy) */}
+    {/* MODAL: ZAPISYWANIE PACJENTA NA ZABIEG */}
     {isBookingModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-2xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -7060,23 +7135,42 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </button>
           </div>
           
-          <div className="space-y-5">
+          <form onSubmit={handleBookAppointment} className="space-y-5">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz pacjenta</label>
-              <select className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`}>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz pacjenta *</label>
+              <select
+                required
+                value={appointmentForm.patient_id}
+                onChange={e => setAppointmentForm({ ...appointmentForm, patient_id: e.target.value })}
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+              >
                 <option value="">-- Wyszukaj z bazy --</option>
-                {patients.map((p: any) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+                {patients.map((p: any) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.pesel})</option>)}
               </select>
             </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz zabieg z katalogu</label>
-              <select className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`}>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz zabieg z katalogu *</label>
+              <select
+                required
+                value={appointmentForm.treatment_id}
+                onChange={e => setAppointmentForm({ ...appointmentForm, treatment_id: e.target.value })}
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+              >
                 <option value="">-- Z katalogu usług --</option>
-                <option value="t1">Laser Frakcyjny CO2</option>
-                <option value="t2">Seria: Depilacja Laserowa (6x)</option>
-                <option value="t3">Modelowanie Ust Kwasem</option>
+                {treatments.map((t: any) => <option key={t.id} value={t.id}>{t.name} {t.type === 'series' ? '(Seria)' : ''}</option>)}
               </select>
+            </div>
+
+            <div>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data i godzina wizyty *</label>
+              <input
+                required
+                type="datetime-local"
+                value={appointmentForm.appointment_date}
+                onChange={e => setAppointmentForm({ ...appointmentForm, appointment_date: e.target.value })}
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+              />
             </div>
 
             <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-blue-900/10 border-blue-900/30' : 'bg-blue-50 border-blue-200/50'}`}>
@@ -7084,17 +7178,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <Activity size={12}/> Akcja automatyczna systemu
               </p>
               <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-800'}`}>
-                Zapisanie wizyty utworzy nowe Appointment ID i od razu wygeneruje 2 dedykowane zgody medyczne do Portalu Pacjenta.
+                Zapisanie wizyty utworzy nowe Appointment ID. Jeśli zabieg posiada przypisane dokumenty prawne w słowniku, zostaną one natychmiast wygenerowane do Portalu Pacjenta.
               </p>
             </div>
 
-            <button 
-              onClick={() => setIsBookingModalOpen(false)}
-              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+            <button
+              type="submit"
+              disabled={updating}
+              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
             >
-              Utwórz Wizytę i Wygeneruj Zgody
+              {updating ? 'Przetwarzanie...' : 'Utwórz Wizytę i Wygeneruj Zgody'}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     )}
