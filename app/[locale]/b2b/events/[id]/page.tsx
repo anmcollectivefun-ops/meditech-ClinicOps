@@ -525,7 +525,8 @@ const [aiTextLoading, setAiTextLoading] = useState(false)
 const [organizerCurrentMonth, setOrganizerCurrentMonth] = useState(() => new Date().getMonth())
 const [organizerCurrentYear, setOrganizerCurrentYear] = useState(() => new Date().getFullYear())
 const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(() => new Date().toISOString().slice(0, 10))
-
+const [patients, setPatients] = useState<any[]>([])
+const [patientSearch, setPatientSearch] = useState('')
 const [isStaffAccessModalOpen, setIsStaffAccessModalOpen] = useState(false)
 const [staffAccessForm, setStaffAccessForm] = useState<any>({})
 // ============================================================================
@@ -971,6 +972,23 @@ const AiTextAssistButton = ({
     }
   }, [id, supabase])
 
+
+const loadPatients = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.warn('Patients load error:', error.message)
+    setPatients([])
+    return
+  }
+
+  setPatients(data || [])
+}, [supabase])
+
+
   const buildAttendeeUnitRows = (app: any) => {
     const baseName = `${app.first_name || ''} ${app.last_name || ''}`.trim()
     const accessStatus = app.access_status || app.status || 'pending'
@@ -1076,29 +1094,52 @@ const AiTextAssistButton = ({
     await loadEventPassData()
     showNotification('Wygenerowano QR dla pakietu uczestnika', 'success')
   }
+
 const createPatientQrUnit = async (patient: any) => {
+  const existing = attendeeUnits.find((unit: any) => unit.patient_id === patient.id)
+
+  if (existing) {
+    showNotification('Ten pacjent ma już wygenerowany QR', 'info')
+    return
+  }
+
+  const qrToken = patient.qr_token || crypto.randomUUID()
+
+  if (!patient.qr_token) {
+    await supabase
+      .from('patients')
+      .update({ qr_token: qrToken })
+      .eq('id', patient.id)
+  }
+
   const { error } = await supabase.from('event_attendee_units').insert([{
     event_id: id,
     patient_id: patient.id,
     unit_type: 'patient',
-    display_name: `${patient.first_name} ${patient.last_name}`,
-    first_name: patient.first_name,
-    last_name: patient.last_name,
-    email: patient.email,
-    phone: patient.phone,
-    qr_token: patient.qr_token || crypto.randomUUID(),
+    display_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || patient.email || 'Pacjent',
+    first_name: patient.first_name || null,
+    last_name: patient.last_name || null,
+    email: patient.email || null,
+    phone: patient.phone || null,
+    qr_token: qrToken,
     qr_status: 'active',
-    access_status: 'active'
+    access_status: 'active',
+    checked_in: false,
+    source_data: {
+      pesel: patient.pesel || null
+    }
   }])
 
   if (error) {
-    showNotification('Nie udało się wygenerować QR pacjenta', 'error')
+    showNotification('Nie udało się wygenerować QR pacjenta: ' + error.message, 'error')
     return
   }
 
+  await loadPatients()
   await loadEventPassData()
   showNotification('QR pacjenta wygenerowany', 'success')
 }
+
   const handleGenerateUnitsForAllApplications = async () => {
     const existingApplicationIds = new Set(attendeeUnits.map(unit => unit.application_id))
     const activeApps = applications.filter((app: any) =>
@@ -14162,8 +14203,201 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* LISTA ZGŁOSZEŃ I OSOBOWYCH KODÓW QR */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+    {/* LISTA PACJENTÓW I KODÓW QR */}
+<div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+
+  <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+    <div className="relative flex-1 min-w-[200px]">
+      <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+      <input
+        className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all border ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+        placeholder="Szukaj pacjenta po imieniu, nazwisku, PESEL, mailu lub telefonie..."
+        value={patientSearch}
+        onChange={e => setPatientSearch(e.target.value)}
+      />
+    </div>
+
+    <button
+      onClick={() => {
+        loadPatients()
+        loadEventPassData()
+      }}
+      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+    >
+      <RefreshCw size={14} /> Odśwież pacjentów
+    </button>
+  </div>
+
+  <div className="space-y-4 p-4 md:p-5">
+    {patients
+      .filter((patient: any) => {
+        const search = patientSearch.toLowerCase()
+        if (!search) return true
+
+        return (
+          `${patient.first_name || ''} ${patient.last_name || ''}`.toLowerCase().includes(search) ||
+          String(patient.email || '').toLowerCase().includes(search) ||
+          String(patient.phone || '').toLowerCase().includes(search) ||
+          String(patient.pesel || '').toLowerCase().includes(search) ||
+          String(patient.qr_token || '').toLowerCase().includes(search)
+        )
+      })
+      .map((patient: any) => {
+        const unit = attendeeUnits.find((u: any) => u.patient_id === patient.id)
+        const isExpanded = expandedApplicationIds[patient.id] === true
+
+        return (
+          <div key={patient.id} className={`rounded-2xl border transition-all ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+
+            <div className="p-4 md:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h4 className={`font-black text-base md:text-lg truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    {patient.first_name} {patient.last_name}
+                  </h4>
+
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+                    unit
+                      ? isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>
+                    {unit ? 'QR aktywny' : 'Brak QR'}
+                  </span>
+
+                  {unit?.checked_in && (
+                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                      Check-in wykonany
+                    </span>
+                  )}
+                </div>
+
+                <p className={`text-xs font-medium truncate mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {patient.email || 'brak email'} <span className="opacity-50 mx-1">|</span>
+                  {patient.phone || 'brak tel.'} <span className="opacity-50 mx-1">|</span>
+                  PESEL: {patient.pesel || 'brak'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>QR</p>
+                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.qr_token ? 'TAK' : 'NIE'}</p>
+                </div>
+
+                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${unit?.checked_in ? (isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700') : (isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
+                  <p className={`text-[8px] font-black uppercase tracking-widest ${!unit?.checked_in ? (isDarkMode ? 'text-slate-500' : 'text-slate-500') : ''}`}>Check-in</p>
+                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.checked_in ? 'TAK' : 'NIE'}</p>
+                </div>
+
+                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${unit?.wristband_issued ? (isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700') : (isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
+                  <p className={`text-[8px] font-black uppercase tracking-widest ${!unit?.wristband_issued ? (isDarkMode ? 'text-slate-500' : 'text-slate-500') : ''}`}>ID</p>
+                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.wristband_issued ? 'TAK' : 'NIE'}</p>
+                </div>
+              </div>
+
+              <div className="shrink-0 flex items-center justify-end gap-2 w-full xl:w-auto">
+                {!unit ? (
+                  <button
+                    onClick={() => createPatientQrUnit(patient)}
+                    className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-sm ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                  >
+                    <QrCode size={14} /> Generuj QR
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setSelectedApplicationForPass(patient)
+                        setSelectedAttendeeUnit(unit)
+                      }}
+                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                    >
+                      <Eye size={14} /> Podgląd QR
+                    </button>
+
+                    <button
+                      onClick={() => toggleApplicationExpanded(patient.id)}
+                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                    >
+                      Akcje <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {isExpanded && unit && (
+              <div className={`border-t p-4 md:p-5 ${isDarkMode ? 'border-slate-800 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+                  <div className="flex items-start gap-4">
+                    <div className={`p-1.5 rounded-xl border shadow-sm bg-white ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                      <QRCode value={unit.qr_token} size={64} />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {unit.display_name}
+                      </p>
+
+                      <p className={`text-[10px] font-mono mt-1 break-all ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                        {unit.qr_token}
+                      </p>
+
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(unit.qr_token)
+                          showNotification('Token QR skopiowany', 'success')
+                        }}
+                        className={`mt-2 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+                      >
+                        <Copy size={12} /> Kopiuj token
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0 w-full xl:w-auto">
+                    <button
+                      onClick={() => handleCheckInAttendeeUnit(unit)}
+                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
+                    >
+                      <ScanLine size={12}/> Check-in
+                    </button>
+
+                    <button
+                      onClick={() => handleIssueWristband(unit)}
+                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                    >
+                      <BadgeCheck size={12}/> Wydaj ID
+                    </button>
+
+                    <button
+                      onClick={() => handleReturnWristband(unit)}
+                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      <CheckCircle2 size={12}/> Zamknij wizytę
+                    </button>
+
+                    <button
+                      onClick={() => handleResetUnitStatus(unit)}
+                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-red-900/20 border-red-800/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}`}
+                    >
+                      <XCircle size={12}/> Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+    {patients.length === 0 && (
+      <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+        Brak pacjentów w tabeli patients.
+      </div>
+    )}
+  </div>
+</div>
       
       {/* WYSZUKIWARKA I FILTRY */}
       <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
