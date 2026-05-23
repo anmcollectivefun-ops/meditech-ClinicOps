@@ -517,6 +517,7 @@ const [ecoAiLoading, setEcoAiLoading] = useState(false)
 const [aiTextAssistConfig, setAiTextAssistConfig] = useState<any>(null)
 const [aiTextTone, setAiTextTone] = useState('premium')
 const [aiTextLength, setAiTextLength] = useState('średnia')
+const [aiTextDocumentType, setAiTextDocumentType] = useState('consent')
 const [aiTextInstruction, setAiTextInstruction] = useState('')
 const [aiTextSuggestion, setAiTextSuggestion] = useState('')
 const [aiTextReason, setAiTextReason] = useState('')
@@ -611,6 +612,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     setAiTextAssistConfig(config)
     setAiTextTone('premium')
     setAiTextLength('średnia')
+    setAiTextDocumentType(config.documentType === 'info' ? 'aftercare' : (config.documentType || 'consent'))
     setAiTextInstruction('')
     setAiTextSuggestion(config.currentValue || '')
     setAiTextReason('')
@@ -623,6 +625,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     setAiTextReason('')
     setAiTextMissingContext([])
     setAiTextInstruction('')
+    setAiTextDocumentType('consent')
   }
 
   const buildLocalAiTextFallback = (config: any) => {
@@ -630,12 +633,167 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     const fieldKey = String(config?.fieldKey || '')
     const currentValue = String(config?.currentValue || '').trim()
     const placeholder = String(config?.placeholder || '').trim()
+    const documentType = String(config?.documentType || aiTextDocumentType || 'consent')
+    const treatmentName = String(config?.relatedEntityTitle || consentTemplateForm?.required_for_treatment || consentTemplateForm?.title || '').trim()
     const eventTitle = event?.title || 'wydarzenie'
     const eventLocation = event?.location ? ` w lokalizacji ${event.location}` : ''
     const short = String(aiTextLength || '').toLowerCase().includes('krót')
+    const isMedicalDocument = sectionKey === 'medical_documents' || sectionKey === 'medical_docs' || sectionKey === 'patient_consents'
 
     if (currentValue) return currentValue
     if (placeholder) return placeholder
+
+    if (isMedicalDocument) {
+      const procedure = treatmentName || '[NAZWA ZABIEGU]'
+
+      if (documentType === 'questionnaire') {
+        return [
+          `WYWIAD MEDYCZNY PRZED PROCEDURĄ: ${procedure}`,
+          '',
+          'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
+          'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
+          'Data wypełnienia: [DATA]',
+          '',
+          '1. Cel wywiadu',
+          'Celem wywiadu jest zebranie informacji istotnych dla bezpiecznej kwalifikacji pacjenta do procedury.',
+          '',
+          '2. Pytania ogólne',
+          '- Czy pacjent choruje przewlekle?',
+          '- Czy pacjent przyjmuje stale leki?',
+          '- Czy występują alergie lub nadwrażliwości?',
+          '- Czy w ostatnim czasie wykonano podobne procedury?',
+          '',
+          '3. Przeciwwskazania i czynniki ryzyka',
+          '- Ciąża lub karmienie piersią: [TAK/NIE]',
+          '- Aktywne infekcje lub stany zapalne: [TAK/NIE]',
+          '- Skłonność do bliznowców lub zaburzeń gojenia: [TAK/NIE]',
+          '- Inne istotne informacje: [OPIS]',
+          '',
+          '4. Oświadczenie pacjenta',
+          'Oświadczam, że przekazane informacje są zgodne z moją wiedzą.',
+          '',
+          'Podpis pacjenta: ____________________    Podpis personelu: ____________________',
+          '',
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
+        ].join('\n')
+      }
+
+      if (documentType === 'aftercare' || documentType === 'precare') {
+        const phase = documentType === 'precare' ? 'PRZED PROCEDURĄ' : 'PO PROCEDURZE'
+        return [
+          `ZALECENIA DLA PACJENTA ${phase}: ${procedure}`,
+          '',
+          'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
+          '',
+          '1. Cel dokumentu',
+          'Poniższe zalecenia mają pomóc pacjentowi w bezpiecznym postępowaniu po procedurze.',
+          '',
+          '2. Zalecenia ogólne',
+          '- Stosować się do indywidualnych zaleceń osoby wykonującej procedurę.',
+          '- Obserwować miejsce zabiegowe i zgłaszać niepokojące objawy.',
+          '- Unikać działań wskazanych jako przeciwwskazane po procedurze.',
+          '',
+          '3. Kiedy skontaktować się z placówką',
+          '- Nasilający się ból, obrzęk lub zaczerwienienie.',
+          '- Objawy infekcji lub reakcja alergiczna.',
+          '- Każdy objaw budzący niepokój pacjenta.',
+          '',
+          '4. Kontrola',
+          'Termin kontroli / kontaktu follow-up: [TERMIN]',
+          '',
+          'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
+        ].join('\n')
+      }
+
+      if (documentType === 'followup') {
+        return [
+          `FOLLOW-UP DO PACJENTA PO WIZYCIE / PROCEDURZE: ${procedure}`,
+          '',
+          'Status treści: WERSJA ROBOCZA DO WERYFIKACJI',
+          '',
+          'Dzień dobry [IMIE_PACJENTA],',
+          '',
+          'kontaktujemy się po wizycie, aby upewnić się, że wszystko przebiega prawidłowo.',
+          '',
+          'Prosimy o kontakt z placówką, jeśli pojawiły się niepokojące objawy, nasilony ból, obrzęk, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
+          '',
+          'Termin kontroli / kolejnego kontaktu: [TERMIN]',
+          '',
+          'Pozdrawiamy,',
+          '[NAZWA_PLACOWKI]',
+          '',
+          'Uwaga: treść wymaga zatwierdzenia przez osobę uprawnioną przed wysyłką.'
+        ].join('\n')
+      }
+
+      if (documentType === 'rodo') {
+        return [
+          'INFORMACJA O PRZETWARZANIU DANYCH OSOBOWYCH I ZGODY PACJENTA',
+          '',
+          'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI PRAWNEJ',
+          '',
+          '1. Administrator danych',
+          'Administratorem danych jest: [NAZWA_PLACOWKI], [ADRES], [KONTAKT].',
+          '',
+          '2. Zakres danych',
+          'Dane mogą obejmować dane identyfikacyjne, kontaktowe, informacje o wizytach oraz dokumentację związaną z obsługą pacjenta.',
+          '',
+          '3. Cele przetwarzania',
+          '- obsługa pacjenta i wizyt,',
+          '- prowadzenie dokumentacji,',
+          '- kontakt organizacyjny,',
+          '- działania marketingowe wyłącznie po wyrażeniu odrębnej zgody.',
+          '',
+          '4. Zgody',
+          '[ ] Wyrażam zgodę na kontakt SMS/e-mail w sprawach organizacyjnych.',
+          '[ ] Wyrażam zgodę na kontakt marketingowy.',
+          '[ ] Wyrażam zgodę na wykorzystanie wizerunku / zdjęć przed i po, jeżeli dotyczy.',
+          '',
+          'Podpis pacjenta: ____________________    Data: [DATA]',
+          '',
+          'Uwaga: dokument wymaga weryfikacji prawnej przed użyciem.'
+        ].join('\n')
+      }
+
+      return [
+        `ZGODA PACJENTA NA PROCEDURĘ: ${procedure}`,
+        '',
+        'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNO-PRAWNEJ',
+        'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
+        'Data: [DATA]',
+        'Placówka: [NAZWA_PLACOWKI]',
+        '',
+        '1. Opis procedury',
+        'Pacjent został poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
+        '',
+        '2. Możliwe przeciwwskazania',
+        '- aktywne infekcje lub stany zapalne,',
+        '- ciąża lub karmienie piersią, jeżeli dotyczy procedury,',
+        '- alergie lub nadwrażliwości na stosowane preparaty,',
+        '- inne przeciwwskazania wskazane przez osobę kwalifikującą.',
+        '',
+        '3. Możliwe działania niepożądane / powikłania',
+        '- ból, obrzęk, zaczerwienienie, siniaki,',
+        '- reakcja alergiczna,',
+        '- infekcja lub zaburzenia gojenia,',
+        '- efekt estetyczny odbiegający od oczekiwań pacjenta.',
+        '',
+        '4. Alternatywy i możliwość odmowy',
+        'Pacjent został poinformowany o możliwości rezygnacji z procedury oraz o dostępnych alternatywach, jeżeli występują.',
+        '',
+        '5. Oświadczenia pacjenta',
+        '[ ] Oświadczam, że miałem/am możliwość zadania pytań.',
+        '[ ] Oświadczam, że przekazałem/am prawdziwe informacje o stanie zdrowia.',
+        '[ ] Wyrażam świadomą zgodę na wykonanie procedury.',
+        '',
+        '6. Zalecenia',
+        'Pacjent otrzymał zalecenia przed i po procedurze oraz został poinformowany o konieczności kontaktu w razie niepokojących objawów.',
+        '',
+        'Podpis pacjenta: ____________________    Podpis osoby uprawnionej: ____________________',
+        '',
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem z pacjentem.'
+      ].join('\n')
+    }
 
     if (fieldKey.includes('title')) {
       if (sectionKey === 'menu') return 'Menu wydarzenia'
@@ -681,6 +839,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           fieldKey: aiTextAssistConfig.fieldKey,
           currentValue: aiTextAssistConfig.currentValue || '',
           relatedEntityId: aiTextAssistConfig.relatedEntityId || null,
+          relatedEntityTitle: aiTextAssistConfig.relatedEntityTitle || '',
+          mode: aiTextAssistConfig.mode || (['medical_documents', 'medical_docs', 'patient_consents'].includes(aiTextAssistConfig.sectionKey) ? 'medical_document' : 'general'),
+          documentType: aiTextDocumentType,
           tone: aiTextTone,
           length: aiTextLength,
           instruction: aiTextInstruction
@@ -711,7 +872,12 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const applyAiTextSuggestion = () => {
     if (!aiTextAssistConfig?.onApply) return
     aiTextAssistConfig.onApply(aiTextSuggestion)
-    showNotification('Propozycja AI została wstawiona do pola. Zapisz formularz, aby utrwalić zmianę.', 'success')
+    showNotification(
+      aiTextAssistConfig?.mode === 'medical_document'
+        ? 'Szkic AI został wstawiony. Przed użyciem zatwierdź go medycznie i prawnie.'
+        : 'Propozycja AI została wstawiona do pola. Zapisz formularz, aby utrwalić zmianę.',
+      'success'
+    )
     closeAiTextAssist()
   }
 
@@ -721,7 +887,11 @@ const AiTextAssistButton = ({
   fieldKey,
   currentValue,
   relatedEntityId,
+  relatedEntityTitle,
   placeholder,
+  mode,
+  documentType,
+  label = 'Magia AI',
   onApply
 }: {
   eventId: string
@@ -729,17 +899,21 @@ const AiTextAssistButton = ({
   fieldKey: string
   currentValue?: string
   relatedEntityId?: string
+  relatedEntityTitle?: string
   placeholder?: string
+  mode?: string
+  documentType?: string
+  label?: string
   onApply: (text: string) => void
 }) => (
   <button
     type="button"
-    onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, placeholder, onApply })}
+    onClick={() => openAiTextAssist({ eventId, sectionKey, fieldKey, currentValue, relatedEntityId, relatedEntityTitle, placeholder, mode, documentType, onApply })}
     className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-400/20 dark:to-purple-400/20 border border-indigo-500/20 dark:border-indigo-400/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:from-indigo-500/20 hover:to-purple-500/20"
-    title="Wygeneruj profesjonalną treść z AI"
+    title={mode === 'medical_document' ? 'Wygeneruj roboczy szkic dokumentu do zatwierdzenia' : 'Wygeneruj profesjonalną treść z AI'}
   >
     <Sparkles size={14} className="animate-pulse" />
-    Magia AI
+    {label}
   </button>
 )
 
@@ -4592,6 +4766,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       {/* MODAL GLOBALNY: ASYSTENT AI */}
       {/* ============================================================================ */}
       {aiTextAssistConfig && (
+        (() => {
+          const isMedicalDocumentAssistant = aiTextAssistConfig.mode === 'medical_document' || ['medical_documents', 'medical_docs', 'patient_consents'].includes(aiTextAssistConfig.sectionKey)
+
+          return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-300">
           <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[32px] flex flex-col border transition-colors shadow-[0_0_80px_-15px_rgba(99,102,241,0.3)] ${
             isDarkMode ? 'bg-slate-900/80 border-indigo-500/30' : 'bg-white/80 border-indigo-200'
@@ -4605,11 +4783,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-3">
                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
                     <span className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>
-                      Asystent treści AI
+                      {isMedicalDocumentAssistant ? 'Medical Document AI' : 'Asystent treści AI'}
                     </span>
                   </div>
                   <h3 className="text-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                    Magia słów
+                    {isMedicalDocumentAssistant ? 'Szkic dokumentu medycznego' : 'Magia słów'}
                   </h3>
                   <p className={`text-xs mt-1 font-bold tracking-widest uppercase flex flex-wrap items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Edit3 size={12} /> Edytujesz:
@@ -4628,7 +4806,32 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
 
               <div className="p-6 md:p-8 space-y-6">
+                {isMedicalDocumentAssistant && (
+                  <div className={`rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed ${isDarkMode ? 'bg-amber-500/10 border-amber-500/25 text-amber-100' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                    AI tworzy wyłącznie roboczy projekt dokumentu. Przed użyciem z pacjentem treść musi zostać sprawdzona i zatwierdzona przez osobę uprawnioną medycznie oraz, w razie potrzeby, prawnie.
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {isMedicalDocumentAssistant ? (
+                    <div className="space-y-2">
+                      <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
+                        <ShieldCheck size={14} /> Typ dokumentu
+                      </label>
+                      <select
+                        className={`w-full rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white'}`}
+                        value={aiTextDocumentType}
+                        onChange={e => setAiTextDocumentType(e.target.value)}
+                      >
+                        <option value="consent">Zgoda medyczna / zabiegowa</option>
+                        <option value="questionnaire">Wywiad medyczny</option>
+                        <option value="aftercare">Zalecenia po zabiegu</option>
+                        <option value="precare">Zalecenia przed zabiegiem</option>
+                        <option value="rodo">RODO / zgody administracyjne</option>
+                        <option value="followup">SMS / e-mail follow-up</option>
+                      </select>
+                    </div>
+                  ) : (
                   <div className="space-y-2">
                     <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
                       <Mic size={14} /> Ton wypowiedzi
@@ -4645,6 +4848,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <option value="eco">Eco / odpowiedzialny</option>
                     </select>
                   </div>
+                  )}
                   <div className="space-y-2">
                     <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
                       <Type size={14} /> Długość tekstu
@@ -4668,7 +4872,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <textarea
                     rows={2}
                     className={`w-full rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all border ${isDarkMode ? 'bg-black/20 border-white/10 text-white focus:border-indigo-400 focus:bg-black/40 placeholder-slate-500' : 'bg-white/60 border-indigo-100 text-slate-900 focus:border-indigo-400 focus:bg-white placeholder-slate-400'}`}
-                    placeholder="Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco..."
+                    placeholder={isMedicalDocumentAssistant ? 'Np. zabieg laserowy CO2, przeciwwskazania, zalecenia, ryzyka, ton formalny dla pacjenta...' : 'Np. podkreśl networking, ogranicz formalny ton, dodaj akcent eco...'}
                     value={aiTextInstruction}
                     onChange={e => setAiTextInstruction(e.target.value)}
                   />
@@ -4681,18 +4885,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   className="group relative w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:scale-100 overflow-hidden text-white border border-white/20 bg-gradient-to-r from-indigo-500 to-purple-500"
                 >
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                  <span className="relative z-10 flex items-center gap-2.5">
-                    {aiTextLoading ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} className="group-hover:animate-pulse" />}
-                    {aiTextLoading ? 'Magia działa...' : 'Generuj treść'}
-                  </span>
-                </button>
+                    <span className="relative z-10 flex items-center gap-2.5">
+                      {aiTextLoading ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} className="group-hover:animate-pulse" />}
+                    {aiTextLoading ? 'Generuję szkic...' : (isMedicalDocumentAssistant ? 'Generuj szkic dokumentu' : 'Generuj treść')}
+                    </span>
+                  </button>
 
                 <div className="space-y-2 pt-2">
                   <label className={`text-[10px] font-black uppercase tracking-widest flex items-center justify-between gap-3 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> Wygenerowana treść</span>
+                    <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> {isMedicalDocumentAssistant ? 'Roboczy szkic dokumentu' : 'Wygenerowana treść'}</span>
                     {aiTextSuggestion && (
                       <span className={`text-[8px] px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-black/5 border-black/10 text-slate-500'}`}>
-                        Możesz edytować przed zapisem
+                        {isMedicalDocumentAssistant ? 'Wymaga zatwierdzenia' : 'Możesz edytować przed zapisem'}
                       </span>
                     )}
                   </label>
@@ -4700,7 +4904,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <textarea
                       rows={6}
                       className={`w-full rounded-2xl px-5 py-4 text-sm leading-relaxed outline-none resize-y transition-all border shadow-inner ${isDarkMode ? 'bg-black/40 border-emerald-500/30 text-emerald-50 focus:border-emerald-400 placeholder-slate-500' : 'bg-white border-emerald-200 text-slate-900 focus:border-emerald-500 placeholder-slate-400'}`}
-                      placeholder={aiTextAssistConfig.placeholder || 'Tu pojawi się gotowy tekst stworzony przez sztuczną inteligencję...'}
+                      placeholder={aiTextAssistConfig.placeholder || (isMedicalDocumentAssistant ? 'Tu pojawi się roboczy szkic dokumentu do weryfikacji...' : 'Tu pojawi się gotowy tekst stworzony przez sztuczną inteligencję...')}
                       value={aiTextSuggestion}
                       onChange={e => setAiTextSuggestion(e.target.value)}
                     />
@@ -4714,7 +4918,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 {aiTextReason && (
                   <p className={`rounded-2xl border px-4 py-3 text-xs font-medium ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-white/70 border-indigo-100 text-slate-600'}`}>
-                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>AI użyło:</span> {aiTextReason}
+                    <span className={isDarkMode ? 'font-black text-indigo-300' : 'font-black text-indigo-700'}>{isMedicalDocumentAssistant ? 'Uzasadnienie szkicu:' : 'AI użyło:'}</span> {aiTextReason}
                   </p>
                 )}
 
@@ -4744,12 +4948,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   disabled={!aiTextSuggestion.trim() || aiTextLoading}
                   className={`px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 border ${isDarkMode ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/40 hover:text-emerald-100' : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600'}`}
                 >
-                  Zastosuj treść
+                  {isMedicalDocumentAssistant ? 'Wstaw szkic do dokumentu' : 'Zastosuj treść'}
                 </button>
               </div>
             </div>
           </div>
         </div>
+          )
+        })()
       )}
 
       {false && aiTextAssistConfig && (
@@ -6213,7 +6419,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                   Treść Szablonu / Pytania
                 </label>
-                <button type="button" className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}>
+                <button
+                  type="button"
+                  onClick={() => openAiTextAssist({
+                    eventId: id,
+                    sectionKey: 'medical_documents',
+                    fieldKey: 'content_template',
+                    currentValue: consentTemplateForm.content_template || '',
+                    relatedEntityTitle: consentTemplateForm.required_for_treatment || consentTemplateForm.title || '',
+                    documentType: consentTemplateForm.document_type || 'consent',
+                    mode: 'medical_document',
+                    placeholder: 'Tu pojawi się roboczy szkic zgody, wywiadu lub zaleceń do zatwierdzenia.',
+                    onApply: (text: string) => setConsentTemplateForm((prev: any) => ({ ...prev, content_template: text }))
+                  })}
+                  className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
+                >
                   <Sparkles size={12}/> Generuj szkielet AI
                 </button>
               </div>

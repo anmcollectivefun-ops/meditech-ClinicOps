@@ -48,12 +48,159 @@ const fallbackSuggestion = ({
   event,
   tone,
   length,
+  mode,
+  documentType,
+  relatedEntityTitle,
 }: Record<string, any>) => {
   const eventTitle = event?.title || 'wydarzenie'
   const location = event?.location ? ` w lokalizacji ${event.location}` : ''
   const short = String(length || '').toLowerCase().includes('krót')
+  const isMedicalDocument = mode === 'medical_document' || ['medical_documents', 'medical_docs', 'patient_consents'].includes(String(sectionKey || ''))
+  const procedure = relatedEntityTitle || event?.title || '[NAZWA PROCEDURY]'
 
   let suggestion = currentValue || ''
+
+  if (!suggestion && isMedicalDocument) {
+    if (documentType === 'questionnaire') {
+      suggestion = [
+        `WYWIAD MEDYCZNY PRZED PROCEDURĄ: ${procedure}`,
+        '',
+        'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
+        'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
+        'Data wypełnienia: [DATA]',
+        '',
+        '1. Cel wywiadu',
+        'Zebranie informacji istotnych dla bezpiecznej kwalifikacji pacjenta do procedury.',
+        '',
+        '2. Pytania ogólne',
+        '- Choroby przewlekłe: [TAK/NIE/OPIS]',
+        '- Stale przyjmowane leki: [TAK/NIE/OPIS]',
+        '- Alergie lub nadwrażliwości: [TAK/NIE/OPIS]',
+        '- Ciąża lub karmienie piersią: [TAK/NIE/NIE DOTYCZY]',
+        '- Wcześniejsze zabiegi w tym obszarze: [TAK/NIE/OPIS]',
+        '',
+        '3. Przeciwwskazania i czynniki ryzyka',
+        '- Aktywna infekcja lub stan zapalny: [TAK/NIE]',
+        '- Zaburzenia gojenia lub skłonność do bliznowców: [TAK/NIE]',
+        '- Inne istotne informacje: [OPIS]',
+        '',
+        '4. Oświadczenie pacjenta',
+        'Oświadczam, że podane informacje są zgodne z moją wiedzą.',
+        '',
+        'Podpis pacjenta: ____________________    Podpis personelu: ____________________',
+        '',
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
+      ].join('\n')
+    } else if (documentType === 'aftercare' || documentType === 'precare') {
+      const phase = documentType === 'precare' ? 'PRZED PROCEDURĄ' : 'PO PROCEDURZE'
+      suggestion = [
+        `ZALECENIA DLA PACJENTA ${phase}: ${procedure}`,
+        '',
+        'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNEJ',
+        '',
+        '1. Cel dokumentu',
+        'Przekazanie pacjentowi zrozumiałych zaleceń organizacyjnych i medycznych związanych z procedurą.',
+        '',
+        '2. Zalecenia ogólne',
+        '- Stosować się do indywidualnych zaleceń osoby wykonującej procedurę.',
+        '- Nie pomijać informacji o lekach, alergiach i chorobach przewlekłych.',
+        '- Skontaktować się z placówką w razie niepokojących objawów lub wątpliwości.',
+        '',
+        '3. Objawy wymagające kontaktu',
+        '- nasilający się ból, obrzęk lub zaczerwienienie,',
+        '- objawy reakcji alergicznej,',
+        '- gorączka, infekcja lub zaburzenia gojenia,',
+        '- każdy objaw budzący niepokój pacjenta.',
+        '',
+        '4. Kontrola',
+        'Termin kontroli / follow-up: [TERMIN]',
+        '',
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem.'
+      ].join('\n')
+    } else if (documentType === 'followup') {
+      suggestion = [
+        `FOLLOW-UP DO PACJENTA PO WIZYCIE / PROCEDURZE: ${procedure}`,
+        '',
+        'Status treści: WERSJA ROBOCZA DO WERYFIKACJI',
+        '',
+        'Dzień dobry [IMIE_PACJENTA],',
+        '',
+        'kontaktujemy się po wizycie, aby upewnić się, że wszystko przebiega prawidłowo.',
+        '',
+        'Prosimy o kontakt z placówką, jeśli pojawiły się niepokojące objawy, nasilony ból, obrzęk, zaczerwienienie, objawy infekcji lub reakcja alergiczna.',
+        '',
+        'Termin kontroli / kolejnego kontaktu: [TERMIN]',
+        '',
+        'Pozdrawiamy,',
+        '[NAZWA_PLACOWKI]',
+        '',
+        'Uwaga: treść wymaga zatwierdzenia przez osobę uprawnioną przed wysyłką.'
+      ].join('\n')
+    } else if (documentType === 'rodo') {
+      suggestion = [
+        'INFORMACJA O PRZETWARZANIU DANYCH OSOBOWYCH I ZGODY PACJENTA',
+        '',
+        'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI PRAWNEJ',
+        '',
+        '1. Administrator danych',
+        'Administratorem danych jest: [NAZWA_PLACOWKI], [ADRES], [KONTAKT].',
+        '',
+        '2. Cele przetwarzania danych',
+        '- obsługa pacjenta i rezerwacji,',
+        '- prowadzenie dokumentacji związanej z wizytą,',
+        '- kontakt organizacyjny,',
+        '- działania marketingowe wyłącznie po wyrażeniu odrębnej zgody.',
+        '',
+        '3. Zgody szczegółowe',
+        '[ ] Wyrażam zgodę na kontakt SMS/e-mail w sprawach organizacyjnych.',
+        '[ ] Wyrażam zgodę na kontakt marketingowy.',
+        '[ ] Wyrażam zgodę na wykorzystanie wizerunku / zdjęć przed i po, jeżeli dotyczy.',
+        '',
+        'Podpis pacjenta: ____________________    Data: [DATA]',
+        '',
+        'Uwaga: dokument wymaga weryfikacji prawnej przed użyciem.'
+      ].join('\n')
+    } else {
+      suggestion = [
+        `ZGODA PACJENTA NA PROCEDURĘ: ${procedure}`,
+        '',
+        'Status dokumentu: WERSJA ROBOCZA DO WERYFIKACJI MEDYCZNO-PRAWNEJ',
+        'Pacjent: [IMIE_PACJENTA] [NAZWISKO_PACJENTA]',
+        'Data: [DATA]',
+        'Placówka: [NAZWA_PLACOWKI]',
+        '',
+        '1. Opis procedury',
+        'Pacjent został poinformowany o charakterze, celu i spodziewanym przebiegu procedury.',
+        '',
+        '2. Możliwe przeciwwskazania',
+        '- aktywne infekcje lub stany zapalne,',
+        '- ciąża lub karmienie piersią, jeżeli dotyczy procedury,',
+        '- alergie lub nadwrażliwości na stosowane preparaty,',
+        '- inne przeciwwskazania wskazane przez osobę kwalifikującą.',
+        '',
+        '3. Możliwe działania niepożądane / powikłania',
+        '- ból, obrzęk, zaczerwienienie, siniaki,',
+        '- reakcja alergiczna,',
+        '- infekcja lub zaburzenia gojenia,',
+        '- efekt odbiegający od oczekiwań pacjenta.',
+        '',
+        '4. Alternatywy i możliwość odmowy',
+        'Pacjent został poinformowany o możliwości rezygnacji z procedury oraz o dostępnych alternatywach, jeżeli występują.',
+        '',
+        '5. Oświadczenia pacjenta',
+        '[ ] Oświadczam, że miałem/am możliwość zadania pytań.',
+        '[ ] Oświadczam, że przekazałem/am prawdziwe informacje o stanie zdrowia.',
+        '[ ] Wyrażam świadomą zgodę na wykonanie procedury.',
+        '',
+        '6. Zalecenia',
+        'Pacjent otrzymał zalecenia przed i po procedurze oraz został poinformowany o konieczności kontaktu w razie niepokojących objawów.',
+        '',
+        'Podpis pacjenta: ____________________    Podpis osoby uprawnionej: ____________________',
+        '',
+        'Uwaga: dokument wymaga zatwierdzenia przez osobę uprawnioną przed użyciem z pacjentem.'
+      ].join('\n')
+    }
+  }
 
   if (!suggestion) {
     if (String(fieldKey || '').includes('title')) {
@@ -87,8 +234,12 @@ const fallbackSuggestion = ({
 
   return {
     suggestion,
-    reason: 'Użyto podstawowych danych wydarzenia i lokalnego fallbacku bez wywołania modelu AI.',
-    missing_context: event?.title ? [] : ['Uzupełnij tytuł wydarzenia, aby sugestie były dokładniejsze.'],
+    reason: isMedicalDocument
+      ? 'Użyto bezpiecznego lokalnego szkieletu dokumentu medycznego. Treść jest projektem do zatwierdzenia.'
+      : 'Użyto podstawowych danych wydarzenia i lokalnego fallbacku bez wywołania modelu AI.',
+    missing_context: isMedicalDocument
+      ? ['Uzupełnij nazwę procedury, przeciwwskazania, możliwe powikłania, zalecenia oraz dane placówki przed zatwierdzeniem.']
+      : (event?.title ? [] : ['Uzupełnij tytuł wydarzenia, aby sugestie były dokładniejsze.']),
   }
 }
 
@@ -105,6 +256,9 @@ serve(async (req) => {
       fieldKey,
       currentValue = '',
       relatedEntityId = null,
+      relatedEntityTitle = '',
+      mode = 'general',
+      documentType = 'consent',
       tone = 'premium',
       length = 'średnia',
       instruction = '',
@@ -162,6 +316,9 @@ serve(async (req) => {
       fieldKey,
       currentValue,
       relatedEntityId,
+      relatedEntityTitle,
+      mode,
+      documentType,
       tone,
       length,
       instruction,
@@ -245,7 +402,8 @@ serve(async (req) => {
       }
     }
 
-    const fallback = fallbackSuggestion({ sectionKey, fieldKey, currentValue, event, tone, length })
+    const isMedicalDocument = mode === 'medical_document' || ['medical_documents', 'medical_docs', 'patient_consents'].includes(String(sectionKey || ''))
+    const fallback = fallbackSuggestion({ sectionKey, fieldKey, currentValue, event, tone, length, mode, documentType, relatedEntityTitle })
 
     try {
       const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
@@ -265,16 +423,29 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: [
-                'Jesteś AI copywriterem i asystentem event managera w ANM Eco Planner.',
-                'Pomagasz tworzyć treści strony wydarzenia na podstawie danych już uzupełnionych w plannerze.',
-                'Pisz po polsku. Pisz konkretnie, nowocześnie i naturalnie.',
-                'Nie wymyślaj faktów, prelegentów, godzin, cen ani lokalizacji.',
-                'Jeśli czegoś brakuje, użyj neutralnego sformułowania.',
-                'Nie nadpisuj danych. Zwracasz tylko propozycję tekstu.',
-                'Dopasuj ton i długość do parametrów.',
-                'Zwróć wyłącznie JSON w kształcie: {"suggestion":"...","reason":"...","missing_context":["..."]}.',
-              ].join(' '),
+              content: isMedicalDocument
+                ? [
+                    'Jesteś asystentem tworzenia roboczych szablonów dokumentów dla placówki medycznej.',
+                    'Tworzysz wyłącznie projekt dokumentu po polsku, do późniejszej weryfikacji przez osobę uprawnioną medycznie i prawnie.',
+                    'Nie udzielasz diagnozy, nie kwalifikujesz pacjenta, nie zastępujesz lekarza ani prawnika.',
+                    'Nie twierdzisz, że dokument jest zgodny z prawem lub gotowy do użycia.',
+                    'Każdy dokument oznacz jako wersję roboczą do zatwierdzenia.',
+                    'Nie wymyślaj konkretnych dawek, procedur, przeciwwskazań ani powikłań, jeśli nie wynikają z kontekstu lub instrukcji.',
+                    'Używaj sekcji: dane pacjenta, dane placówki, opis procedury, przeciwwskazania, ryzyka/powikłania, alternatywy, oświadczenia pacjenta, zalecenia, podpisy, wersja dokumentu.',
+                    'Dla wywiadu medycznego twórz pytania i pola odpowiedzi, nie rozpoznania.',
+                    'Dla RODO twórz szkic administracyjny z miejscami na dane placówki i zgody szczegółowe.',
+                    'Zwróć wyłącznie JSON w kształcie: {"suggestion":"...","reason":"...","missing_context":["..."]}.',
+                  ].join(' ')
+                : [
+                    'Jesteś AI copywriterem i asystentem event managera w ANM Eco Planner.',
+                    'Pomagasz tworzyć treści strony wydarzenia na podstawie danych już uzupełnionych w plannerze.',
+                    'Pisz po polsku. Pisz konkretnie, nowocześnie i naturalnie.',
+                    'Nie wymyślaj faktów, prelegentów, godzin, cen ani lokalizacji.',
+                    'Jeśli czegoś brakuje, użyj neutralnego sformułowania.',
+                    'Nie nadpisuj danych. Zwracasz tylko propozycję tekstu.',
+                    'Dopasuj ton i długość do parametrów.',
+                    'Zwróć wyłącznie JSON w kształcie: {"suggestion":"...","reason":"...","missing_context":["..."]}.',
+                  ].join(' '),
             },
             {
               role: 'user',
