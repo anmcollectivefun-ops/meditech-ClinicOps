@@ -3474,7 +3474,6 @@ const { data: checklistItemData } = await supabase
       setTiers(tierData || [])
       setPromoCodes(promoData || [])
       //setSpeakers(speakerData || [])//
-      setMaterials([])
       setPartners(partnerData || [])
       setContractors(contractorData || [])
       setOrganizedRoutes([])
