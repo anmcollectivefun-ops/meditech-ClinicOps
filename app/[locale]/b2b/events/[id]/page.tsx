@@ -476,6 +476,7 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
   const [templateSearch, setTemplateSearch] = useState('')
   const [activeTemplateSendId, setActiveTemplateSendId] = useState<string | null>(null)
   const [selectedPatientForTemplate, setSelectedPatientForTemplate] = useState<string>('')
+  const [isEditingConsentTemplate, setIsEditingConsentTemplate] = useState(false)
 // ==========================================
   // STANY prelegenci
   // ==========================================
@@ -3334,8 +3335,7 @@ const loadSpaceLayoutData = useCallback(async () => {
 
   setSpaceObjects(objectsData || [])
 }, [id, supabase])
-
-  const loadEventData = useCallback(async () => {
+const loadEventData = useCallback(async () => {
     try {
       const { data: ev } = await supabase.from('b2b_events').select('*').eq('id', id).single()
       const { data: apps } = await supabase.from('b2b_applications').select('*').eq('event_id', id).order('created_at', { ascending: false })
@@ -3362,7 +3362,6 @@ const { data: checklistItemData } = await supabase
   .eq('event_id', id)
   .order('display_order', { ascending: true })
 
-
       const { data: partnerData } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
       const { data: contractorData } = await supabase.from('contractors').select('*').eq('event_id', id).order('created_at', { ascending: false })
 
@@ -3384,11 +3383,13 @@ const { data: checklistItemData } = await supabase
       setTransportStops([])
       setFleet([])
       setChecklistGroups(checklistGroupData || [])
-setChecklistItems(checklistItemData || [])
-await loadBudgetData()
-await loadEventPassData()
-await loadPatients()
-await loadPatientConsents()
+      setChecklistItems(checklistItemData || [])
+      await loadBudgetData()
+      await loadEventPassData()
+      await loadPatients()
+      await loadPatientConsents()
+      await loadConsentTemplates() // <--- DODANO TUTAJ
+
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
 
@@ -3397,7 +3398,7 @@ await loadPatientConsents()
     } finally {
       setLoading(false)
     }
- }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientConsents])
+  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientConsents, loadConsentTemplates])
 
   useEffect(() => {
     loadEventData()
@@ -6420,10 +6421,55 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </button>
           </div>
 
-          <form onSubmit={(e) => {
+          <form onSubmit={async (e) => {
             e.preventDefault()
-            showNotification('Szablon zapisany w bazie.', 'success')
-            setIsConsentTemplateModalOpen(false)
+            setUpdating(true)
+
+            try {
+              const payload: any = {
+                event_id: id,
+                title: consentTemplateForm.title,
+                description: consentTemplateForm.description || null,
+                document_type: consentTemplateForm.document_type || 'consent',
+                required_for_treatment: consentTemplateForm.required_for_treatment || null,
+                validity_months: consentTemplateForm.validity_months ? Number(consentTemplateForm.validity_months) : null,
+                version: Number(consentTemplateForm.version || 1),
+                is_global_required: !!consentTemplateForm.is_global_required,
+                is_active: consentTemplateForm.is_active !== false,
+                content_template: consentTemplateForm.content_template || ''
+              }
+
+              if (payload.document_type === 'questionnaire') {
+                payload.content_template = JSON.stringify(consentTemplateForm.questions || [])
+              }
+
+              if (isEditingConsentTemplate && consentTemplateForm.id) {
+                const { error } = await supabase
+                  .from('medical_consent_templates')
+                  .update(payload)
+                  .eq('id', consentTemplateForm.id)
+
+                if (error) throw error
+                showNotification('Szablon dokumentu został zaktualizowany w bazie danych.', 'success')
+              } else {
+                const { error } = await supabase
+                  .from('medical_consent_templates')
+                  .insert([payload])
+
+                if (error) throw error
+                showNotification('Nowy szablon dokumentu został trwale zapisany w bazie.', 'success')
+              }
+
+              await loadConsentTemplates()
+              setConsentTemplateForm({})
+              setIsEditingConsentTemplate(false)
+              setIsConsentTemplateModalOpen(false)
+            } catch (err: any) {
+              console.error('Błąd zapisu dokumentu:', err)
+              showNotification('Krytyczny błąd bazy danych: ' + (err?.message || 'Nieznany błąd'), 'error')
+            } finally {
+              setUpdating(false)
+            }
           }} className="space-y-6">
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
