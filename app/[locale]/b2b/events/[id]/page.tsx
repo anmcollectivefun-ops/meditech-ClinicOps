@@ -608,7 +608,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [treatments, setTreatments] = useState<any[]>([])
   const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
   const [appointmentsList, setAppointmentsList] = useState<any[]>([])
-  const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '' })
+  const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' })
 
   // --- PRAWDZIWE STANY KATALOGU ZABIEGÓW ---
   const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false)
@@ -643,6 +643,8 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
         sessions_count: treatmentForm.sessions_count || 1,
         doctor_id: treatmentForm.doctor_id || null,
         preparation_id: treatmentForm.preparation_id || null,
+        price_amount: treatmentForm.price_amount === '' || treatmentForm.price_amount === undefined ? null : Number(treatmentForm.price_amount || 0),
+        currency: treatmentForm.currency || 'PLN',
         room: treatmentForm.room || null,
         treatment_category: treatmentForm.treatment_category || 'standard',
         pre_recommendations: treatmentForm.pre_recommendations || null,
@@ -727,6 +729,10 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
           treatment_id: appointmentForm.treatment_id,
           treatment_name: selectedTreatment?.name || 'Zabieg medyczny',
           doctor_id: selectedTreatment?.doctor_id || null,
+          price_amount: appointmentForm.price_amount === '' || appointmentForm.price_amount === undefined
+            ? (selectedTreatment?.price_amount ?? null)
+            : Number(appointmentForm.price_amount || 0),
+          currency: appointmentForm.currency || selectedTreatment?.currency || 'PLN',
           appointment_date: appointmentForm.appointment_date,
           status: 'scheduled'
         }])
@@ -756,7 +762,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
       showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgód.`, 'success');
       setIsBookingModalOpen(false);
-      setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '' });
+      setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' });
       await loadAppointments();
       await loadPatientConsents();
       
@@ -7390,16 +7396,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <select 
                 required
                 value={appointmentForm.treatment_id}
-                onChange={e => setAppointmentForm({ ...appointmentForm, treatment_id: e.target.value })}
+                onChange={e => {
+                  const selectedTreatment = treatments.find((t: any) => t.id === e.target.value)
+                  setAppointmentForm({
+                    ...appointmentForm,
+                    treatment_id: e.target.value,
+                    price_amount: selectedTreatment?.price_amount ?? '',
+                    currency: selectedTreatment?.currency || appointmentForm.currency || 'PLN'
+                  })
+                }}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
                 <option value="">-- Wybierz usługę z bazy --</option>
-                {treatments.filter(t => t.is_active).map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {treatments.filter(t => t.is_active).map((t: any) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}{t.price_amount ? ` - ${Number(t.price_amount).toLocaleString('pl-PL')} ${t.currency || 'PLN'}` : ''}
+                  </option>
+                ))}
               </select>
               <p className="text-[9px] mt-2 opacity-60 px-1">Lekarz i preparaty zostaną przypisane automatycznie na podstawie definicji zabiegu.</p>
             </div>
 
-            <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="md:col-span-2">
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>3. Data i godzina *</label>
               <input 
                 required
@@ -7408,6 +7427,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 onChange={e => setAppointmentForm({ ...appointmentForm, appointment_date: e.target.value })}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena wizyty</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={appointmentForm.price_amount}
+                    onChange={e => setAppointmentForm({ ...appointmentForm, price_amount: e.target.value })}
+                    placeholder="0.00"
+                    className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                  />
+                  <select
+                    value={appointmentForm.currency}
+                    onChange={e => setAppointmentForm({ ...appointmentForm, currency: e.target.value })}
+                    className={`w-24 border rounded-xl px-3 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                  >
+                    <option value="PLN">PLN</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <button 
@@ -7452,6 +7494,31 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <select value={treatmentForm.type || 'single'} onChange={e => setTreatmentForm({ ...treatmentForm, type: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="single">Pojedyncza wizyta</option>
                     <option value="series">Seria zabiegów</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
+                <div className="md:col-span-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena katalogowa zabiegu</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={treatmentForm.price_amount ?? ''}
+                    onChange={e => setTreatmentForm({ ...treatmentForm, price_amount: e.target.value })}
+                    placeholder="np. 450.00"
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Waluta</label>
+                  <select
+                    value={treatmentForm.currency || 'PLN'}
+                    onChange={e => setTreatmentForm({ ...treatmentForm, currency: e.target.value })}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}
+                  >
+                    <option value="PLN">PLN</option>
+                    <option value="EUR">EUR</option>
                   </select>
                 </div>
               </div>
