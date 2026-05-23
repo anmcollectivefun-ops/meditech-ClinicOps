@@ -6920,321 +6920,180 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 {/* ============================================================================ */}
-{/* harmonogram */}
+{/* ZABIEGI I WIZYTY (Zarządzanie Katalogiem i Rejestracja) */}
 {/* ============================================================================ */}
 {activeTab === 'harmonogram' && (
-  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300">
+  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-200'}`}>
+    {/* NAGŁÓWEK SEKCJI */}
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Clock size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Wizyty, zabiegi i konsultacje
+          <Stethoscope size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+          Zabiegi i Kalendarz Wizyt
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj kalendarzem wizyt, procedurami, konsultacjami i blokami pracy zespołu medycznego.
+          Zarządzaj katalogiem usług (pojedyncze i serie) oraz rejestruj pacjentów, co automatycznie wygeneruje im zgody.
         </p>
       </div>
 
-      {!isEditingSession && (
+      <div className="flex flex-wrap gap-2 shrink-0">
         <button
           onClick={() => {
-            setSessionForm({})
-            setIsEditingSession(true)
+            // Tymczasowy state pod modal tworzenia katalogu
+            showNotification('Modal Katalogu Zabiegów otwarty', 'info')
           }}
-          className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 shrink-0 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+          className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-all hover:bg-slate-50 dark:hover:bg-slate-800 ${isDarkMode ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-700'}`}
         >
-          <Plus size={14} />
-          Dodaj wizytę
+          <Layers size={14} /> Dodaj do Katalogu
         </button>
-      )}
+        <button
+          onClick={() => setIsBookingModalOpen(true)}
+          className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+        >
+          <CalendarPlus size={14} /> Zapisz Pacjenta
+        </button>
+      </div>
     </div>
 
-    {isEditingSession ? (
-      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-        <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-          <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Edit3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
-            {sessionForm.id ? 'Edycja sesji' : 'Tworzenie nowej sesji'}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">
+      
+      {/* LEWA KOLUMNA: KATALOG ZABIEGÓW (Słownik dla kliniki) */}
+      <div className="lg:col-span-1 space-y-4">
+        <div className={`p-5 rounded-[24px] border shadow-sm flex items-center justify-between ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <h4 className={`font-black text-sm uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+            <ListChecks size={16} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}/> 
+            Katalog Usług
           </h4>
-
-          <button
-            onClick={() => setIsEditingSession(false)}
-            className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-          >
-            <X size={20} />
-          </button>
         </div>
 
-        <form onSubmit={handleSaveSession} className="p-5 md:p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Tytuł *
-              </label>
-              <input
-                required
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={sessionForm.title || ''}
-                onChange={e => setSessionForm({ ...sessionForm, title: e.target.value })}
-                placeholder="np. Powitanie gości"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Typ
-              </label>
-              <select
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={sessionForm.session_type || 'lecture'}
-                onChange={e => setSessionForm({ ...sessionForm, session_type: e.target.value })}
-              >
-                <option value="lecture">Wykład</option>
-                <option value="workshop">Warsztat</option>
-                <option value="entertainment">Rozrywka</option>
-                <option value="meal">Posiłek</option>
-                <option value="networking">Networking</option>
-                <option value="break">Przerwa</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Opis
-              </label>
-            </div>
-            <textarea
-              rows={3}
-              className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-              value={sessionForm.description || ''}
-              onChange={e => setSessionForm({ ...sessionForm, description: e.target.value })}
-              placeholder="Zwięzły opis wydarzenia, co się będzie działo..."
-            />
-            {/* Przycisk AI wywołujący funkcję podpowiedzi opisu */}
-            <div className="mt-2">
-              <AiTextAssistButton
-                eventId={id}
-                sectionKey="agenda"
-                fieldKey="description"
-                currentValue={sessionForm.description || ''}
-                placeholder="np. Skupmy się na wartości dla uczestnika..."
-                onApply={(text) => setSessionForm({ ...sessionForm, description: text })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Start *
-              </label>
-              <input
-                required
-                type="datetime-local"
-                className={`w-full border rounded-xl px-4 py-3 text-[11px] font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={toDateTimeLocalInput(sessionForm.start_time)}
-                onChange={e => setSessionForm({ ...sessionForm, start_time: e.target.value || null })}
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Koniec *
-              </label>
-              <input
-                required
-                type="datetime-local"
-                className={`w-full border rounded-xl px-4 py-3 text-[11px] font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={toDateTimeLocalInput(sessionForm.end_time)}
-                onChange={e => setSessionForm({ ...sessionForm, end_time: e.target.value || null })}
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Prowadzący
-              </label>
-              <input
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={sessionForm.speaker_name || ''}
-                onChange={e => setSessionForm({ ...sessionForm, speaker_name: e.target.value })}
-                placeholder="np. Anna Nowak"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Sala
-              </label>
-              <input
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={sessionForm.location || ''}
-                onChange={e => setSessionForm({ ...sessionForm, location: e.target.value })}
-                placeholder="np. Scena Główna"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className={`p-4 md:p-5 border rounded-2xl ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Zdjęcie sesji
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300 file:border-slate-700' : 'text-slate-700 file:bg-white file:border-slate-300'}`}
-                onChange={e => setNewFiles({ ...newFiles, sessionImg: e.target.files ? e.target.files[0] : null })}
-              />
-            </div>
-
-            <div className={`p-4 md:p-5 border rounded-2xl flex items-center justify-between ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <div>
-                <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Publiczne
-                </p>
-                <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Czy sesja ma być widoczna na stronie wydarzenia?
-                </p>
+        {/* Makieta Katalogu Zabiegów */}
+        <div className="space-y-3">
+          {[
+            { id: 't1', name: 'Laser Frakcyjny CO2', type: 'Pojedynczy zabieg', consents: 2 },
+            { id: 't2', name: 'Seria: Depilacja Laserowa (6x)', type: 'Seria zabiegów', consents: 1 },
+            { id: 't3', name: 'Modelowanie Ust Kwasem', type: 'Pojedynczy zabieg', consents: 3 },
+          ].map(treatment => (
+            <div key={treatment.id} className={`p-4 rounded-[20px] border transition-all ${isDarkMode ? 'bg-slate-900/50 border-slate-800 hover:border-slate-700' : 'bg-slate-50 border-slate-200 hover:bg-white shadow-sm'}`}>
+              <div className="flex justify-between items-start mb-2">
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${treatment.type.includes('Seria') ? (isDarkMode ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
+                  {treatment.type}
+                </span>
+                <button className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-200 text-slate-400'}`}>
+                  <Edit3 size={14} />
+                </button>
               </div>
-
-              <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={sessionForm.is_mandatory || false}
-                  onChange={e => setSessionForm({ ...sessionForm, is_mandatory: e.target.checked })}
-                />
-                <div className={`w-12 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${isDarkMode ? 'bg-slate-700 peer-checked:bg-[#e8ce7a] peer-checked:after:border-white' : 'bg-slate-200 peer-checked:bg-slate-900'}`} />
-              </label>
+              <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{treatment.name}</h5>
+              <p className={`text-[10px] mt-2 font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                <FileSignature size={12} className="opacity-70"/> 
+                Wymaga {treatment.consents} zgód
+              </p>
             </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={updating}
-            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
-          >
-            {updating ? 'Zapisywanie...' : 'Zapisz sesję'}
-          </button>
-        </form>
+          ))}
+        </div>
       </div>
-    ) : (
-      <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-          <h4 className={`font-black text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Zapisane wydarzenia ({sessions.length})
+
+      {/* PRAWA KOLUMNA: ZAPLANOWANE WIZYTY (Rezerwacje) */}
+      <div className="lg:col-span-2 space-y-4">
+        <div className={`p-5 rounded-[24px] border shadow-sm flex items-center justify-between ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <h4 className={`font-black text-sm uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+            <Calendar size={16} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}/> 
+            Umówione Wizyty
           </h4>
+          <span className={`px-2 py-1 text-[9px] font-black rounded-lg ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+            Nadchodzące (2)
+          </span>
         </div>
 
-        <div className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-          {sessions.length === 0 ? (
-            <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-              Harmonogram jest obecnie pusty. Dodaj pierwszą sesję.
-            </div>
-          ) : sessions.map((item) => (
-            <div key={item.id} className={`p-5 md:p-6 transition-colors group ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
-              <div className="flex flex-col md:flex-row gap-5 md:gap-6">
-
-                {/* Zdjęcie */}
-                <div className={`w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon size={32} className={isDarkMode ? 'text-slate-600' : 'text-slate-300'} />
-                    </div>
-                  )}
+        <div className="space-y-3">
+          {/* Makieta pojedynczej wizyty */}
+          {[
+            { id: 'app1', patient: 'Anna Nowak', treatment: 'Modelowanie Ust Kwasem', date: '25 Maj 2026, 14:30', isSeries: false, consentsReady: false },
+            { id: 'app2', patient: 'Jan Kowalski', treatment: 'Seria: Depilacja Laserowa (Zabieg 2/6)', date: '26 Maj 2026, 10:00', isSeries: true, consentsReady: true },
+          ].map(app => (
+            <div key={app.id} className={`p-5 rounded-[24px] border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                  <User size={20} />
                 </div>
-
-                {/* Dane sesji */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
-                            item.session_type === 'entertainment'
-                              ? (isDarkMode ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200')
-                              : item.session_type === 'workshop'
-                                ? (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200')
-                                : (isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-300')
-                          }`}
-                        >
-                          {item.session_type}
-                        </span>
-
-                        {item.is_mandatory && (
-                          <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                            Publiczne
-                          </span>
-                        )}
-                      </div>
-
-                      <h5 className={`text-lg md:text-xl font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                        {item.title}
-                      </h5>
-
-                      {item.description && (
-                        <p className={`text-sm mt-2 max-w-3xl line-clamp-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                          {item.description}
-                        </p>
-                      )}
-
-                      <div className={`flex flex-wrap gap-4 mt-4 text-[11px] md:text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <span className="flex items-center gap-1.5">
-                          <Clock size={14} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
-                          {formatTimeValue(item.start_time)} - {formatTimeValue(item.end_time)}
-                        </span>
-
-                        {item.location && (
-                          <span className="flex items-center gap-1.5">
-                            <MapPin size={14} className={isDarkMode ? 'text-blue-400' : 'text-blue-600'} />
-                            {item.location}
-                          </span>
-                        )}
-
-                        {item.speaker_name && (
-                          <span className="flex items-center gap-1.5">
-                            <Users size={14} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
-                            {item.speaker_name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Akcje - widoczne zawsze na mobile, na desktopie po hoverze */}
-                    <div className={`flex items-center gap-1.5 p-1 rounded-xl border shrink-0 transition-opacity md:opacity-0 group-hover:opacity-100 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-                      <button
-                        onClick={() => {
-                          setSessionForm(item)
-                          setIsEditingSession(true)
-                        }}
-                        className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`}
-                      >
-                        <Edit3 size={16} />
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteSession(item.id)}
-                        className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-600'}`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
+                <div>
+                  <h5 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{app.patient}</h5>
+                  <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'}`}>{app.treatment}</p>
+                  <p className={`text-[10px] mt-1 font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <Clock size={12} /> {app.date}
+                  </p>
                 </div>
+              </div>
+              
+              <div className="flex flex-col items-end gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 dark:border-slate-800 border-slate-100">
+                {app.consentsReady ? (
+                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 border ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                    <CheckCircle2 size={12}/> Zgody Gotowe
+                  </span>
+                ) : (
+                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 border ${isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    <AlertTriangle size={12}/> Zgody do podpisu
+                  </span>
+                )}
+                <button className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'}`}>
+                  Szczegóły Wizyty
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+    
+    {/* MODAL: ZAPISYWANIE PACJENTA (Tymczasowy) */}
+    {isBookingModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-2xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex justify-between items-center mb-6 border-b pb-4 dark:border-slate-800 border-slate-100">
+            <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <CalendarPlus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+              Zapisz Pacjenta na Zabieg
+            </h3>
+            <button onClick={() => setIsBookingModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="space-y-5">
+            <div>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz pacjenta</label>
+              <select className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`}>
+                <option value="">-- Wyszukaj z bazy --</option>
+                {patients.map((p: any) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybierz zabieg z katalogu</label>
+              <select className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`}>
+                <option value="">-- Z katalogu usług --</option>
+                <option value="t1">Laser Frakcyjny CO2</option>
+                <option value="t2">Seria: Depilacja Laserowa (6x)</option>
+                <option value="t3">Modelowanie Ust Kwasem</option>
+              </select>
+            </div>
+
+            <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-blue-900/10 border-blue-900/30' : 'bg-blue-50 border-blue-200/50'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+                <Activity size={12}/> Akcja automatyczna systemu
+              </p>
+              <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-800'}`}>
+                Zapisanie wizyty utworzy nowe Appointment ID i od razu wygeneruje 2 dedykowane zgody medyczne do Portalu Pacjenta.
+              </p>
+            </div>
+
+            <button 
+              onClick={() => setIsBookingModalOpen(false)}
+              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+            >
+              Utwórz Wizytę i Wygeneruj Zgody
+            </button>
+          </div>
         </div>
       </div>
     )}
