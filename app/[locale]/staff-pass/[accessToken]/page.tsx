@@ -101,14 +101,12 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const qrSearchLoadingRef = useRef(false)
 
   const canEntry = hasPermission(staffAccess, 'can_entry_checkin')
-  const canMeal = hasPermission(staffAccess, 'can_meal_redemption')
   const canGadget = hasPermission(staffAccess, 'can_gadget_redemption')
-  const canTransport = hasPermission(staffAccess, 'can_transport_checkin')
   const canBandIssue = hasPermission(staffAccess, 'can_wristband_issue')
   const canBandReturn = hasPermission(staffAccess, 'can_wristband_return')
   const canMedicalHistory = canViewMedicalHistory(staffAccess)
   const canAppointments = canViewAppointments(staffAccess)
-  const canSessions = canAppointments || staffAccess?.role === 'manager' || [canEntry, canMeal, canGadget, canTransport, canBandIssue, canBandReturn].filter(Boolean).length > 1
+  const canSessions = canAppointments || staffAccess?.role === 'manager' || [canEntry, canGadget, canBandIssue, canBandReturn].filter(Boolean).length > 1
 
   const mealById = useMemo(() => new Map(meals.map((meal: any) => [meal.id, meal])), [meals])
   const gadgetById = useMemo(() => new Map(gadgets.map((gadget: any) => [gadget.id, gadget])), [gadgets])
@@ -213,44 +211,26 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
 
     const [
       appRes,
-      mealChoiceRes,
       gadgetChoiceRes,
       sessionRes,
-      transportRes,
-      mealRedemptionRes,
       gadgetRedemptionRes,
-      transportCheckinRes,
-      mealsRes,
       gadgetsRes,
-      sessionsRes,
-      routesRes
+      sessionsRes
     ] = await Promise.all([
       supabase.from('b2b_applications').select('*').eq('id', unit.application_id).single(),
-      supabase.from('event_attendee_meal_choices').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
       supabase.from('event_attendee_gadget_choices').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
       supabase.from('event_attendee_session_signups').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
-      supabase.from('event_attendee_transport_choices').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
-      supabase.from('event_meal_redemptions').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
       supabase.from('event_gadget_redemptions').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
-      supabase.from('event_transport_checkins').select('*').eq('event_id', unit.event_id).eq('attendee_unit_id', unit.id),
-      supabase.from('event_meals').select('*').eq('event_id', unit.event_id),
       supabase.from('event_gadgets').select('*').eq('event_id', unit.event_id),
-      supabase.from('event_sessions').select('*').eq('event_id', unit.event_id),
-      supabase.from('organized_transport_routes').select('*').eq('event_id', unit.event_id)
+      supabase.from('event_sessions').select('*').eq('event_id', unit.event_id)
     ])
 
     if (appRes.error) console.warn('Staff pass application load error:', appRes.error.message)
-    if (mealChoiceRes.error) console.warn('Staff pass meal choices load error:', mealChoiceRes.error.message)
     if (gadgetChoiceRes.error) console.warn('Staff pass gadget choices load error:', gadgetChoiceRes.error.message)
     if (sessionRes.error) console.warn('Staff pass session signups load error:', sessionRes.error.message)
-    if (transportRes.error) console.warn('Staff pass transport choices load error:', transportRes.error.message)
-    if (mealRedemptionRes.error) console.warn('Staff pass meal redemptions load error:', mealRedemptionRes.error.message)
     if (gadgetRedemptionRes.error) console.warn('Staff pass gadget redemptions load error:', gadgetRedemptionRes.error.message)
-    if (transportCheckinRes.error) console.warn('Staff pass transport checkins load error:', transportCheckinRes.error.message)
-    if (mealsRes.error) console.warn('Staff pass meals load error:', mealsRes.error.message)
     if (gadgetsRes.error) console.warn('Staff pass gadgets load error:', gadgetsRes.error.message)
     if (sessionsRes.error) console.warn('Staff pass sessions load error:', sessionsRes.error.message)
-    if (routesRes.error) console.warn('Staff pass routes load error:', routesRes.error.message)
 
     const sourceData = typeof unit.source_data === 'string'
       ? (() => {
@@ -295,17 +275,17 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       : fallbackSessionSignups
 
     setApplication(appRes.data || null)
-    setMealChoices(mealChoiceRes.data || [])
+    setMealChoices([])
     setGadgetChoices(resolvedGadgetChoices)
     setSessionSignups(resolvedSessionSignups)
-    setTransportChoices(transportRes.data || [])
-    setMealRedemptions(mealRedemptionRes.data || [])
+    setTransportChoices([])
+    setMealRedemptions([])
     setGadgetRedemptions(gadgetRedemptionRes.data || [])
-    setTransportCheckins(transportCheckinRes.data || [])
-    setMeals(mealsRes.data || [])
+    setTransportCheckins([])
+    setMeals([])
     setGadgets(gadgetsRes.data || [])
     setSessions(sessionsRes.data || [])
-    setRoutes(routesRes.data || [])
+    setRoutes([])
   }
 
   const searchAttendeeByQrToken = async (rawToken: string) => {
@@ -611,29 +591,6 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
     setActionLoading(null)
   }
 
-  const handleRedeemMeal = async (choice: any) => {
-    if (!attendeeUnit || !staffAccess) return
-    const action = 'meal_redemption'
-    const payload = {
-      event_id: staffAccess.event_id,
-      application_id: attendeeUnit.application_id,
-      attendee_unit_id: attendeeUnit.id,
-      meal_id: choice.meal_id,
-      redeemed_by: staffAccess.name,
-      staff_role: staffAccess.role,
-      notes: null
-    }
-    setActionLoading(`${action}-${choice.meal_id}`)
-    const { error: insertError } = await supabase.from('event_meal_redemptions').insert([payload])
-    if (insertError) {
-      logActionError(action, insertError, payload)
-    } else {
-      setMessage('Posiłek wydany.')
-      await refreshCurrentUnit()
-    }
-    setActionLoading(null)
-  }
-
   const handleRedeemGadget = async (choice: any) => {
     if (!attendeeUnit || !staffAccess) return
     const action = 'gadget_redemption'
@@ -652,29 +609,6 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       logActionError(action, insertError, payload)
     } else {
       setMessage('Gadżet wydany.')
-      await refreshCurrentUnit()
-    }
-    setActionLoading(null)
-  }
-
-  const handleTransportCheckIn = async (choice: any) => {
-    if (!attendeeUnit || !staffAccess) return
-    const action = 'transport_checkin'
-    const payload = {
-      event_id: staffAccess.event_id,
-      application_id: attendeeUnit.application_id,
-      attendee_unit_id: attendeeUnit.id,
-      route_id: choice.route_id || null,
-      checked_in_by: staffAccess.name,
-      staff_role: staffAccess.role,
-      notes: null
-    }
-    setActionLoading(`${action}-${choice.id || choice.route_id || 'general'}`)
-    const { error: insertError } = await supabase.from('event_transport_checkins').insert([payload])
-    if (insertError) {
-      logActionError(action, insertError, payload)
-    } else {
-      setMessage('Transport zameldowany.')
       await refreshCurrentUnit()
     }
     setActionLoading(null)
@@ -740,30 +674,6 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       payload
     })
     setError(`Nie udało się wykonać akcji: ${error?.message || 'Nieznany błąd'}`)
-  }
-
-  const handleFallbackTransportCheckIn = async () => {
-    if (!attendeeUnit || !staffAccess || !application) return
-    const action = 'fallback_transport_checkin'
-    const payload = {
-      event_id: staffAccess.event_id,
-      application_id: attendeeUnit.application_id,
-      attendee_unit_id: attendeeUnit.id,
-      route_id: null,
-      checked_in_by: staffAccess.name,
-      staff_role: staffAccess.role,
-      notes: `Fallback transport check-in: ${application.transport || 'brak'}, ${application.transport_address || ''}`
-    }
-    setActionLoading(action)
-    const { error: insertError } = await supabase.from('event_transport_checkins').insert([payload])
-    if (insertError) {
-      logFallbackActionError(action, insertError, payload)
-      setError('Nie można zapisać check-in transportu bez przypisanej trasy.')
-    } else {
-      setMessage('Transport zameldowany.')
-      await refreshCurrentUnit()
-    }
-    setActionLoading(null)
   }
 
   if (loading) {
@@ -1025,47 +935,6 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              {canMeal && (
-                <PassSection icon={<UtensilsCrossed size={18} />} title="Catering / posiłki">
-                  <p className="text-xs text-white/50 mb-4">Dieta: {fallbackDiet} | Alergie: {fallbackAllergies}</p>
-                  {mealChoices.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <p className="font-black">Posiłek według diety</p>
-                        {isChildUnit && <span className="rounded-full bg-blue-500/20 px-2 py-1 text-[9px] font-black uppercase text-blue-100">Porcja dziecięca</span>}
-                      </div>
-                      <p className="text-xs text-white/55">Dieta: <span className="font-bold text-white/80">{fallbackDiet}</span></p>
-                      <p className="text-xs text-white/55 mt-1">Alergie: <span className="font-bold text-white/80">{fallbackAllergies}</span></p>
-                      <p className="text-[10px] font-black uppercase text-[#e8ce7a] mt-3">Do obsługi przez kuchnię</p>
-                      <p className="text-xs text-white/45 mt-2">
-                        {currentDiet || currentAllergies
-                          ? 'Brak konkretnego dania, ale uczestnik ma deklarację dietetyczną.'
-                          : 'Brak szczegółowego wyboru posiłku.'}
-                      </p>
-                      <p className="text-xs text-amber-100 mt-3 rounded-xl border border-amber-400/20 bg-amber-500/10 p-3">
-                        Brak przypisanego dania — wydanie wymaga konkretnego posiłku w RSVP lub panelu cateringu.
-                      </p>
-                    </div>
-                  ) : mealChoices.map(choice => {
-                    const meal = mealById.get(choice.meal_id)
-                    const redeemed = mealRedemptions.find(item => item.meal_id === choice.meal_id)
-                    return (
-                      <ItemRow
-                        key={choice.id || choice.meal_id}
-                        title={meal?.name || 'Posiłek'}
-                        subtitle={`${meal?.meal_type || '-'} | ${meal?.dietary_category || '-'}`}
-                        status={redeemed ? `Wydano ${formatDateTime(redeemed.redeemed_at)}` : 'Do wydania'}
-                        action={!redeemed ? (
-                          <SmallButton onClick={() => handleRedeemMeal(choice)} disabled={actionLoading === `meal_redemption-${choice.meal_id}`}>
-                            Wydaj posiłek
-                          </SmallButton>
-                        ) : null}
-                      />
-                    )
-                  })}
-                </PassSection>
-              )}
-
               {canGadget && (
                 <PassSection icon={<Gift size={18} />} title="Gadżety">
                   {gadgetChoices.length === 0 ? (
@@ -1082,65 +951,6 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
                         action={!choice.declined_gadget && !redeemed ? (
                           <SmallButton onClick={() => handleRedeemGadget(choice)} disabled={actionLoading === `gadget_redemption-${choice.gadget_id}`}>
                             Wydaj gadżet
-                          </SmallButton>
-                        ) : null}
-                      />
-                    )
-                  })}
-                </PassSection>
-              )}
-
-              {canTransport && (
-                <PassSection icon={<Bus size={18} />} title="Transport">
-                  {transportChoices.length === 0 ? (
-                    (() => {
-                      const transport = application?.transport || ''
-                      const transportAddress = application?.transport_address || ''
-                      const normalized = String(transport).toLowerCase()
-                      const isOwn = normalized.includes('własny') || normalized.includes('own')
-                      const isTransfer = normalized.includes('transfer') || normalized.includes('organizer')
-                      const isCarpooling = normalized.includes('carpool')
-                      const title = isOwn ? 'Własny dojazd' : isTransfer ? 'Transfer organizatora' : isCarpooling ? 'Carpooling' : transport || 'Brak deklaracji transportowej'
-                      const status = isOwn
-                        ? 'Nie wymaga miejsca w transporcie organizatora'
-                        : isTransfer
-                          ? 'Do zameldowania w transporcie'
-                          : isCarpooling
-                            ? 'Deklaracja carpooling'
-                            : 'Brak deklaracji transportowej'
-                      const checked = transportCheckins.find(item => !item.route_id && item.attendee_unit_id === attendeeUnit.id)
-
-                      return (
-                        <ItemRow
-                          title={title}
-                          subtitle={[
-                            transportAddress ? `Adres/miasto: ${transportAddress}` : '',
-                            application?.extra_notes ? `Uwagi: ${application.extra_notes}` : '',
-                            application?.phone ? `Telefon: ${application.phone}` : ''
-                          ].filter(Boolean).join(' | ') || 'brak szczegółów'}
-                          status={checked ? `Już zameldowano ${formatDateTime(checked.checked_in_at)}` : status}
-                          action={isTransfer && !checked ? (
-                            <SmallButton onClick={handleFallbackTransportCheckIn} disabled={actionLoading === 'fallback_transport_checkin'}>
-                              Zamelduj do transportu
-                            </SmallButton>
-                          ) : null}
-                        />
-                      )
-                    })()
-                  ) : transportChoices.map(choice => {
-                    const route = choice.route_id ? routeById.get(choice.route_id) : null
-                    const checked = transportCheckins.find(item => (
-                      item.route_id ? item.route_id === choice.route_id : item.attendee_unit_id === attendeeUnit.id
-                    ))
-                    return (
-                      <ItemRow
-                        key={choice.id || choice.route_id || choice.transport_type}
-                        title={route?.public_title || route?.route_name || choice.transport_type || choice.transport || 'Transport'}
-                        subtitle={`${choice.city || choice.transport_address || '-'} ${choice.notes ? `| ${choice.notes}` : ''}`}
-                        status={checked ? `Już zameldowano ${formatDateTime(checked.checked_in_at)}` : 'Do zameldowania'}
-                        action={!checked ? (
-                          <SmallButton onClick={() => handleTransportCheckIn(choice)} disabled={actionLoading === `transport_checkin-${choice.id || choice.route_id || 'general'}`}>
-                            Zamelduj do transportu
                           </SmallButton>
                         ) : null}
                       />
