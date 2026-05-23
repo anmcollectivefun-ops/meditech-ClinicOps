@@ -657,9 +657,6 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     const short = String(aiTextLength || '').toLowerCase().includes('krót')
     const isMedicalDocument = sectionKey === 'medical_documents' || sectionKey === 'medical_docs' || sectionKey === 'patient_consents'
 
-    if (currentValue) return currentValue
-    if (placeholder) return placeholder
-
     if (isMedicalDocument) {
       const procedure = treatmentName || '[NAZWA ZABIEGU]'
 
@@ -812,6 +809,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       ].join('\n')
     }
 
+    if (currentValue) return currentValue
+    if (placeholder) return placeholder
+
     if (fieldKey.includes('title')) {
       if (sectionKey === 'menu') return 'Menu wydarzenia'
       if (sectionKey === 'transport') return 'Transport i dojazd'
@@ -867,9 +867,29 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
       if (error) throw error
 
-      setAiTextSuggestion(data?.suggestion || '')
-      setAiTextReason(data?.reason || '')
-      setAiTextMissingContext(Array.isArray(data?.missing_context) ? data.missing_context : [])
+      const isMedicalDocumentRequest =
+        aiTextAssistConfig?.mode === 'medical_document' ||
+        ['medical_documents', 'medical_docs', 'patient_consents'].includes(aiTextAssistConfig?.sectionKey)
+      const suggestion = String(data?.suggestion || '')
+      const normalizedSuggestion = suggestion.toLowerCase()
+      const looksLikeOldEventFallback =
+        isMedicalDocumentRequest &&
+        (
+          normalizedSuggestion.includes('wydarzen') ||
+          normalizedSuggestion.includes('organizator') ||
+          normalizedSuggestion.includes('regulaminie') ||
+          normalizedSuggestion.includes('gości')
+        )
+
+      if (looksLikeOldEventFallback || (isMedicalDocumentRequest && !suggestion.trim())) {
+        setAiTextSuggestion(buildLocalAiTextFallback(aiTextAssistConfig))
+        setAiTextReason('Odrzucono eventową odpowiedź starej funkcji AI i użyto bezpiecznego medycznego szkieletu dokumentu.')
+        setAiTextMissingContext(['Wdróż zaktualizowaną Edge Function generate-text-suggestion, aby model generował dokumenty medyczne bez fallbacku.'])
+      } else {
+        setAiTextSuggestion(suggestion)
+        setAiTextReason(data?.reason || '')
+        setAiTextMissingContext(Array.isArray(data?.missing_context) ? data.missing_context : [])
+      }
     } catch (error: any) {
       console.error('AI text suggestion error:', {
         message: error?.message,
