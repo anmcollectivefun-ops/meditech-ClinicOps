@@ -556,6 +556,19 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     setTimeout(() => setNotification(null), 3000)
   }
 
+  const openNewConsentTemplateCreator = () => {
+    setConsentTemplateForm({
+      document_type: 'consent',
+      version: 1,
+      is_active: true,
+      is_global_required: false,
+      content_template: '',
+      questions: []
+    })
+    setIsEditingConsentTemplate(false)
+    setIsConsentTemplateModalOpen(true)
+  }
+
   const loadHelpDocuments = useCallback(async () => {
     const { data, error } = await supabase
       .from('help_documents')
@@ -5998,11 +6011,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex gap-2 shrink-0">
         <HelpButton sectionKey="medical_docs" />
         <button
-          onClick={() => {
-            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false, content_template: '', questions: [] })
-            setIsEditingConsentTemplate(false)
-            setIsConsentTemplateModalOpen(true)
-          }}
+          type="button"
+          onClick={openNewConsentTemplateCreator}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Sparkles size={14} />
@@ -6284,11 +6294,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
         
         <button 
-          onClick={() => {
-            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false, content_template: '', questions: [] })
-            setIsEditingConsentTemplate(false)
-            setIsConsentTemplateModalOpen(true)
-          }}
+          type="button"
+          onClick={openNewConsentTemplateCreator}
           className={`w-full py-4 border-2 border-dashed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${isDarkMode ? 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 bg-slate-900/50' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 bg-slate-50'}`}
         >
           <Plus size={16} /> Nowy Szablon (Ręcznie)
