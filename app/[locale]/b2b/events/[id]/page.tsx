@@ -552,6 +552,15 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [todayPatientSearch, setTodayPatientSearch] = useState('')
   const [allPatientSearch, setAllPatientSearch] = useState('')
   const [expandedPatientDocs, setExpandedPatientDocs] = useState<string | null>(null)
+
+
+  // --- STANY DLA NOWEJ REJESTRACJI PACJENTÓW ---
+  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false)
+  const [isEditingPatient, setIsEditingPatient] = useState(false)
+  const [patientForm, setPatientForm] = useState<any>({})
+  const [registrySearch, setRegistrySearch] = useState('')
+
+ 
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
@@ -2593,7 +2602,50 @@ const patientQrMetrics = useMemo(() => ({
       setUpdating(false)
     }
   }
+ const handleSavePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const payload = {
+        first_name: patientForm.first_name,
+        last_name: patientForm.last_name,
+        pesel: patientForm.pesel,
+        email: patientForm.email || null,
+        phone: patientForm.phone || null,
+        status: patientForm.status || 'active'
+      };
 
+      if (isEditingPatient && patientForm.id) {
+        const { error } = await supabase.from('patients').update(payload).eq('id', patientForm.id);
+        if (error) throw error;
+        showNotification('Dane pacjenta zaktualizowane', 'success');
+      } else {
+        const { error } = await supabase.from('patients').insert([payload]);
+        if (error) throw error;
+        showNotification('Nowy pacjent dodany do bazy', 'success');
+      }
+
+      await loadPatients(); // Odświeżamy główną bazę!
+      setIsPatientModalOpen(false);
+      setPatientForm({});
+    } catch (err: any) {
+      showNotification('Błąd zapisu pacjenta: ' + err.message, 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    if (!confirm('Usunąć tego pacjenta i całą jego dokumentację? Tej operacji nie można cofnąć.')) return;
+    try {
+      const { error } = await supabase.from('patients').delete().eq('id', id);
+      if (error) throw error;
+      await loadPatients();
+      showNotification('Pacjent usunięty', 'success');
+    } catch (err: any) {
+      showNotification('Błąd usuwania pacjenta: ' + err.message, 'error');
+    }
+  };
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
     const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
@@ -10108,7 +10160,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 {/* ============================================================================ */}
-{/* bilety */}
+{/* REJESTRACJA PACJENTÓW (Główna Baza) - Zastępuje stare 'bilety' */}
 {/* ============================================================================ */}
 {activeTab === 'bilety' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -10117,38 +10169,35 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Ticket size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Rejestracja & Płatności
+          <UserRoundPlus size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+          Rejestracja Pacjentów
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj dostępami, kontroluj wpłaty i importuj wyciągi bankowe.
+          Główna baza Twojej kliniki. Dodaj pacjenta tutaj, aby system mógł założyć mu cyfrową teczkę, generować zgody i historię choroby.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2 shrink-0">
-        <HelpButton sectionKey="tickets" />
         <button
           onClick={() => {
-            setTicketTierForm({ currency: 'PLN', price: 0, is_active: true, requires_payment: false, includes_catering: true, includes_gadget: true, sort_order: tiers.length })
-            setIsEditingTicketTier(false)
-            setIsTicketTierModalOpen(true)
+            setPatientForm({ status: 'active' })
+            setIsEditingPatient(false)
+            setIsPatientModalOpen(true)
           }}
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Dodaj Pakiet (Bilet)
+          <Plus size={14} /> Dodaj Pacjenta
         </button>
       </div>
     </div>
 
     {/* METRYKI BAZOWE */}
-    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {[
-        { label: 'Zgłoszenia', value: applications.length, icon: Users, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
-        { label: 'Aktywni', value: ticketMetrics.active, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
-        { label: 'Nieopłacone', value: ticketMetrics.waitingPayment, icon: Clock, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-        { label: 'Opłacone', value: ticketMetrics.paid, icon: Wallet, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
-        { label: 'Rezerwa', value: ticketMetrics.waitlist, icon: AlertTriangle, color: isDarkMode ? 'text-rose-400' : 'text-rose-600' },
-        { label: 'Limit', value: event?.registration_limit ? `${ticketMetrics.active}/${event.registration_limit}` : 'Brak', icon: Percent, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' },
+        { label: 'Wszyscy Pacjenci', value: patients.length, icon: Users, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
+        { label: 'Aktywni', value: patients.filter((p: any) => p.status === 'active').length, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
+        { label: 'Dodani (7 dni)', value: patients.filter((p: any) => new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length, icon: TrendingUp, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
+        { label: 'Brakuje PESEL', value: patients.filter((p: any) => !p.pesel || p.pesel.length < 11).length, icon: AlertTriangle, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
       ].map((kpi: any) => (
         <div key={kpi.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
@@ -10169,571 +10218,162 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* USTAWIENIA REJESTRACJI */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Settings size={20} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} />
-            Ustawienia rejestracji
-          </h4>
-          <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Tryb zapisów, limit miejsc i komunikaty dla uczestników.
-          </p>
-        </div>
-        <button
-          onClick={handleSaveRegistrationSettings}
-          disabled={updating}
-          className={`shrink-0 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-        >
-          {updating ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-          Zapisz ustawienia
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tryb rejestracji</label>
-          <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={editForm?.registration_mode || 'free'} onChange={e => setEditForm({ ...editForm, registration_mode: e.target.value })}>
-            <option value="free">Darmowa</option>
-            <option value="paid">Płatna</option>
-            <option value="mixed">Mieszana</option>
-            <option value="approval">Wymaga Akceptacji</option>
-          </select>
-        </div>
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Limit miejsc</label>
-          <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Bez limitu" value={editForm?.registration_limit || ''} onChange={e => setEditForm({ ...editForm, registration_limit: e.target.value ? Number(e.target.value) : null })} />
-        </div>
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zliczanie limitu z bazy</label>
-          <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={editForm?.registration_count_limit_mode || 'active_only'} onChange={e => setEditForm({ ...editForm, registration_count_limit_mode: e.target.value })}>
-            <option value="active_only">Tylko Aktywni</option>
-            <option value="signup">Wszyscy zapisani</option>
-            <option value="paid_only">Tylko Opłaceni</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        {[
-          ['registration_is_open', 'Rejestracja otwarta', 'Przyjmuj zgłoszenia'],
-          ['registration_auto_activate_free', 'Auto-aktywuj darmowe', 'Bez ręcznej weryfikacji'],
-          ['registration_close_when_full', 'Zamknij po limicie', 'Zablokuj zapisy automatycznie'],
-        ].map(([key, title, desc]) => {
-          const isChecked = editForm?.[key] !== false;
-          return (
-            <label key={key} className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              isChecked
-                ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white')
-                : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-            }`}>
-              <div>
-                <p className={`font-black text-xs uppercase tracking-wider ${isChecked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-700')}`}>
-                  {title}
-                </p>
-                <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                  {desc}
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={isChecked}
-                onChange={e => setEditForm({ ...editForm, [key]: e.target.checked })}
-                className="sr-only"
-              />
-              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                isChecked
-                  ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
-                  : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
-              }`}>
-                {isChecked && <CheckCircle2 size={12} />}
-              </div>
-            </label>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Domyślny link płatności (Opcjonalny)</label>
-          <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="https://..." value={editForm?.payment_default_url || ''} onChange={e => setEditForm({ ...editForm, payment_default_url: e.target.value })} />
-        </div>
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka wewnętrzna / skrót</label>
-          <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Ukryte notatki" value={editForm?.tickets_notes || ''} onChange={e => setEditForm({ ...editForm, tickets_notes: e.target.value })} />
-        </div>
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Komunikat po zapisie / sukcesie</label>
-          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Dziękujemy za rejestrację..." value={editForm?.payment_success_message || ''} onChange={e => setEditForm({ ...editForm, payment_success_message: e.target.value })} />
-        </div>
-        <div>
-          <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Komunikat dla listy rezerwowej</label>
-          <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Brak miejsc. Trafiasz na listę oczekujących." value={editForm?.waitlist_message || ''} onChange={e => setEditForm({ ...editForm, waitlist_message: e.target.value })} />
-        </div>
-      </div>
-    </div>
-
-    {/* TYPY BILETÓW (PAKIETY) */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-8 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
-          <Ticket size={20} />
-        </div>
-        <h4 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Typy biletów (Pakiety)
-        </h4>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {tiers.map(tier => {
-          const assigned = applications.filter((app: any) => app.ticket_tier_id === tier.id)
-          const active = assigned.filter(isTicketActive)
-          return (
-            <div key={tier.id} className={`rounded-2xl border p-5 flex flex-col justify-between transition-colors ${tier.is_active === false ? (isDarkMode ? 'bg-slate-900/30 border-slate-800 opacity-60' : 'bg-slate-50 border-slate-200 opacity-70') : (isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200 shadow-sm')}`}>
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <h5 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tier.name}</h5>
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${tier.is_active === false ? (isDarkMode ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200') : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')}`}>
-                    {tier.is_active === false ? 'Nieaktywny' : 'Aktywny'}
-                  </span>
-                </div>
-                <p className={`text-xs font-medium line-clamp-2 min-h-[32px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {tier.description || 'Brak opisu'}
-                </p>
-                <p className={`text-3xl font-black tabular-nums mt-4 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
-                  {Number(tier.price || 0).toLocaleString('pl-PL')} <span className="text-lg">{tier.currency || 'PLN'}</span>
-                </p>
-
-                <div className={`mt-5 grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] font-bold uppercase tracking-wider p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">Limit miejsc</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.limit || '∞'}</span></div>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">Przypisani</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{assigned.length}</span></div>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">Aktywni</span><span className={`text-sm tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{active.length}</span></div>
-                  <div><span className="opacity-60 block text-[8px] mb-0.5">Płatność</span><span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{tier.requires_payment ? 'Wymagana' : 'Brak'}</span></div>
-                  <span className="col-span-2 mt-1">Match/Darowizna: {tier.min_match_amount || 0} - {tier.max_match_amount || '∞'}</span>
-                </div>
-
-                {tier.payment_url && (
-                  <a href={tier.payment_url} target="_blank" rel="noopener noreferrer" className={`mt-4 flex items-center gap-1.5 text-[10px] font-bold truncate transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}>
-                    <ExternalLink size={12} /> {tier.payment_url}
-                  </a>
-                )}
-                {tier.internal_notes && (
-                  <p className={`mt-2 text-[10px] italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{tier.internal_notes}</p>
-                )}
-              </div>
-
-              <div className={`mt-5 pt-4 border-t flex items-center justify-between gap-2 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-                <div className="flex gap-2">
-                  <button onClick={() => { setTicketTierForm(tier); setIsEditingTicketTier(true); setIsTicketTierModalOpen(true) }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-blue-600'}`}>
-                    <Edit3 size={16} />
-                  </button>
-                  <button onClick={() => handleDeleteTicketTier(tier.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-red-900/30 text-red-400' : 'bg-slate-100 hover:bg-red-50 text-red-600'}`}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <button onClick={() => handleToggleTicketTier(tier)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border ${tier.is_active === false ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50 hover:bg-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100') : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200')}`}>
-                  {tier.is_active === false ? 'Aktywuj' : 'Wyłącz'}
-                </button>
-              </div>
-            </div>
-          )
-        })}
-        {tiers.length === 0 && (
-          <div className={`md:col-span-2 xl:col-span-3 p-12 text-center border-2 border-dashed rounded-2xl font-bold text-sm ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak typów biletów.
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* LISTA ZGŁOSZEŃ I IMPORT BANKOWY (Odzyskana Tabela!) */}
+    {/* LISTA PACJENTÓW (Główny rejestr) */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-
-      {/* HEADER TABELI Z PRZYCISKIEM IMPORTU */}
-      <div className={`p-5 md:p-6 border-b flex flex-col xl:flex-row xl:items-center justify-between gap-5 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        <div>
-          <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Receipt size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> Lista Zgłoszeń i Płatności
-          </h4>
-          <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Zarządzaj ręcznie statusem lub zaimportuj wyciąg bankowy, aby system automatycznie oznaczył gości jako opłaconych.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Ukryty input do importu plików */}
-          <input
-            type="file"
-            id="bank-statement-upload"
-            accept=".csv, .xlsx, .xls"
-            className="hidden"
-            onChange={handleImportBankStatement}
-          />
-          <button
-            type="button"
-            onClick={() => document.getElementById('bank-statement-upload')?.click()}
-            disabled={updating}
-            className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
-          >
-            {updating ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
-            Importuj Wyciąg Bankowy
-          </button>
-        </div>
-      </div>
-
-      {/* FILTRY */}
-      <div className={`px-5 py-4 border-b flex flex-wrap gap-3 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-100'}`}>
-        <div className="relative flex-1 min-w-[200px]">
+      
+      {/* Pasek wyszukiwania */}
+      <div className={`px-5 py-4 border-b flex flex-col sm:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <div className="relative flex-1">
           <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
           <input
-            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-            placeholder="Szukaj osoby, firmy lub numeru referencyjnego..."
-            value={ticketSearch}
-            onChange={e => setTicketSearch(e.target.value)}
+            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            placeholder="Szukaj po nazwisku, PESEL, e-mail lub telefonie..."
+            value={registrySearch}
+            onChange={e => setRegistrySearch(e.target.value)}
           />
         </div>
-        <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketPaymentFilter} onChange={e => setTicketPaymentFilter(e.target.value)}>
-          <option value="all">Płatności: Wszystkie</option>
-          <option value="unpaid">Nieopłacone</option>
-          <option value="paid">Opłacone</option>
-          <option value="not_required">Brak Opłaty</option>
-        </select>
-        <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketAccessFilter} onChange={e => setTicketAccessFilter(e.target.value)}>
-          <option value="all">Dostęp: Wszystkie</option>
-          <option value="pending">Oczekujące</option>
-          <option value="active">Aktywne</option>
-          <option value="waitlist">Rezerwowe</option>
-          <option value="cancelled">Anulowane</option>
-        </select>
-        <select className={`border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-700 focus:border-slate-900'}`} value={ticketTierFilter} onChange={e => setTicketTierFilter(e.target.value)}>
-          <option value="all">Pakiety: Wszystkie</option>
-          {tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name}</option>)}
-        </select>
       </div>
 
-      {/* TABELA ZGŁOSZEŃ */}
+      {/* Tabela */}
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className={`text-[9px] font-black uppercase tracking-widest border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
             <tr>
-              <th className="p-4 pl-6">Uczestnik</th>
-              <th className="p-4">Bilet / Firma</th>
-              <th className="p-4">Kwota & Płatność</th>
-              <th className="p-4">Dostęp</th>
-              <th className="p-4 pr-6 text-right">Zarządzanie Zgłoszeniem</th>
+              <th className="p-4 pl-6">Pacjent</th>
+              <th className="p-4">PESEL</th>
+              <th className="p-4">Kontakt</th>
+              <th className="p-4">Data dołączenia</th>
+              <th className="p-4">Status</th>
+              <th className="p-4 pr-6 text-right">Zarządzaj</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-            {filteredTicketApplications.length === 0 ? (
+            {patients.length === 0 ? (
               <tr>
-                <td colSpan={5} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Brak zgłoszeń dla wybranych filtrów.
+                <td colSpan={6} className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Brak pacjentów w bazie. Dodaj pierwszą osobę!
                 </td>
               </tr>
-            ) : filteredTicketApplications.map((app: any) => {
-              const tier = getTicketTierForApplication(app)
-
-              // Kolory dla pigułek statusów
-              const getAccessColor = (status: string) => {
-                if (status === 'active') return isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                if (status === 'waitlist') return isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200';
-                if (status === 'cancelled' || status === 'rejected') return isDarkMode ? 'bg-red-900/20 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200';
-                return isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200';
-              }
-
-              const getPaymentColor = (status: string) => {
-                if (status === 'paid') return isDarkMode ? 'text-emerald-400' : 'text-emerald-600';
-                if (status === 'unpaid') return isDarkMode ? 'text-amber-400' : 'text-amber-600';
-                return isDarkMode ? 'text-slate-400' : 'text-slate-500';
-              }
-
-              return (
-                <tr key={app.id} className={`transition-colors group ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
-                  <td className="p-4 pl-6 min-w-[200px]">
-                    <p className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{app.first_name} {app.last_name}</p>
-                    <p className={`text-[10px] font-medium mt-0.5 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{app.email}</p>
-                    {app.payment_reference && (
-                      <p className={`text-[9px] font-mono mt-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                        Ref: {app.payment_reference}
-                      </p>
-                    )}
-                  </td>
-
-                  <td className="p-4 min-w-[150px]">
-                    <p className={`text-xs font-black truncate ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{app.ticket_type || tier?.name || 'Brak Pakietu'}</p>
-                    <p className={`text-[10px] font-bold mt-1 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{app.company_name || 'Brak firmy'}</p>
-                  </td>
-
-                  <td className="p-4 min-w-[150px]">
-                    <p className={`text-sm font-black tabular-nums ${getPaymentColor(app.payment_status)}`}>
-                      {Number(app.ticket_paid_amount || 0).toLocaleString('pl-PL')} <span className="text-[10px] font-bold text-slate-500">/ {Number(app.ticket_expected_amount || 0).toLocaleString('pl-PL')} {tier?.currency || 'PLN'}</span>
-                    </p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${app.payment_status === 'paid' ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
-                      {app.payment_status === 'paid' ? 'Opłacone' : app.payment_status === 'unpaid' ? 'Nieopłacone' : 'Bez opłaty'}
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${getAccessColor(app.access_status)}`}>
-                      {app.access_status === 'active' ? 'Aktywny' : app.access_status === 'waitlist' ? 'Rezerwowa' : app.access_status === 'cancelled' ? 'Anulowany' : 'Oczekujący'}
-                    </span>
-                  </td>
-
-                  <td className="p-4 pr-6 text-right">
-                    <div className="flex flex-wrap justify-end gap-2 min-w-[200px] xl:min-w-[320px]">
-
-                      {app.payment_status !== 'paid' && app.ticket_expected_amount > 0 && (
-                        <button
-                          onClick={() => markTicketPaid(app)}
-                          title="Oznacz jako opłacone"
-                          className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40 border border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
-                        >
-                          <Wallet size={16} />
-                        </button>
-                      )}
-
-                      {app.access_status !== 'active' && (
-                        <button
-                          onClick={() => activateTicketParticipant(app)}
-                          title="Aktywuj dostęp"
-                          className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 border border-blue-800/50' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
-                        >
-                          <CheckCircle2 size={16} />
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => { setTicketApplicationForm(app); setIsTicketApplicationModalOpen(true) }}
-                        title="Edytuj szczegóły"
-                        className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`}
-                      >
-                        <Edit3 size={16} />
-                      </button>
-
-                      {/* Dropdown na pozostałe rzadsze akcje */}
-                      <details className="relative">
-                        <summary className={`list-none cursor-pointer p-2 rounded-xl transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white border-slate-700 hover:border-slate-600' : 'bg-white text-slate-500 hover:text-slate-900 border-slate-200 hover:border-slate-300'}`}>
-                          <MoreHorizontal size={16} />
-                        </summary>
-                        <div className={`absolute right-0 top-10 z-20 w-48 rounded-2xl border p-2 shadow-xl flex flex-col gap-1 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                          <button onClick={() => waitlistTicketParticipant(app)} className={`text-left px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'text-amber-400 hover:bg-slate-700' : 'text-amber-700 hover:bg-slate-50'}`}>Lista Rezerwowa</button>
-                          <button onClick={() => resetTicketParticipant(app)} className={`text-left px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}>Cofnij do nowych</button>
-                          <div className={`my-1 border-t ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}></div>
-                          <button onClick={() => cancelTicketParticipant(app)} className={`text-left px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 ${isDarkMode ? 'text-red-400 hover:bg-slate-700' : 'text-red-600 hover:bg-red-50'}`}>
-                            <XCircle size={14}/> Anuluj bilet
-                          </button>
-                        </div>
-                      </details>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
+            ) : patients
+              .filter((p: any) => {
+                if (!registrySearch) return true;
+                const query = registrySearch.toLowerCase();
+                const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+                return fullName.includes(query) || (p.pesel || '').includes(query) || (p.email || '').toLowerCase().includes(query) || (p.phone || '').includes(query);
+              })
+              .map((patient: any) => (
+              <tr key={patient.id} className={`transition-colors group ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
+                <td className="p-4 pl-6">
+                  <p className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{patient.first_name} {patient.last_name}</p>
+                </td>
+                <td className="p-4">
+                  <p className={`text-xs font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    {patient.pesel || <span className="text-red-400">BRAK</span>}
+                  </p>
+                </td>
+                <td className="p-4">
+                  <p className={`text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{patient.phone || 'brak tel.'}</p>
+                  <p className={`text-[10px] font-bold mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{patient.email || 'brak e-mail'}</p>
+                </td>
+                <td className="p-4">
+                  <p className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {new Date(patient.created_at).toLocaleDateString('pl-PL')}
+                  </p>
+                </td>
+                <td className="p-4">
+                  <span className={`inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${
+                    patient.status === 'active' 
+                      ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') 
+                      : (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')
+                  }`}>
+                    {patient.status === 'active' ? 'Aktywny' : 'Nieaktywny'}
+                  </span>
+                </td>
+                <td className="p-4 pr-6 text-right">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      onClick={() => { setPatientForm(patient); setIsEditingPatient(true); setIsPatientModalOpen(true) }}
+                      title="Edytuj dane"
+                      className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'}`}
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePatient(patient.id)}
+                      title="Usuń pacjenta"
+                      className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-800/50' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
     </div>
 
-    {/* MODAL: TYP BILETU */}
-    {isTicketTierModalOpen && (
+    {/* ========================================== */}
+    {/* MODAL: DODAJ / EDYTUJ PACJENTA */}
+    {/* ========================================== */}
+    {isPatientModalOpen && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-        <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-            <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <Ticket size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-              {isEditingTicketTier ? 'Edytuj pakiet / bilet' : 'Nowy pakiet / bilet'}
-            </h3>
-            <button onClick={() => setIsTicketTierModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
-              <X size={20} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSaveTicketTier} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa biletu *</label>
-                <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="np. Pakiet VIP" value={ticketTierForm.name || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, name: e.target.value })} />
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Waluta</label>
-                <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="PLN" value={ticketTierForm.currency || 'PLN'} onChange={e => setTicketTierForm({ ...ticketTierForm, currency: e.target.value })} />
-              </div>
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krótki opis korzyści (dla gościa)</label>
-              <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="Co obejmuje bilet?" value={ticketTierForm.description || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, description: e.target.value })} />
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena brutto</label>
-                <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="0.00" value={ticketTierForm.price ?? ''} onChange={e => setTicketTierForm({ ...ticketTierForm, price: Number(e.target.value || 0) })} />
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Limit szt.</label>
-                <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="∞" value={ticketTierForm.limit || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, limit: e.target.value ? Number(e.target.value) : null })} />
-              </div>
-              <div className="col-span-2 md:col-span-2">
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Widełki kwotowe (darowizny)</label>
-                <div className="flex items-center gap-2">
-                  <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Min" value={ticketTierForm.min_match_amount || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, min_match_amount: e.target.value ? Number(e.target.value) : null })} />
-                  <span className={`font-black ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>-</span>
-                  <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Max" value={ticketTierForm.max_match_amount || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, max_match_amount: e.target.value ? Number(e.target.value) : null })} />
-                </div>
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kolejność</label>
-                <input type="number" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="0" value={ticketTierForm.sort_order || 0} onChange={e => setTicketTierForm({ ...ticketTierForm, sort_order: Number(e.target.value || 0) })} />
-              </div>
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zewnętrzny Link Płatności (np. PayU, Przelewy24)</label>
-              <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`} placeholder="https://..." value={ticketTierForm.payment_url || ''} onChange={e => setTicketTierForm({ ...ticketTierForm, payment_url: e.target.value })} />
-            </div>
-
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-              {[
-                ['is_active', 'W sprzedaży'],
-                ['requires_payment', 'Wymaga opłacenia'],
-                ['auto_activate_after_signup', 'Auto-aktywacja'],
-                ['access_streaming', 'Dostęp Live'],
-                ['access_vip_zone', 'VIP zone'],
-                ['includes_catering', 'Catering w cenie'],
-                ['includes_gadget', 'Gadżet w cenie'],
-              ].map(([key, label]) => {
-                const isChecked = ticketTierForm[key] === true || (['is_active', 'includes_catering', 'includes_gadget'].includes(key) && ticketTierForm[key] !== false);
-                return (
-                  <label key={key} className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    isChecked
-                      ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white')
-                      : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-                  }`}>
-                    <span className={`text-[10px] font-black uppercase tracking-wider ${isChecked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
-                      {label}
-                    </span>
-                    <input type="checkbox" checked={isChecked} onChange={e => setTicketTierForm({ ...ticketTierForm, [key]: e.target.checked })} className="sr-only" />
-                    <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isChecked ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white') : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')}`}>
-                      {isChecked && <CheckCircle2 size={12} />}
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
-
-            <button type="submit" disabled={updating} className={`w-full mt-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}>
-              {updating ? 'Zapisywanie...' : 'Zapisz Typ Biletu'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )}
-
-    {/* MODAL: EDYCJA ZGŁOSZENIA (Zarządzanie Pojedynczym Uczestnikiem) */}
-    {isTicketApplicationModalOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-        <div className={`rounded-[32px] max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+        <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className={`flex justify-between items-start mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
             <div>
               <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                Edycja Zgłoszenia / Biletu
+                {isEditingPatient ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <UserRoundPlus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
+                {isEditingPatient ? 'Edytuj Pacjenta' : 'Zarejestruj Nowego Pacjenta'}
               </h3>
-              <p className={`text-xs mt-1.5 font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Uczestnik: {ticketApplicationForm.first_name} {ticketApplicationForm.last_name} ({ticketApplicationForm.company_name || 'Brak firmy'})
+              <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Upewnij się, że wpisujesz poprawny PESEL – pacjent będzie używał go do logowania się do swoich zgód.
               </p>
             </div>
-            <button onClick={() => setIsTicketApplicationModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
+            <button onClick={() => setIsPatientModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
               <X size={20} />
             </button>
           </div>
-          <form onSubmit={handleSaveApplicationTicket} className="space-y-6">
+          
+          <form onSubmit={handleSavePatient} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Imię *</label>
+                <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. Jan" value={patientForm.first_name || ''} onChange={e => setPatientForm({ ...patientForm, first_name: e.target.value })} />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwisko *</label>
+                <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. Kowalski" value={patientForm.last_name || ''} onChange={e => setPatientForm({ ...patientForm, last_name: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Numer PESEL *</label>
+                <input required maxLength={11} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-mono font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="11 cyfr" value={patientForm.pesel || ''} onChange={e => setPatientForm({ ...patientForm, pesel: e.target.value })} />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Telefon</label>
+                <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="+48..." value={patientForm.phone || ''} onChange={e => setPatientForm({ ...patientForm, phone: e.target.value })} />
+              </div>
+            </div>
 
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zmień Typ Biletu / Pakiet z Cennika</label>
-              <select
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={ticketApplicationForm.ticket_tier_id || ''}
-                onChange={e => {
-                  const tier = tiers.find(t => t.id === e.target.value)
-                  setTicketApplicationForm({
-                    ...ticketApplicationForm,
-                    ticket_tier_id: e.target.value || null,
-                    ticket_type: tier?.name || ticketApplicationForm.ticket_type,
-                    ticket_expected_amount: tier ? Number(tier.price || 0) : ticketApplicationForm.ticket_expected_amount
-                  })
-                }}
-              >
-                <option value="">Niestandardowy (Ręczny)</option>
-                {tiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name} - {Number(tier.price || 0).toLocaleString('pl-PL')} {tier.currency || 'PLN'}</option>)}
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>E-mail</label>
+              <input type="email" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="pacjent@email.pl" value={patientForm.email || ''} onChange={e => setPatientForm({ ...patientForm, email: e.target.value })} />
+            </div>
+
+            <div className={`pt-6 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status w klinice</label>
+              <select className={`w-full md:w-1/2 border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={patientForm.status || 'active'} onChange={e => setPatientForm({ ...patientForm, status: e.target.value })}>
+                <option value="active">Aktywny (Standardowy)</option>
+                <option value="inactive">Nieaktywny</option>
+                <option value="blocked">Zablokowany</option>
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ Biletu (Tekst na wejściówce)</label>
-                <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Typ biletu" value={ticketApplicationForm.ticket_type || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_type: e.target.value })} />
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>Oczekiwana Płatność</label>
-                <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-black outline-none transition-all ${isDarkMode ? 'bg-amber-900/10 border-amber-900/50 text-amber-400 focus:border-amber-500' : 'bg-amber-50 border-amber-200 text-amber-800 focus:border-amber-500'}`} placeholder="0.00" value={ticketApplicationForm.ticket_expected_amount || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_expected_amount: Number(e.target.value || 0) })} />
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Wpłacono Rzeczywiście</label>
-                <input type="number" step="0.01" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-black outline-none transition-all ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/50 text-emerald-400 focus:border-emerald-500' : 'bg-emerald-50 border-emerald-200 text-emerald-800 focus:border-emerald-500'}`} placeholder="0.00" value={ticketApplicationForm.ticket_paid_amount || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_paid_amount: Number(e.target.value || 0) })} />
-              </div>
-            </div>
-
-            <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 border-t pt-6 ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Płatność (Księgowość)</label>
-                <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.payment_status || 'not_required'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, payment_status: e.target.value })}>
-                  <option value="not_required">Nie Wymaga</option>
-                  <option value="unpaid">Nieopłacone</option>
-                  <option value="paid">Opłacone</option>
-                  <option value="manual">Obsługa Ręczna</option>
-                  <option value="refunded">Zwrócone</option>
-                </select>
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status Biletu</label>
-                <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.ticket_status || 'new'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, ticket_status: e.target.value })}>
-                  <option value="new">Nowy</option>
-                  <option value="free">Darmowy Zapis</option>
-                  <option value="waiting_payment">Czeka na wpłatę</option>
-                  <option value="paid">Wykupiony</option>
-                  <option value="waitlist">Rezerwowy</option>
-                  <option value="cancelled">Anulowany</option>
-                </select>
-              </div>
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dostęp Operacyjny</label>
-                <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} value={ticketApplicationForm.access_status || 'pending'} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, access_status: e.target.value })}>
-                  <option value="pending">Weryfikacja</option>
-                  <option value="active">Pełny Dostęp (Aktywny)</option>
-                  <option value="waitlist">Lista Rezerwowa</option>
-                  <option value="blocked">Zablokowany</option>
-                  <option value="cancelled">Zrezygnował</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Referencja / Potwierdzenie zewn. (ID Transakcji)</label>
-              <input className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. TR-10928-BLIK" value={ticketApplicationForm.payment_reference || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, payment_reference: e.target.value })} />
-            </div>
-
-            {'notes' in ticketApplicationForm && (
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka Wewnętrzna</label>
-                <textarea rows={3} className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="Tylko dla organizatorów..." value={ticketApplicationForm.notes || ''} onChange={e => setTicketApplicationForm({ ...ticketApplicationForm, notes: e.target.value })} />
-              </div>
-            )}
-
             <button type="submit" disabled={updating} className={`w-full mt-6 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}>
-              {updating ? 'Zapisywanie...' : 'Zatwierdź Ustawienia Zgłoszenia'}
+              {updating ? 'Zapisywanie...' : (isEditingPatient ? 'Zapisz Zmiany' : 'Utwórz Pacjenta')}
             </button>
           </form>
         </div>
