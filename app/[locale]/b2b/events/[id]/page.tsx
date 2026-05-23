@@ -5982,7 +5982,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <HelpButton sectionKey="medical_docs" />
         <button
           onClick={() => {
-            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false })
+            setConsentTemplateForm({ document_type: 'consent', version: 1, is_active: true, is_global_required: false, content_template: '', questions: [] })
+            setIsEditingConsentTemplate(false)
             setIsConsentTemplateModalOpen(true)
           }}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
