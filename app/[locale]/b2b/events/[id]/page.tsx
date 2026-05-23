@@ -1128,18 +1128,20 @@ const createPatientQrUnit = async (patient: any) => {
   }
 
   const insertEventPassScan = async (unit: any, scanType: string) => {
-    const { error } = await supabase.from('event_pass_scans').insert([{
-      event_id: id,
-      application_id: unit.application_id,
-      attendee_unit_id: unit.id,
-      scan_type: scanType,
-      result: 'ok',
-      scanned_by: 'planner',
-      staff_role: 'admin',
-      scanned_at: new Date().toISOString(),
-    }])
-    if (error) console.warn('Event pass table unavailable:', error.message)
-  }
+  const { error } = await supabase.from('event_pass_scans').insert([{
+    event_id: id,
+    application_id: unit.application_id || null,
+    patient_id: unit.patient_id || null,
+    attendee_unit_id: unit.id,
+    scan_type: scanType,
+    result: 'ok',
+    scanned_by: 'planner',
+    staff_role: 'admin',
+    scanned_at: new Date().toISOString(),
+  }])
+
+  if (error) console.warn('Event pass scan error:', error.message)
+}
 
   const handleCheckInAttendeeUnit = async (unit: any) => {
     const { error } = await supabase
@@ -5466,7 +5468,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
      <main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
 
  {/* ============================================================================ */}
-  {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów) */}
+  {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów)  nie zamykaj zamniesz wszystko*/}
  {/* ============================================================================ */}
         <div className={`rounded-[24px] md:rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-xl mb-6 md:mb-8 border transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-900 border-slate-800'}`}>
           <div className={`absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 rounded-full blur-3xl pointer-events-none ${isDarkMode ? 'bg-[#e8ce7a]/10' : 'bg-blue-500/20'}`}></div>
@@ -13137,9 +13139,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 
-
-
-
 {/* ============================================================================ */}
 {/* PLAN PRZESTRZENI wieksza poprawka */}
 {/* ============================================================================ */}
@@ -14247,12 +14246,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
                 <div className="shrink-0 flex items-center justify-end w-full xl:w-auto">
                   {units.length === 0 ? (
-                    <button 
-                      onClick={() => generateAttendeeUnitsForApplication(app)} 
-                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-sm ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                    >
-                      <QrCode size={14} /> Twórz QR
-                    </button>
+                   <button
+  onClick={() => createPatientQrUnit(patient)}
+  className="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+>
+  Wygeneruj QR pacjenta
+</button>
                   ) : (
                     <button 
                       onClick={() => toggleApplicationExpanded(app.id)} 
