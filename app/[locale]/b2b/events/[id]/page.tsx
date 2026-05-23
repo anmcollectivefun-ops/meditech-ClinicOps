@@ -676,43 +676,6 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     }
   };
 
-  const handleBookAppointment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdating(true);
-    try {
-      const selectedTreatment = treatments.find(t => t.id === appointmentForm.treatment_id);
-      
-      // Zapisujemy wizytę z DZIEDZICZONYM LEKARZEM z szablonu!
-      const { data: newApp } = await supabase.from('appointments').insert([{
-        patient_id: appointmentForm.patient_id,
-        event_id: id,
-        treatment_id: selectedTreatment.id,
-        treatment_name: selectedTreatment.name,
-        doctor_id: selectedTreatment.doctor_id, // Automatycznie przejmuje lekarza
-        appointment_date: appointmentForm.appointment_date,
-        status: 'scheduled'
-      }]).select().single();
-
-      // Generujemy zgody
-      const requiredTemplates = treatmentMappings.filter(m => m.treatment_id === selectedTreatment.id).map(m => m.template_id);
-      if (requiredTemplates.length > 0) {
-        const consents = requiredTemplates.map(tId => ({
-          event_id: id, patient_id: appointmentForm.patient_id, template_id: tId, appointment_id: newApp.id, status: 'pending'
-        }));
-        await supabase.from('patient_consents').insert(consents);
-      }
-
-      showNotification('Wizyta utworzona, zgody wygenerowane!', 'success');
-      setIsBookingModalOpen(false);
-      setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '' });
-      await loadAppointments();
-    } catch (err: any) {
-      showNotification('Błąd: ' + err.message, 'error');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   // POBIERANIE KATALOGU (Dodaj to tam, gdzie masz inne funkcje ładujące np. loadPatients)
   const loadTreatmentsCatalog = async () => {
     const { data: tData } = await supabase.from('treatments').select('*').eq('is_active', true);
