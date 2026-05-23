@@ -115,7 +115,7 @@ export default function PatientPortal() {
     setLoginError('')
 
     try {
-      const normalizedPesel = loginPesel.trim()
+      const normalizedPesel = loginPesel.replace(/\D/g, '')
       const { data, error } = await supabase.rpc('patient_portal_by_pesel', {
         input_pesel: normalizedPesel
       })
@@ -156,7 +156,7 @@ export default function PatientPortal() {
     try {
       if (selectedConsentToSign.id && !String(selectedConsentToSign.id).startsWith('c')) {
         const { data, error } = await supabase.rpc('patient_portal_sign_consent', {
-          input_pesel: loginPesel.trim(),
+          input_pesel: loginPesel.replace(/\D/g, ''),
           input_consent_id: selectedConsentToSign.id
         })
 
