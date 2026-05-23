@@ -1,72 +1,33 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Activity,
   AlertTriangle,
-  ArrowRight,
-  Bell,
   Calendar,
   CheckCircle2,
   Clock,
-  Download,
   FileSignature,
   FileText,
   HeartPulse,
   LogOut,
-  MapPin,
-  Plus,
+  MessageSquare,
+  Send,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
-  User,
   X,
 } from 'lucide-react'
 import { createClient } from '../../../lib/supabase'
 
-const MOCK_ANNOUNCEMENTS = [
-  {
-    id: 1,
-    title: 'Dni Otwartych Technologii',
-    date: '2026-06-01',
-    type: 'promo',
-    content: 'Zapisz się na bezpłatną konsultację technologiczną w dniach 1-5 czerwca.',
-  },
-  {
-    id: 2,
-    title: 'Aktualizacja harmonogramów',
-    date: '2026-06-15',
-    type: 'info',
-    content: 'Część specjalistów przebywa na urlopach. Prosimy o wcześniejsze planowanie wizyt.',
-  },
-]
-
-const MOCK_APPOINTMENTS = [
-  {
-    id: 101,
-    date: '2026-05-25T14:30:00',
-    doctor: 'Dr Karolina Wiśniewska',
-    specialty: 'Medycyna estetyczna',
-    status: 'upcoming',
-    location: 'Gabinet 3, piętro 1',
-  }
-]
-
-const MOCK_RECORDS = [
-  { id: 201, date: '2026-04-10', title: 'Zalecenia po zabiegu', type: 'zalecenia', fileUrl: '#' }
-]
-
-const MOCK_DOCTORS = [
-  {
-    id: 'd1',
-    name: 'Dr Karolina Wiśniewska',
-    specialty: 'Medycyna estetyczna',
-    photo: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300&h=400',
-  }
-]
-
 const normalizePesel = (value: string) => value.replace(/\D/g, '')
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return 'Termin do ustalenia'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' })
+}
 
 export default function PatientPortal() {
   const supabase = useMemo(() => createClient(), [])
@@ -76,39 +37,35 @@ export default function PatientPortal() {
   const [loginError, setLoginError] = useState('')
   const [patient, setPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'zgody' | 'wizyty' | 'historia' | 'lekarze'>('zgody')
-  const [pendingConsents, setPendingConsents] = useState<any[]>([])
-  const [signedConsents, setSignedConsents] = useState<any[]>([])
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
-  const [bookingForm, setBookingForm] = useState({ doctorId: '', date: '' })
-  
-  const [isSignModalOpen, setIsSignModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'start' | 'dokumenty' | 'wizyty' | 'kontakt'>('start')
+  const [consents, setConsents] = useState<any[]>([])
+  const [appointments, setAppointments] = useState<any[]>([])
   const [selectedConsentToSign, setSelectedConsentToSign] = useState<any>(null)
   const [isSigning, setIsSigning] = useState(false)
-  
-  // NOWOŚĆ: Stan przechowujący odpowiedzi z interaktywnego formularza
   const [formAnswers, setFormAnswers] = useState<Record<string, any>>({})
+  const [requestForm, setRequestForm] = useState({ type: 'post_treatment_question', subject: '', message: '' })
+  const [requestSuccess, setRequestSuccess] = useState('')
+
+  const pendingConsents = consents.filter((consent: any) => String(consent.status || '').toLowerCase() !== 'signed')
+  const signedConsents = consents.filter((consent: any) => String(consent.status || '').toLowerCase() === 'signed')
+  const upcomingAppointments = appointments
+    .filter((appointment: any) => appointment.appointment_date && new Date(appointment.appointment_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
+    .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
+  const nextAppointment = upcomingAppointments[0] || null
 
   const getConsentTitle = (consent: any) =>
     consent?.medical_consent_templates?.title || consent?.title || `Dokument #${String(consent?.id || '').slice(0, 5)}`
 
-  const getConsentType = (consent: any) =>
-    consent?.medical_consent_templates?.document_type || consent?.type || 'consent'
+  const getConsentTypeLabel = (consent: any) => {
+    const type = consent?.medical_consent_templates?.document_type || consent?.document_type || 'consent'
+    if (type === 'questionnaire') return 'Wywiad medyczny'
+    if (type === 'rodo') return 'RODO'
+    if (type === 'info') return 'Zalecenia / informacja'
+    return 'Zgoda zabiegowa'
+  }
 
   const getConsentContent = (consent: any) =>
     consent?.medical_consent_templates?.content_template || consent?.content_template || ''
-
-  const getConsentDate = (consent: any) => {
-    const rawDate = consent?.signed_at || consent?.created_at || consent?.date
-    return rawDate ? new Date(rawDate).toLocaleDateString('pl-PL') : '-'
-  }
-
-  const applyPortalData = (portalData: any) => {
-    const consents = Array.isArray(portalData?.consents) ? portalData.consents : []
-    setPatient(portalData.patient)
-    setPendingConsents(consents.filter((consent: any) => String(consent.status || '').toLowerCase() === 'pending'))
-    setSignedConsents(consents.filter((consent: any) => String(consent.status || '').toLowerCase() !== 'pending'))
-  }
 
   const loadConsentsForPatient = async (patientId: string) => {
     const joined = await supabase
@@ -126,44 +83,58 @@ export default function PatientPortal() {
       .order('created_at', { ascending: false })
 
     if (plain.error) throw plain.error
+    return plain.data || []
+  }
 
-    const consents = plain.data || []
-    const templateIds = Array.from(new Set(consents.map((consent: any) => consent.template_id).filter(Boolean)))
+  const loadAppointmentsForPatient = async (patientId: string) => {
+    const result = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('appointment_date', { ascending: true })
 
-    if (templateIds.length === 0) return consents
+    if (result.error) {
+      console.warn('Patient appointments unavailable:', result.error.message)
+      return []
+    }
 
-    const templates = await supabase.from('medical_consent_templates').select('*').in('id', templateIds)
-    if (templates.error) return consents
-
-    const templatesById = new Map((templates.data || []).map((template: any) => [template.id, template]))
-    return consents.map((consent: any) => ({
-      ...consent,
-      medical_consent_templates: templatesById.get(consent.template_id) || null,
-    }))
+    return result.data || []
   }
 
   const loadPatientDirectly = async (normalizedPesel: string) => {
     const exact = await supabase.from('patients').select('*').eq('pesel', normalizedPesel).limit(1)
-
     if (exact.error) throw exact.error
 
     let foundPatient = exact.data?.[0] || null
 
     if (!foundPatient) {
-      const allPatients = await supabase.from('patients').select('*').limit(300)
+      const allPatients = await supabase.from('patients').select('*').limit(500)
       if (allPatients.error) throw allPatients.error
-
       foundPatient = (allPatients.data || []).find((row: any) => normalizePesel(String(row.pesel || '')) === normalizedPesel)
     }
 
     if (!foundPatient) return null
 
-    const consents = await loadConsentsForPatient(foundPatient.id)
-    return { patient: foundPatient, consents }
+    const [patientConsents, patientAppointments] = await Promise.all([
+      loadConsentsForPatient(foundPatient.id),
+      loadAppointmentsForPatient(foundPatient.id),
+    ])
+
+    return { patient: foundPatient, consents: patientConsents, appointments: patientAppointments }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const refreshPortal = async () => {
+    const normalizedPesel = normalizePesel(loginPesel)
+    if (!normalizedPesel || !patient?.id) return
+    const refreshed = await loadPatientDirectly(normalizedPesel)
+    if (!refreshed?.patient) return
+    setPatient(refreshed.patient)
+    setConsents(refreshed.consents)
+    setAppointments(refreshed.appointments)
+  }
+
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault()
     setLoading(true)
     setLoginError('')
 
@@ -174,14 +145,16 @@ export default function PatientPortal() {
         return
       }
 
-      const directData = await loadPatientDirectly(normalizedPesel)
-
-      if (directData?.patient) {
-        applyPortalData(directData)
-        setIsLoggedIn(true)
-      } else {
+      const portalData = await loadPatientDirectly(normalizedPesel)
+      if (!portalData?.patient) {
         setLoginError('Nie znaleziono pacjenta w bazie. Sprawdź PESEL.')
+        return
       }
+
+      setPatient(portalData.patient)
+      setConsents(portalData.consents)
+      setAppointments(portalData.appointments)
+      setIsLoggedIn(true)
     } catch (err: any) {
       setLoginError('Nie udało się połączyć z portalem: ' + (err?.message || 'błąd'))
     } finally {
@@ -193,52 +166,45 @@ export default function PatientPortal() {
     setIsLoggedIn(false)
     setPatient(null)
     setLoginPesel('')
-    setPendingConsents([])
-    setSignedConsents([])
+    setConsents([])
+    setAppointments([])
+    setRequestSuccess('')
   }
 
-  const handleBookVisit = (e: React.FormEvent) => {
-    e.preventDefault()
-    alert('Zgłoszenie rezerwacji zostało wysłane. Oczekuj na potwierdzenie z recepcji.')
-    setIsBookingModalOpen(false)
-  }
-
-  // Otwieranie formularza z czyszczeniem odpowiedzi
   const openSignModal = (consent: any) => {
     setSelectedConsentToSign(consent)
-    setFormAnswers({}) // Czyścimy odpowiedzi przed nowym dokumentem
-    setIsSignModalOpen(true)
+    setFormAnswers({})
   }
 
   const handleSignConsent = async () => {
-    if (!selectedConsentToSign) return
+    if (!selectedConsentToSign || !patient?.id) return
     setIsSigning(true)
     setLoginError('')
 
-    try {
-      const normalizedPesel = normalizePesel(loginPesel)
+    const payload = {
+      status: 'signed',
+      signed_at: new Date().toISOString(),
+      answers: formAnswers,
+    }
 
-      if (selectedConsentToSign.id && !String(selectedConsentToSign.id).startsWith('demo-')) {
-        
-        // Zapisujemy bezpośrednio do bazy z nową kolumną answers!
-        const { error: updateError } = await supabase
+    try {
+      const update = await supabase
+        .from('patient_consents')
+        .update(payload)
+        .eq('id', selectedConsentToSign.id)
+        .eq('patient_id', patient.id)
+
+      if (update.error) {
+        const fallback = await supabase
           .from('patient_consents')
-          .update({ 
-            status: 'signed', 
-            signed_at: new Date().toISOString(),
-            answers: formAnswers // Magia - tu lecą wyklikane checkboxy i wpisane teksty!
-          })
+          .update({ status: 'signed', signed_at: payload.signed_at })
           .eq('id', selectedConsentToSign.id)
           .eq('patient_id', patient.id)
-
-        if (updateError) throw updateError
-
-        const refreshed = await loadPatientDirectly(normalizedPesel)
-        if (refreshed?.patient) applyPortalData(refreshed)
+        if (fallback.error) throw fallback.error
       }
 
-      setIsSignModalOpen(false)
       setSelectedConsentToSign(null)
+      await refreshPortal()
     } catch (err: any) {
       setLoginError('Nie udało się zapisać dokumentu: ' + (err?.message || 'błąd'))
     } finally {
@@ -246,144 +212,202 @@ export default function PatientPortal() {
     }
   }
 
-  // ============================================================================
-  // MAGICZNY PARSER: Zamienia [ ] na checkboxy i ____ na inputy
-  // ============================================================================
+  const handleSubmitRequest = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!patient?.id || !requestForm.message.trim()) {
+      setRequestSuccess('Uzupełnij treść wiadomości.')
+      return
+    }
+
+    const insert = await supabase.from('patient_portal_requests').insert([{
+      patient_id: patient.id,
+      request_type: requestForm.type,
+      subject: requestForm.subject || (requestForm.type === 'appointment_request' ? 'Prośba o wizytę' : 'Pytanie pacjenta'),
+      message: requestForm.message,
+      status: 'new',
+    }])
+
+    if (insert.error) {
+      setRequestSuccess('Nie udało się wysłać zgłoszenia: ' + insert.error.message)
+      return
+    }
+
+    setRequestForm({ type: 'post_treatment_question', subject: '', message: '' })
+    setRequestSuccess('Wiadomość trafiła do recepcji. Odpowiemy możliwie szybko.')
+  }
+
   const renderInteractiveContent = (text: string) => {
-    if (!text) return null;
-    
-    // Dzielimy tekst na kawałki szukając: [ ] lub _ (minimum 3 podłogi)
-    const parts = text.split(/(\[\s*\]|_{3,})/);
-    let checkboxIndex = 0;
-    let textIndex = 0;
+    if (!text) return <p>Ten dokument nie ma jeszcze treści. Możesz go potwierdzić po rozmowie z recepcją.</p>
+
+    const parts = text.split(/(\[\s*\]|_{3,})/)
+    let checkboxIndex = 0
+    let textIndex = 0
 
     return parts.map((part, index) => {
-      // Jeśli to jest [ ]
       if (part.match(/\[\s*\]/)) {
-        const fieldId = `checkbox_${checkboxIndex++}`;
+        const fieldId = `checkbox_${checkboxIndex++}`
         return (
           <input
             key={index}
             type="checkbox"
-            className="mx-2 w-5 h-5 translate-y-1 cursor-pointer accent-red-600 rounded border-white/20 bg-white/5"
+            className="mx-2 h-5 w-5 translate-y-1 rounded border-white/20 bg-white/5 accent-cyan-300"
             checked={!!formAnswers[fieldId]}
-            onChange={(e) => setFormAnswers(prev => ({ ...prev, [fieldId]: e.target.checked }))}
+            onChange={(event) => setFormAnswers(prev => ({ ...prev, [fieldId]: event.target.checked }))}
           />
-        );
-      } 
-      // Jeśli to jest ____
-      else if (part.match(/_{3,}/)) {
-        const fieldId = `textinput_${textIndex++}`;
+        )
+      }
+
+      if (part.match(/_{3,}/)) {
+        const fieldId = `textinput_${textIndex++}`
         return (
           <input
             key={index}
             type="text"
             placeholder="wpisz..."
-            className="mx-2 bg-transparent border-b border-white/30 text-cyan-200 placeholder-slate-600/50 outline-none focus:border-red-500 min-w-[120px] px-1 text-center"
+            className="mx-2 min-w-[140px] border-b border-white/30 bg-transparent px-1 text-center text-cyan-100 outline-none focus:border-cyan-300"
             value={formAnswers[fieldId] || ''}
-            onChange={(e) => setFormAnswers(prev => ({ ...prev, [fieldId]: e.target.value }))}
+            onChange={(event) => setFormAnswers(prev => ({ ...prev, [fieldId]: event.target.value }))}
           />
-        );
+        )
       }
-      // W przeciwnym razie wyświetl zwykły tekst
-      return <span key={index}>{part}</span>;
-    });
-  };
+
+      return <span key={index}>{part}</span>
+    })
+  }
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#071016] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.15),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.12),transparent_30%)] pointer-events-none" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+      <div className="min-h-screen bg-[#071016] text-white flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(16,185,129,0.14),transparent_32%)]" />
+        <motion.form
+          onSubmit={handleLogin}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full max-w-md p-8 rounded-[40px] border border-white/10 bg-[#101a22]/80 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+          className="relative w-full max-w-md rounded-[36px] border border-white/10 bg-[#101a22]/85 p-8 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
         >
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-inner border border-cyan-300/20 bg-cyan-300/10">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-200/20 bg-cyan-200/10">
               <HeartPulse size={32} className="text-cyan-200" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white">Portal Pacjenta</h1>
-            <p className="text-sm mt-2 text-slate-400">Zintegrowany system medyczny</p>
+            <h1 className="text-3xl font-black tracking-tight">Portal Pacjenta</h1>
+            <p className="mt-2 text-sm text-slate-400">Dokumenty, wizyty i kontakt z kliniką w jednym miejscu.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="text-[10px] font-black uppercase tracking-widest mb-2 block text-slate-400">
-                Weryfikacja tożsamości
-              </label>
-              <input
-                type="password"
-                required
-                inputMode="numeric"
-                placeholder="Wpisz PESEL pacjenta"
-                value={loginPesel}
-                onChange={event => setLoginPesel(event.target.value)}
-                className="w-full px-5 py-4 rounded-2xl outline-none text-white font-bold transition-all border border-white/10 bg-white/[0.03] focus:border-cyan-300/50 focus:bg-white/[0.06]"
-              />
-            </div>
+          <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Weryfikacja PESEL
+          </label>
+          <input
+            type="password"
+            required
+            inputMode="numeric"
+            placeholder="Wpisz PESEL pacjenta"
+            value={loginPesel}
+            onChange={event => setLoginPesel(event.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 font-bold text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/[0.07]"
+          />
 
-            {loginError && <p className="text-red-400 text-sm font-bold text-center leading-relaxed">{loginError}</p>}
+          {loginError && <p className="mt-4 text-center text-sm font-bold text-red-300">{loginError}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 bg-cyan-200 text-[#071016] shadow-[0_12px_30px_rgba(103,232,249,0.18)]"
-            >
-              {loading ? 'Weryfikacja...' : 'Zaloguj się do portalu'}
-            </button>
-          </form>
-        </motion.div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-2xl bg-cyan-200 py-4 text-sm font-black uppercase tracking-widest text-[#071016] shadow-[0_16px_36px_rgba(103,232,249,0.18)] transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+          >
+            {loading ? 'Weryfikacja...' : 'Wejdź do portalu'}
+          </button>
+        </motion.form>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-[#071016] text-white selection:bg-cyan-300 selection:text-[#071016]">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.12),transparent_35%),radial-gradient(circle_at_85%_20%,rgba(16,185,129,0.10),transparent_28%)] pointer-events-none" />
+  const tabs = [
+    { id: 'start', label: 'Start', icon: Sparkles },
+    { id: 'dokumenty', label: 'Dokumenty', icon: FileSignature, count: pendingConsents.length },
+    { id: 'wizyty', label: 'Wizyty', icon: Calendar },
+    { id: 'kontakt', label: 'Zapytaj klinikę', icon: MessageSquare },
+  ] as const
 
-      <header className="relative z-20 border-b border-white/10 bg-[#071016]/80 backdrop-blur-xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between gap-4">
+  return (
+    <div className="min-h-screen bg-[#071016] text-white">
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.14),transparent_35%),radial-gradient(circle_at_84%_16%,rgba(16,185,129,0.12),transparent_28%)] pointer-events-none" />
+
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071016]/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-cyan-200/10 border border-cyan-200/20 flex items-center justify-center">
-              <HeartPulse size={22} className="text-cyan-200" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/10">
+              <HeartPulse size={24} className="text-cyan-200" />
             </div>
             <div>
-              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Portal Pacjenta</p>
-              <h2 className="font-black text-lg leading-none">{patient?.first_name} {patient?.last_name}</h2>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">Portal Pacjenta</p>
+              <h2 className="text-lg font-black leading-none">{patient?.first_name} {patient?.last_name}</h2>
             </div>
           </div>
-
-          <button onClick={handleLogout} className="p-3 rounded-2xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+          <button onClick={handleLogout} className="rounded-2xl border border-white/10 p-3 text-slate-400 transition hover:bg-white/5 hover:text-white">
             <LogOut size={18} />
           </button>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 py-8 md:py-10">
-        <nav className="flex gap-2 overflow-x-auto pb-3 mb-7">
-          {[
-            { id: 'zgody', label: 'Zgody i wywiady', icon: FileSignature },
-            { id: 'wizyty', label: 'Wizyty', icon: Calendar },
-            { id: 'historia', label: 'Dokumenty', icon: FileText },
-            { id: 'lekarze', label: 'Mój zespół', icon: Stethoscope },
-          ].map(item => {
+      <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10">
+        <section className="mb-7 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 rounded-[34px] border border-white/10 bg-[#101a22]/75 p-6 md:p-8 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Twoja ścieżka opieki</p>
+            <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">Dzień dobry, {patient?.first_name || 'Pacjencie'}.</h1>
+            <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-300">
+              Tutaj podpiszesz dokumenty przed wizytą, sprawdzisz najbliższy termin i wyślesz pytanie do zespołu kliniki.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                ['Do podpisu', pendingConsents.length],
+                ['Potwierdzone', signedConsents.length],
+                ['Wizyty', appointments.length],
+                ['PESEL', patient?.pesel ? 'OK' : 'brak'],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+                  <p className="mt-1 text-xl font-black text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[34px] border border-cyan-200/20 bg-cyan-200/10 p-6 md:p-7">
+            <div className="flex items-center gap-3">
+              <Clock className="text-cyan-200" size={22} />
+              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-100">Najbliższa wizyta</p>
+            </div>
+            {nextAppointment ? (
+              <div className="mt-5">
+                <h3 className="text-xl font-black">{nextAppointment.treatment_name || 'Wizyta w klinice'}</h3>
+                <p className="mt-2 text-sm font-bold text-cyan-100">{formatDateTime(nextAppointment.appointment_date)}</p>
+                <p className="mt-4 text-xs leading-6 text-slate-300">Przyjdź kilka minut wcześniej. Dokumenty do podpisu zobaczysz w zakładce Dokumenty.</p>
+              </div>
+            ) : (
+              <div className="mt-5">
+                <h3 className="text-xl font-black">Brak nadchodzącej wizyty</h3>
+                <p className="mt-3 text-xs leading-6 text-slate-300">Możesz poprosić recepcję o konsultację lub nowy termin w zakładce kontaktu.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <nav className="mb-7 flex gap-2 overflow-x-auto pb-2">
+          {tabs.map(item => {
             const Icon = item.icon
             const isActive = activeTab === item.id
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
-                className={`relative px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shrink-0 transition-all border ${
-                  isActive ? 'bg-cyan-200 text-[#071016] border-cyan-200' : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-white hover:bg-white/[0.06]'
+                onClick={() => setActiveTab(item.id)}
+                className={`relative flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-wider transition ${
+                  isActive ? 'border-cyan-200 bg-cyan-200 text-[#071016]' : 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-white'
                 }`}
               >
                 <Icon size={15} />
                 {item.label}
-                {item.id === 'zgody' && pendingConsents.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-                    {pendingConsents.length}
+                {'count' in item && item.count > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                    {item.count}
                   </span>
                 )}
               </button>
@@ -392,130 +416,212 @@ export default function PatientPortal() {
         </nav>
 
         <AnimatePresence mode="wait">
-          {activeTab === 'zgody' && (
-            <motion.section key="zgody" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-6">
-              <div className="rounded-[32px] border border-white/10 bg-[#101a22]/70 overflow-hidden">
-                <div className="p-6 border-b border-white/10 flex items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-black">Wymagające Twojej akcji</h3>
-                    <p className="text-xs text-slate-400 font-medium mt-1">Dokumenty wysłane przez recepcję do uzupełnienia.</p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black bg-red-500/10 text-red-300 border border-red-500/20">
-                    {pendingConsents.length} oczekuje
-                  </span>
-                </div>
+          {activeTab === 'start' && (
+            <motion.section key="start" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <InfoCard icon={FileSignature} title="Dokumenty przed wizytą" text={pendingConsents.length ? `Masz ${pendingConsents.length} dokumentów do podpisu.` : 'Nie masz zaległych dokumentów.'} accent="red" />
+              <InfoCard icon={Calendar} title="Wizyty i konsultacje" text={nextAppointment ? formatDateTime(nextAppointment.appointment_date) : 'Poproś o termin w panelu kontaktu.'} accent="cyan" />
+              <InfoCard icon={MessageSquare} title="Kontakt po zabiegu" text="Wyślij pytanie kontrolne do recepcji bez dzwonienia." accent="emerald" />
+            </motion.section>
+          )}
 
-                <div className="p-5 space-y-3">
-                  {pendingConsents.length === 0 ? (
-                    <div className="p-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 text-center">
-                      <CheckCircle2 size={32} className="text-emerald-300 mx-auto mb-3" />
-                      <p className="font-bold">Wszystkie dokumenty są uzupełnione.</p>
+          {activeTab === 'dokumenty' && (
+            <motion.section key="dokumenty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-6">
+              <Panel title="Do podpisu" subtitle="Dokumenty wymagające Twojej akceptacji przed wizytą." badge={`${pendingConsents.length} oczekuje`}>
+                {pendingConsents.length === 0 ? (
+                  <EmptyState icon={CheckCircle2} title="Wszystko podpisane" text="Na ten moment nie masz dokumentów oczekujących na akceptację." />
+                ) : pendingConsents.map(consent => (
+                  <DocumentRow key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending onClick={() => openSignModal(consent)} />
+                ))}
+              </Panel>
+
+              <Panel title="Potwierdzone dokumenty" subtitle="Archiwum zaakceptowanych dokumentów i skanów.">
+                {signedConsents.length === 0 ? (
+                  <EmptyState icon={FileText} title="Brak historii" text="Podpisane dokumenty pojawią się tutaj po akceptacji." />
+                ) : signedConsents.map(consent => (
+                  <DocumentRow key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending={false} date={formatDateTime(consent.signed_at || consent.created_at)} />
+                ))}
+              </Panel>
+            </motion.section>
+          )}
+
+          {activeTab === 'wizyty' && (
+            <motion.section key="wizyty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-5">
+              <Panel title="Twoje wizyty" subtitle="Najbliższe terminy, status płatności i historia zaplanowanych zabiegów.">
+                {appointments.length === 0 ? (
+                  <EmptyState icon={Calendar} title="Brak wizyt" text="Wyślij prośbę o konsultację lub nowy termin w zakładce kontaktu." />
+                ) : appointments.map(appointment => (
+                  <div key={appointment.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">{appointment.status || 'zaplanowana'}</p>
+                        <h3 className="mt-1 text-lg font-black">{appointment.treatment_name || 'Wizyta w klinice'}</h3>
+                        <p className="mt-2 text-sm font-bold text-slate-300">{formatDateTime(appointment.appointment_date)}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-[#071016]/50 px-4 py-3 text-sm font-black">
+                        {appointment.price_amount ? `${Number(appointment.price_amount).toLocaleString('pl-PL')} ${appointment.currency || 'PLN'}` : 'Cena wg ustaleń'}
+                      </div>
                     </div>
-                  ) : (
-                    pendingConsents.map(consent => (
-                      <div key={consent.id} className="p-5 rounded-3xl border border-red-500/20 bg-red-500/[0.06] flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-11 h-11 rounded-2xl bg-red-500/10 text-red-300 flex items-center justify-center shrink-0">
-                            <AlertTriangle size={20} />
-                          </div>
-                          <div>
-                            <h4 className="font-black">{getConsentTitle(consent)}</h4>
-                            <p className="text-xs text-slate-400 mt-2 font-medium">Do uzupełnienia przed wizytą</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => openSignModal(consent)}
-                          className="px-5 py-3 rounded-2xl bg-white text-[#071016] font-black text-xs uppercase tracking-wider hover:scale-[1.02] transition-transform flex items-center gap-2"
-                        >
-                          <FileSignature size={14} /> Wypełnij
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+                  </div>
+                ))}
+              </Panel>
+            </motion.section>
+          )}
 
-              <div className="rounded-[32px] border border-white/10 bg-[#101a22]/70 overflow-hidden">
-                <div className="p-6 border-b border-white/10">
-                  <h3 className="text-xl font-black">Archiwum dokumentów</h3>
-                </div>
-                <div className="divide-y divide-white/10">
-                  {signedConsents.length === 0 ? (
-                    <p className="p-6 text-sm text-slate-400 font-bold">Brak podpisanych dokumentów.</p>
-                  ) : (
-                    signedConsents.map(consent => (
-                      <div key={consent.id} className="p-5 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-300 flex items-center justify-center">
-                            <CheckCircle2 size={18} />
-                          </div>
-                          <div>
-                            <p className="font-black text-sm">{getConsentTitle(consent)}</p>
-                            <p className="text-[10px] text-slate-500 mt-1 uppercase">{getConsentDate(consent)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+          {activeTab === 'kontakt' && (
+            <motion.section key="kontakt" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+              <Panel title="Zapytaj klinikę" subtitle="Pytanie trafi do recepcji/opiekuna pacjenta w panelu kliniki.">
+                <form onSubmit={handleSubmitRequest} className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500">Rodzaj zgłoszenia</label>
+                      <select
+                        value={requestForm.type}
+                        onChange={event => setRequestForm({ ...requestForm, type: event.target.value })}
+                        className="w-full rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-bold outline-none focus:border-cyan-300"
+                      >
+                        <option value="post_treatment_question">Pytanie po zabiegu</option>
+                        <option value="appointment_request">Chcę umówić wizytę</option>
+                        <option value="followup_request">Prośba o konsultację kontrolną</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500">Temat</label>
+                      <input
+                        value={requestForm.subject}
+                        onChange={event => setRequestForm({ ...requestForm, subject: event.target.value })}
+                        placeholder="np. obrzęk po zabiegu, termin kontroli..."
+                        className="w-full rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-bold outline-none focus:border-cyan-300"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500">Wiadomość</label>
+                    <textarea
+                      rows={6}
+                      value={requestForm.message}
+                      onChange={event => setRequestForm({ ...requestForm, message: event.target.value })}
+                      placeholder="Opisz, co się dzieje albo jaki termin wizyty Ci odpowiada..."
+                      className="w-full resize-none rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-medium leading-6 outline-none focus:border-cyan-300"
+                    />
+                  </div>
+                  {requestSuccess && <p className="rounded-2xl border border-cyan-200/20 bg-cyan-200/10 p-4 text-sm font-bold text-cyan-100">{requestSuccess}</p>}
+                  <button type="submit" className="inline-flex items-center gap-2 rounded-2xl bg-cyan-200 px-5 py-3 text-xs font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02]">
+                    <Send size={15} /> Wyślij do recepcji
+                  </button>
+                </form>
+              </Panel>
             </motion.section>
           )}
         </AnimatePresence>
       </main>
 
-      {/* MODAL Z INTERAKTYWNYM FORMULARZEM */}
       <AnimatePresence>
-        {isSignModalOpen && selectedConsentToSign && (
+        {selectedConsentToSign && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSignModalOpen(false)} className="absolute inset-0 bg-[#071016]/90 backdrop-blur-xl" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedConsentToSign(null)} className="absolute inset-0 bg-[#071016]/90 backdrop-blur-xl" />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 18 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative z-10 w-full max-w-3xl max-h-[90vh] flex flex-col rounded-[40px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-[#101a22] overflow-hidden"
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[36px] border border-white/10 bg-[#101a22] shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
             >
-              <div className="p-6 md:p-8 border-b border-white/10 shrink-0 flex justify-between items-center bg-[#101a22] z-10">
+              <div className="flex shrink-0 items-center justify-between border-b border-white/10 p-6 md:p-8">
                 <div>
-                  <h3 className="text-xl md:text-2xl font-black text-white">{getConsentTitle(selectedConsentToSign)}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">{getConsentTypeLabel(selectedConsentToSign)}</p>
+                  <h3 className="mt-1 text-xl font-black md:text-2xl">{getConsentTitle(selectedConsentToSign)}</h3>
                 </div>
-                <button onClick={() => setIsSignModalOpen(false)} className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-slate-400">
+                <button onClick={() => setSelectedConsentToSign(null)} className="rounded-full bg-white/5 p-3 text-slate-400 hover:bg-white/10">
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 text-sm text-slate-300 leading-loose space-y-4">
-                
-                {/* TUTAJ DZIAŁA MAGICZNY PARSER! */}
-                {getConsentContent(selectedConsentToSign) ? (
-                  <div className="whitespace-pre-wrap">
-                    {renderInteractiveContent(getConsentContent(selectedConsentToSign))}
-                  </div>
-                ) : (
-                  <p>Brak treści w szablonie.</p>
-                )}
-
-                <div className="mt-8 p-5 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-xs font-bold text-slate-400 mb-2 uppercase">Oświadczenie cyfrowe</p>
-                  <p className="text-sm text-white font-medium">
-                    Kliknięcie „Akceptuję i podpisuję” jest równoznaczne ze złożeniem podpisu elektronicznego.
+              <div className="custom-scrollbar flex-1 overflow-y-auto p-6 text-sm leading-loose text-slate-300 md:p-8">
+                <div className="whitespace-pre-wrap">{renderInteractiveContent(getConsentContent(selectedConsentToSign))}</div>
+                <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Oświadczenie cyfrowe</p>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    Kliknięcie „Akceptuję i podpisuję” jest równoznaczne z potwierdzeniem dokumentu w Portalu Pacjenta.
                   </p>
                 </div>
               </div>
 
-              <div className="p-6 md:p-8 border-t border-white/10 bg-[#0c131a] shrink-0">
+              <div className="shrink-0 border-t border-white/10 bg-[#0c131a] p-6 md:p-8">
                 <button
                   onClick={handleSignConsent}
                   disabled={isSigning}
-                  className="w-full py-4 rounded-2xl font-black text-sm uppercase text-white bg-red-600 shadow-lg shadow-red-600/20 hover:bg-red-500 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-200 py-4 text-sm font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02] disabled:opacity-60"
                 >
-                  {isSigning ? 'Zapisywanie...' : <><FileSignature size={18} /> Wyślij i Podpisz</>}
+                  {isSigning ? 'Zapisywanie...' : <><FileSignature size={18} /> Akceptuję i podpisuję</>}
                 </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+function Panel({ title, subtitle, badge, children }: { title: string; subtitle?: string; badge?: string; children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#101a22]/75">
+      <div className="flex flex-col gap-3 border-b border-white/10 p-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-black">{title}</h2>
+          {subtitle && <p className="mt-1 text-xs font-medium text-slate-400">{subtitle}</p>}
+        </div>
+        {badge && <span className="w-fit rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase text-red-200">{badge}</span>}
+      </div>
+      <div className="space-y-3 p-5">{children}</div>
+    </div>
+  )
+}
+
+function InfoCard({ icon: Icon, title, text, accent }: { icon: any; title: string; text: string; accent: 'red' | 'cyan' | 'emerald' }) {
+  const colors = {
+    red: 'border-red-500/20 bg-red-500/[0.07] text-red-200',
+    cyan: 'border-cyan-200/20 bg-cyan-200/[0.08] text-cyan-100',
+    emerald: 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-100',
+  }
+  return (
+    <div className={`rounded-[28px] border p-5 ${colors[accent]}`}>
+      <Icon size={22} />
+      <h3 className="mt-4 font-black">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
+    </div>
+  )
+}
+
+function EmptyState({ icon: Icon, title, text }: { icon: any; title: string; text: string }) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
+      <Icon size={32} className="mx-auto mb-3 text-slate-400" />
+      <p className="font-black">{title}</p>
+      <p className="mt-2 text-sm text-slate-400">{text}</p>
+    </div>
+  )
+}
+
+function DocumentRow({ title, typeLabel, pending, date, onClick }: { consent: any; title: string; typeLabel: string; pending: boolean; date?: string; onClick?: () => void }) {
+  return (
+    <div className={`rounded-3xl border p-5 ${pending ? 'border-red-500/20 bg-red-500/[0.06]' : 'border-emerald-500/20 bg-emerald-500/[0.05]'}`}>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start gap-4">
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${pending ? 'bg-red-500/10 text-red-300' : 'bg-emerald-500/10 text-emerald-300'}`}>
+            {pending ? <AlertTriangle size={20} /> : <ShieldCheck size={20} />}
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{typeLabel}</p>
+            <h3 className="mt-1 font-black">{title}</h3>
+            {date && <p className="mt-2 text-xs font-bold text-slate-500">{date}</p>}
+          </div>
+        </div>
+        {pending && onClick && (
+          <button onClick={onClick} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-xs font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02]">
+            <FileSignature size={15} /> Wypełnij
+          </button>
+        )}
+      </div>
     </div>
   )
 }

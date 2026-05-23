@@ -297,6 +297,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   // ----- 4.1. STANY GŁÓWNE -----
   const [event, setEvent] = useState<any>(null)
   const [applications, setApplications] = useState<Guest[]>([])
+  const [patientPortalRequests, setPatientPortalRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabModule>('rekrutacja')
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
@@ -1593,6 +1594,22 @@ const loadPatients = useCallback(async () => {
 
   setPatients(data || [])
 }, [supabase])
+
+const loadPatientPortalRequests = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('patient_portal_requests')
+    .select('*, patients(*)')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.warn('Patient portal requests load error:', error.message)
+    setPatientPortalRequests([])
+    return
+  }
+
+  setPatientPortalRequests(data || [])
+}, [supabase])
+
 const loadPatientConsents = useCallback(async () => {
   const { data, error } = await supabase
     .from('patient_consents')
@@ -3021,6 +3038,18 @@ const patientQrMetrics = useMemo(() => ({
       showNotification('Błąd usuwania pacjenta: ' + err.message, 'error');
     }
   };
+
+  const handleUpdatePatientPortalRequestStatus = async (requestId: string, status: string) => {
+    const { error } = await supabase
+      .from('patient_portal_requests')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', requestId)
+
+    if (error) return showNotification('Błąd aktualizacji zgłoszenia: ' + error.message, 'error')
+    await loadPatientPortalRequests()
+    showNotification('Zgłoszenie pacjenta zaktualizowane', 'success')
+  }
+
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
     const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
@@ -3541,6 +3570,7 @@ const { data: checklistItemData } = await supabase
       await loadBudgetData()
       await loadEventPassData()
       await loadPatients()
+      await loadPatientPortalRequests()
       await loadPatientConsents()
       await loadConsentTemplates() // <--- DODANO TUTAJ
       await loadTreatmentsCatalog()
@@ -3555,7 +3585,7 @@ const { data: checklistItemData } = await supabase
     } finally {
       setLoading(false)
     }
-  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientConsents, loadConsentTemplates])
+  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientConsents, loadConsentTemplates])
 
   useEffect(() => {
     loadEventData()
@@ -4653,7 +4683,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       title: 'Pierwszy kontakt',
       desc: 'Leady, rejestracja i follow-up',
       items: [
-        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
+        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length + patientPortalRequests.filter((item: any) => item.status === 'new').length, urgent: true },
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
         { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
@@ -11344,6 +11374,89 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
     )}
+  </div>
+)}
+
+{activeTab === 'rekrutacja' && (
+  <div className="space-y-6 animate-in fade-in duration-300">
+    <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
+            Pierwszy kontakt z portalu pacjenta
+          </p>
+          <h2 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            Pytania, prośby o wizytę i konsultacje kontrolne
+          </h2>
+          <p className={`mt-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Tu trafiają wiadomości wysłane przez pacjentów z Portalu Pacjenta.
+          </p>
+        </div>
+        <span className={`w-fit rounded-2xl px-4 py-2 text-xs font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+          {patientPortalRequests.filter((item: any) => item.status === 'new').length} nowe
+        </span>
+      </div>
+
+      {patientPortalRequests.length === 0 ? (
+        <div className={`rounded-3xl border-2 border-dashed p-10 text-center ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+          <MessageSquare size={34} className="mx-auto mb-3 opacity-60" />
+          <p className="text-sm font-black">Brak zgłoszeń z portalu pacjenta.</p>
+          <p className="mt-2 text-xs font-medium">Nowe pytania i prośby o wizytę pojawią się tutaj automatycznie.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {patientPortalRequests.map((request: any) => {
+            const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim() || 'Pacjent'
+            const typeLabel = request.request_type === 'appointment_request'
+              ? 'Prośba o wizytę'
+              : request.request_type === 'followup_request'
+                ? 'Konsultacja kontrolna'
+                : 'Pytanie po zabiegu'
+            const isNew = request.status === 'new'
+
+            return (
+              <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isNew ? 'bg-red-500 text-white' : (isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white text-slate-600 border border-slate-200')}`}>
+                        {request.status || 'new'}
+                      </span>
+                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                        {typeLabel}
+                      </span>
+                    </div>
+                    <h3 className={`mt-3 text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {request.subject || typeLabel}
+                    </h3>
+                    <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {patientName} · PESEL: {request.patients?.pesel || 'brak'} · {request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : ''}
+                    </p>
+                    <p className={`mt-4 text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      {request.message}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button
+                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'in_progress')}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                    >
+                      W trakcie
+                    </button>
+                    <button
+                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'closed')}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                    >
+                      Zamknij
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
   </div>
 )}
 
