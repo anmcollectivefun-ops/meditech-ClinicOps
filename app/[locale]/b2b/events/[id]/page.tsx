@@ -39,7 +39,7 @@ import jsPDF from 'jspdf'
 
 type TabModule =
   | 'rekrutacja' | 'logistyka' | 'edycja'
-  | 'harmonogram' | 'menu' | 'budzet' | 'inne' | 'eko'
+  | 'harmonogram' | 'eko'
   | 'komunikacja' | 'checklista' | 'finanse' | 'gadgets'
   | 'dostawcy' | 'minutowka'
   | 'bilety' | 'prelegenci' | 'materialy'
@@ -438,15 +438,10 @@ const [newFiles, setNewFiles] = useState<{
   const [ticketAccessFilter, setTicketAccessFilter] = useState('all')
   const [ticketTierFilter, setTicketTierFilter] = useState('all')
 
-  const [materials, setMaterials] = useState<any[]>([])
   const [eventVideos, setEventVideos] = useState<any[]>([])
   const [videoForm, setVideoForm] = useState<any>({})
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [isEditingVideo, setIsEditingVideo] = useState(false)
-  const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false)
-const [isEditingMaterial, setIsEditingMaterial] = useState(false)
-const [materialForm, setMaterialForm] = useState<any>({})
-const [materialFile, setMaterialFile] = useState<File | null>(null)
 const [checklistGroups, setChecklistGroups] = useState<any[]>([])
 const [checklistItems, setChecklistItems] = useState<any[]>([])
 const [isChecklistGroupModalOpen, setIsChecklistGroupModalOpen] = useState(false)
@@ -3444,22 +3439,6 @@ const toggleChecklistGroupOpen = async (group: any) => {
 // ============================================================================
 // ----- 4.5. EFEKT GŁÓWNY (ładowanie danych) -----
 // ============================================================================
- const loadMaterials = useCallback(async () => {
-  setMaterials([])
-}, [])
-
-const handleSaveMaterial = async (e: React.FormEvent) => {
-  e.preventDefault()
-  showNotification('Stary moduł materiałów jest wyłączony. Użyj szablonów zgód w sekcji dokumentacji.', 'info')
-  setIsMaterialModalOpen(false)
-  setIsEditingMaterial(false)
-  setMaterialForm({})
-  setMaterialFile(null)
-}
-
-const handleDeleteMaterial = async (_materialId: string) => {
-  showNotification('Stary moduł materiałów jest wyłączony. Dokumenty pacjenta są w patient_consents.', 'info')
-}
 const loadEventData = useCallback(async () => {
     try {
       const { data: ev } = await supabase.from('b2b_events').select('*').eq('id', id).single()
@@ -3973,7 +3952,6 @@ const transportAnalytics = useMemo(() => {
     const safeContractors = Array.isArray(contractors) ? contractors : []
     const safeCateringOffers = Array.isArray(cateringOffers) ? cateringOffers : []
     const safeBudgetItems = Array.isArray(budgetItems) ? budgetItems : []
-    const safeMaterials = Array.isArray(materials) ? materials : []
 
     const totalApplications = safeApplications.length
     const approvedCount = safeApprovedApps.length
@@ -3997,7 +3975,7 @@ const transportAnalytics = useMemo(() => {
       totalApplications
 
     const avoidedPrintsCount = Math.max(
-      (totalApplications * 3) + activeParticipantsCount + (safeMaterials.length * 2),
+      (totalApplications * 3) + activeParticipantsCount,
       0
     )
     const paperSavedKg = Number((avoidedPrintsCount * 0.005).toFixed(1))
@@ -4081,7 +4059,6 @@ const transportAnalytics = useMemo(() => {
       localSuppliersCount > 0,
       safeCateringOffers.length > 0,
       safeBudgetItems.length > 0,
-      safeMaterials.length > 0,
       event?.eventpass_qr_visible === true || event?.eventpass_qr_visible === 'true'
     ].filter(Boolean).length
 
@@ -4414,7 +4391,6 @@ const transportAnalytics = useMemo(() => {
     cateringOffers,
     budgetItems,
     event,
-    materials
   ])
 
   const displayedEcoAnalysis = useMemo(() => {
@@ -11420,291 +11396,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 
 
-{/* ============================================================================ */}
-{/* PLAN PRZESTRZENI wieksza poprawka */}
-{/* ============================================================================ */}
-{activeTab === 'eko' && (
-  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
 
-    {/* HERO - GŁÓWNY PANEL AI (ZMNIEJSZONY) */}
-    <section className="relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-5 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-colors duration-200 border-slate-800 bg-gradient-to-br from-slate-950 via-[#0f172a] to-[#253a2a]">
-      <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#e8ce7a]/10 blur-3xl pointer-events-none" />
-      <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 max-w-3xl">
-        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8ce7a]/30 bg-black/40 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-[#e8ce7a] backdrop-blur-md">
-          <Sparkles size={12} className="animate-pulse" />
-          Silnik Analityczny AI
-        </span>
-        <h2 className="mt-3 text-2xl md:text-3xl font-black tracking-tight text-white leading-tight">
-          Centrum Zrównoważonego Eventu (GOZ)
-        </h2>
-        <p className="mt-2 text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
-          System na bieżąco analizuje logistykę, catering i materiały, wyliczając szacunkowy ślad środowiskowy oraz generując rekomendacje obniżające koszty i marnotrawstwo.
-        </p>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-start xl:items-end gap-3 shrink-0">
-        <div className="text-left xl:text-right bg-black/20 px-4 py-3 rounded-xl border border-white/10 backdrop-blur-sm w-full xl:w-auto flex justify-between xl:flex-col gap-2">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status Analizy</p>
-          <p className="text-sm font-black text-emerald-400 flex items-center gap-1.5"><CheckCircle2 size={14}/> Aktywna</p>
-        </div>
-        <button
-          type="button"
-          onClick={runEcoAiAnalysis}
-          disabled={ecoAiLoading}
-          className="w-full xl:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#e8ce7a] px-5 py-3 text-[11px] font-black uppercase tracking-wider text-[#0f172a] shadow-lg transition-all hover:bg-[#d8bd65] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          <RefreshCw size={14} className={ecoAiLoading ? 'animate-spin' : ''} />
-          {ecoAiLoading ? 'Przeliczanie...' : 'Wymuś analizę'}
-        </button>
-      </div>
-    </section>
-
-    {/* METRYKI GŁÓWNE */}
-    <section className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
-      {[
-        { label: 'Wynik GOZ', value: `${displayedEcoAnalysis.circularityScore}%`, icon: Leaf, isGood: displayedEcoAnalysis.circularityScore >= 60 },
-        { label: 'Uniknięte wydruki', value: displayedEcoAnalysis.avoidedPrintsCount.toLocaleString('pl-PL'), icon: FileText, isGood: true },
-        { label: 'Oszczędzony papier', value: `${displayedEcoAnalysis.paperSavedKg.toFixed(1)} kg`, icon: Recycle, isGood: true },
-        { label: 'Ryzyko food waste', value: `${displayedEcoAnalysis.foodWastePortionsRisk} porcji`, icon: UtensilsCrossed, isGood: displayedEcoAnalysis.foodWastePortionsRisk < 5 },
-        { label: 'Nadwyżka gadżetów', value: `${displayedEcoAnalysis.gadgetOverstockCount} szt.`, icon: Gift, isGood: displayedEcoAnalysis.gadgetOverstockCount < 10 },
-        { label: 'Oszczędności', value: `${displayedEcoAnalysis.estimatedCostSavings.toLocaleString('pl-PL')} zł`, icon: Wallet, isGood: true }
-      ].map((item: any) => (
-        <div
-          key={item.label}
-          className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}
-        >
-          <div className="absolute -right-3 -bottom-3 opacity-[0.05] pointer-events-none">
-            <item.icon size={70} className={isDarkMode ? 'text-white' : 'text-slate-900'} />
-          </div>
-
-          <div className="relative z-10">
-            <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              {item.label}
-            </p>
-            <p className={`mt-2 text-xl md:text-2xl font-black tabular-nums tracking-tight truncate ${item.isGood ? 'text-emerald-500' : 'text-amber-500'}`}>
-              {item.value}
-            </p>
-          </div>
-        </div>
-      ))}
-    </section>
-
-    {/* ŚLAD WĘGLOWY I ŹRÓDŁA */}
-    <section className="grid grid-cols-1 xl:grid-cols-5 gap-4 md:gap-6">
-      {/* Ślad węglowy LIVE */}
-      <div className={`xl:col-span-2 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm overflow-hidden flex flex-col justify-between ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Globe size={16} className="text-emerald-500" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Ślad Węglowy LIVE</p>
-          </div>
-          <h3 className={`text-3xl md:text-4xl font-black mt-2 tracking-tight truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            {displayedEcoAnalysis.totalCo2Saved.toFixed(1)} <span className="text-xl md:text-2xl text-slate-400">kg CO2</span>
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mt-6">
-          <div className={`rounded-2xl border p-3 text-center ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-            <p className="text-2xl md:text-3xl font-black text-emerald-500">{displayedEcoAnalysis.treesEquivalent}</p>
-            <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Uratowanych drzew</p>
-          </div>
-          <div className={`rounded-2xl border p-3 text-center ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-            <p className={`text-2xl md:text-3xl font-black tabular-nums ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{displayedEcoAnalysis.kmEquivalent}</p>
-            <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>KM jazdy autem</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Źródła wyliczeń */}
-      <div className={`xl:col-span-3 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-        <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Z czego wynika oszczędność?
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[180px] md:max-h-[220px] overflow-y-auto custom-scrollbar pr-2">
-          {displayedEcoAnalysis.sources.map((source: any, index: number) => {
-            const sourceIcons = [Globe, Truck, Recycle, UtensilsCrossed, Gift, FileText, Recycle, AlertTriangle, Wallet, Leaf]
-            const SourceIcon = sourceIcons[index] || Leaf
-
-            return (
-              <div key={source.label} className={`flex items-center gap-3 rounded-2xl border p-3 transition-colors hover:shadow-sm ${isDarkMode ? 'bg-[#1e293b] border-slate-700/50 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white shadow-sm text-slate-600'}`}>
-                  <SourceIcon size={16} />
-                </div>
-                <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className={`text-[10px] md:text-xs font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{source.label}</p>
-                    <p className={`text-[9px] font-medium truncate mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{source.detail}</p>
-                  </div>
-                  <p className="text-sm font-black text-emerald-500 shrink-0">{source.value}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-
-    {/* REKOMENDACJE AI (Pełna szerokość w poziomie) */}
-    <section className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex items-center justify-between gap-4 mb-5">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 shrink-0">
-            <Sparkles size={12} /> Sugestie AI
-          </span>
-          <h3 className={`text-base md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Co poprawić przed eventem?</h3>
-        </div>
-      </div>
-
-      {displayedEcoAnalysis.recommendations.length === 0 ? (
-        <div className={`rounded-2xl border p-6 text-center ${isDarkMode ? 'bg-[#1e293b] border-emerald-900/30' : 'bg-emerald-50 border-emerald-200'}`}>
-          <BadgeCheck size={32} className="mx-auto text-emerald-500 mb-3" />
-          <p className="font-black text-emerald-600 dark:text-emerald-400">Brak krytycznych rekomendacji.</p>
-          <p className={`text-xs mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Aktualne dane wyglądają stabilnie. Uzupełniaj dane operacyjne na bieżąco.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {displayedEcoAnalysis.recommendations.map((item: any, i: number) => (
-            <div key={i} className={`rounded-2xl border p-4 md:p-5 flex flex-col justify-between transition-colors ${isDarkMode ? 'bg-[#1e293b] border-slate-700/50 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white border shadow-sm text-slate-600'}`}>
-                    {item.area || 'Logistyka'}
-                  </span>
-                  <span className={`rounded-lg px-2 py-0.5 text-[8px] font-black uppercase tracking-wider ${
-                    item.impact === 'wysoki'
-                      ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                  }`}>
-                    Priorytet: {item.impact}
-                  </span>
-                </div>
-                <h4 className={`font-black text-sm leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h4>
-                <p className={`text-[10px] md:text-xs mt-2 font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/50">
-                <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
-                  <ArrowRightLeft size={10} /> {item.actionLabel}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-
-    {/* MODEL ReSOLVE (Pełna szerokość pozioma) */}
-    <section className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zgodność z modelem gospodarki (GOZ)</p>
-          <h3 className={`text-lg md:text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Model ReSOLVE
-          </h3>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Łączny wynik:</span>
-          <span className={`rounded-xl px-4 py-2 text-sm font-black tabular-nums border ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-            {displayedEcoAnalysis.circularityScore}%
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-        {[
-          ['Virtualize', displayedEcoAnalysis.resolveScore.virtualize],
-          ['Optimize / Share', displayedEcoAnalysis.resolveScore.optimizeShare],
-          ['Loop', displayedEcoAnalysis.resolveScore.loop],
-          ['Exchange', displayedEcoAnalysis.resolveScore.exchange],
-          ['Regenerate', displayedEcoAnalysis.resolveScore.regenerate]
-        ].map(([label, value]: any) => (
-          <div key={label} className={`rounded-2xl border p-4 text-center flex flex-col justify-between ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-            <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</p>
-            <div className="mt-4">
-              <p className={`text-2xl md:text-3xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{value}%</p>
-              <div className={`mt-3 h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}>
-                <div className="h-full rounded-full bg-blue-500 transition-all duration-1000" style={{ width: `${Math.min(Number(value || 0), 100)}%` }} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    {/* Dwie Kolumny: ANALIZA OBSZARÓW + SCENARIUSZE */}
-    <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-      {/* Analiza Obszarów */}
-      <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className="mb-5">
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Analiza Obszarów</p>
-          <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>GOZ według modułów</h3>
-        </div>
-
-        <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[350px]">
-          {displayedEcoAnalysis.areas.map((area: any, i: number) => {
-            const isGood = area.status === 'dobrze' || area.status === 'mocny wynik';
-            return (
-              <div key={i} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-[#1e293b] border-slate-700/50' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className={`text-sm font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{area.name}</p>
-                    <p className={`text-[9px] font-black uppercase tracking-widest mt-0.5 ${isGood ? 'text-emerald-500' : 'text-amber-500'}`}>
-                      {area.status}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-black tabular-nums border ${isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700' : 'bg-white text-slate-700 border-slate-200 shadow-sm'}`}>
-                    {area.value}
-                  </span>
-                </div>
-                <p className={`text-[10px] md:text-xs font-medium mt-2 leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{area.description}</p>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Scenariusze */}
-      <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-        <div className="mb-5">
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Symulacja Kosztowa</p>
-          <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Obecny vs Zoptymalizowany</h3>
-        </div>
-
-        <div className="space-y-4 flex-1">
-          {[displayedEcoAnalysis.scenarios.current, displayedEcoAnalysis.scenarios.optimized].map((scenario: any, index: number) => {
-            const isOpt = index === 1;
-            return (
-              <div key={scenario.label} className={`rounded-2xl border p-4 md:p-5 ${isOpt ? (isDarkMode ? 'bg-blue-900/10 border-blue-800/50' : 'bg-blue-50/50 border-blue-200') : (isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
-                <div className="flex justify-between items-center mb-4">
-                  <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${isOpt ? 'text-blue-500' : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`}>{scenario.label}</p>
-                  <p className={`text-lg md:text-xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{scenario.co2.toFixed(1)} <span className="text-[10px] text-slate-500 font-bold uppercase">kg CO2</span></p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Wpływ na budżet</p>
-                    <p className={`text-sm font-black mt-1 ${isOpt ? 'text-emerald-500' : 'text-amber-500'}`}>{scenario.cost}</p>
-                  </div>
-                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Ryzyko strat</p>
-                    <p className={`text-sm font-black mt-1 ${isOpt ? 'text-emerald-500' : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>{scenario.waste}</p>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-
-    {/* Nota prawna / info */}
-    <div className={`rounded-2xl border p-4 text-[9px] md:text-[10px] font-medium text-center uppercase tracking-widest ${isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-      Wyniki generowane przez moduł AI Eco Engine mają charakter szacunkowy. Nie zastępują pełnego certyfikowanego audytu środowiskowego, ale stanowią podstawę do raportowania ESG.
-    </div>
-
-  </div>
-)}
 {/* ============================================================================ */}
 {/* pass QR */}
 {/* ============================================================================ */}
@@ -12702,70 +12394,3 @@ const PlaceholderView = ({ icon: Icon, title, desc }: { icon: any, title: string
   </div>
 )
 
-const SavingsItem = ({ icon, title, value, description }: { icon: React.ReactNode, title: string, value: string, description: string }) => (
-  <div className="flex items-start gap-2 md:gap-3 bg-white rounded-xl p-2 md:p-3 border border-emerald-200 shadow-sm">
-    <div className="p-1.5 md:p-2 bg-emerald-100 rounded-lg text-emerald-800 shrink-0">{icon}</div>
-    <div className="flex-1 min-w-0"><p className="text-xs md:text-sm font-bold text-slate-900">{title}</p><p className="text-[9px] md:text-xs text-slate-600 font-medium">{description}</p></div>
-    <p className="text-xs md:text-sm font-black text-emerald-700 shrink-0">{value}</p>
-  </div>
-)
-
-const LiveCarbonFootprint = ({ event, applications }: { event: any, applications: any[] }) => {
-  const approvedGuests = applications.filter(a => a.status === 'approved')
-  const confirmedGuests = approvedGuests.filter(a => a.rsvp_status === 'potwierdzone')
-  const EMISSIONS = { paperInvitation: 0.15, printedBanner: 8.0, carPerKm: 0.2, meal: 2.5, singleUsePlastic: 0.1 }
-  const paperSaved = approvedGuests.length * EMISSIONS.paperInvitation
-  const postersSaved = (event?.use_print_materials ? 4 : 0) * EMISSIONS.printedBanner
-  const carTransportSaved = confirmedGuests.filter(g => g.transport === 'car').length * 15 * EMISSIONS.carPerKm * 0.3
-  const mealWasteSaved = (approvedGuests.length - confirmedGuests.length) * EMISSIONS.meal * 0.7
-  const plasticSaved = approvedGuests.length * EMISSIONS.singleUsePlastic
-  const totalSaved = paperSaved + postersSaved + carTransportSaved + mealWasteSaved + plasticSaved
-  return (
-    <div className="bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-300 rounded-[24px] md:rounded-[32px] p-4 md:p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-4"><div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-md"><Leaf size={20} className="text-white" /></div><div><h3 className="font-black text-emerald-950 text-sm md:text-lg">Ślad Węglowy LIVE</h3><p className="text-[10px] md:text-xs font-bold text-emerald-700">Kalkulator CO2</p></div></div>
-      <div className="bg-white rounded-2xl p-3 md:p-5 mb-3 border border-emerald-200 text-center shadow-sm"><p className="text-[10px] text-slate-600 font-black mb-1 uppercase tracking-widest">Oszczędność CO2</p><p className="text-2xl md:text-3xl font-black text-emerald-700">{totalSaved.toFixed(1)} kg</p><div className="grid grid-cols-2 gap-2 mt-3"><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved * 0.06)}</p><p className="text-[9px] font-bold text-emerald-700 uppercase">drzew</p></div><div className="bg-emerald-50 rounded-xl p-2 border border-emerald-100"><p className="text-lg font-black text-emerald-800">{Math.round(totalSaved / 0.2)} km</p><p className="text-[9px] font-bold text-emerald-700 uppercase">jazdy</p></div></div></div>
-      <div className="space-y-2"><SavingsItem icon={<Globe size={12} />} title="Cyfrowe zaproszenia" value={`${paperSaved.toFixed(1)} kg`} description={`${approvedGuests.length} szt.`} /><SavingsItem icon={<Truck size={12} />} title="Transport" value={`${carTransportSaved.toFixed(1)} kg`} description="Carpooling" /><SavingsItem icon={<Recycle size={12} />} title="Plastik" value={`${plasticSaved.toFixed(1)} kg`} description="Eliminacja" /></div>
-    </div>
-  )
-}
-
-const EcoCertificate = ({ event, metrics }: { event: any, metrics: any }) => {
-  const certificateId = `GOZ-${event?.id || 'event'}-${Date.now()}`
-  const qrValue = `${typeof window !== 'undefined' ? window.location.origin : ''}/verify-cert/${certificateId}`
-  return (
-    <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4"><h3 className="font-black text-slate-900 flex items-center gap-2 text-sm md:text-base"><Award size={18} className="text-[#253a2a]"/> Certyfikat Eko ANM</h3><button className="px-3 py-1.5 bg-[#253a2a] text-[#e8ce7a] rounded-xl text-[10px] font-black uppercase transition-colors hover:bg-[#1a291e]">PDF</button></div>
-      <div className="bg-gradient-to-br from-slate-100 to-emerald-50 rounded-2xl p-4 border border-emerald-200 text-center shadow-inner"><Leaf size={28} className="text-[#253a2a] mx-auto mb-3" /><h4 className="font-black text-slate-900 mb-2 text-sm uppercase">Wydarzenie Przyjazne Środowisku</h4><div className="grid grid-cols-2 gap-2 mb-3"><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.totalCO2Saved} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">CO2</p></div><div className="bg-white rounded-xl p-2 border border-slate-200 shadow-sm"><p className="text-base font-black text-emerald-700">{metrics.foodWastePrevented} kg</p><p className="text-[9px] font-bold text-slate-500 uppercase">Jedzenie</p></div></div><div className="bg-white rounded-xl p-2 inline-block border border-slate-200 shadow-sm"><QRCode value={qrValue} size={60} level="M" /></div><p className="text-[9px] font-mono font-bold text-slate-500 mt-3 bg-slate-100 inline-block px-2 py-1 rounded">ID: {certificateId}</p></div>
-    </div>
-  )
-}
-
-const CircularSuppliersPanel = () => {
-  const [suppliers, setSuppliers] = useState([
-    { id: 1, name: "Eko Catering Zielony", category: "Catering", score: 85, practices: ["Lokalne", "BIO", "Zero waste"], co2Reduction: 45, price: "średnia", selected: false },
-    { id: 2, name: "Green Transport", category: "Transport", score: 92, practices: ["Elektryki", "Carpooling"], co2Reduction: 78, price: "wyższa", selected: false },
-    { id: 3, name: "Bio Dekoracje", category: "Dekoracje", score: 78, practices: ["Recykling", "Sezonowe"], co2Reduction: 60, price: "niższa", selected: false }
-  ])
-  const toggleSupplier = (id: number) => setSuppliers(suppliers.map(s => s.id === id ? { ...s, selected: !s.selected } : s))
-  const selectedCount = suppliers.filter(s => s.selected).length
-  return (
-    <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm p-4 md:p-6">
-      <div className="flex justify-between items-center mb-4"><h3 className="font-black text-slate-900 text-sm md:text-base flex items-center gap-2"><Recycle size={18} className="text-[#253a2a]"/> Dostawcy Cyrkularni</h3>{selectedCount > 0 && <span className="text-[10px] bg-[#253a2a] text-[#e8ce7a] px-2 py-1 rounded-lg font-black shadow-sm">Wybrano {selectedCount}</span>}</div>
-      <div className="space-y-3">{suppliers.map(s => (<div key={s.id} onClick={() => toggleSupplier(s.id)} className={`border-2 rounded-2xl p-3 cursor-pointer transition-all ${s.selected ? 'border-[#253a2a] bg-emerald-50/50' : 'border-slate-200 hover:border-[#253a2a]'}`}><div className="flex justify-between items-center"><div><h4 className="font-black text-slate-900 text-sm">{s.name}</h4><p className="text-[10px] font-bold text-slate-600 mt-0.5">{s.category} / {s.price}</p></div><div className="flex items-center gap-2"><span className="text-xs font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">GOZ {s.score}%</span><div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${s.selected ? 'bg-[#253a2a] border-[#253a2a]' : 'border-slate-300 bg-white'}`}>{s.selected && <CheckCircle2 size={12} className="text-white" />}</div></div></div><div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-slate-100/50">{s.practices.map((p, i) => <span key={i} className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-black text-slate-700 border border-slate-200 shadow-sm">{p}</span>)}</div></div>))}</div>
-    </div>
-  )
-}
-
-
-
-const TransportOptimizer = ({ applications }: { applications: Guest[] }) => {
-  const confirmed = applications.filter(a => a.rsvp_status === 'potwierdzone')
-  const needTransport = confirmed.filter(a => a.transport && a.transport !== 'Własny dojazd' && a.transport_address)
-  const totalNeedTransport = needTransport.length
-  return (
-    <div className="bg-white rounded-[32px] border border-slate-300 shadow-sm p-6">
-      <h3 className="font-black text-slate-900 text-lg mb-4 flex items-center gap-2"><Car size={20} className="text-[#253a2a]"/> Optymalizator Logistyczny</h3>
-      <div className="grid grid-cols-2 gap-3 mb-4"><div className="bg-slate-50 border border-slate-200 shadow-sm rounded-2xl p-4 text-center"><p className="text-[11px] font-black uppercase text-slate-600 tracking-wider">Wymaga transportu</p><p className="text-3xl font-black text-slate-900 mt-1">{totalNeedTransport}</p></div><div className="bg-emerald-50 border border-emerald-200 shadow-sm rounded-2xl p-4 text-center"><p className="text-[11px] font-black uppercase text-emerald-800 tracking-wider">Sugerowane Grupy</p><p className="text-3xl font-black text-emerald-700 mt-1">{Math.round(totalNeedTransport * 0.7)}</p></div></div>
-    </div>
-  )
-}
