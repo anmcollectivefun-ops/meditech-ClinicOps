@@ -529,6 +529,11 @@ const [patients, setPatients] = useState<any[]>([])
 const [patientSearch, setPatientSearch] = useState('')
 const [isStaffAccessModalOpen, setIsStaffAccessModalOpen] = useState(false)
 const [staffAccessForm, setStaffAccessForm] = useState<any>({})
+const [patients, setPatients] = useState<any[]>([])
+const [patientSearch, setPatientSearch] = useState('')
+const [patientQrFilter, setPatientQrFilter] = useState('all')
+const [expandedPatientIds, setExpandedPatientIds] = useState<Record<string, boolean>>({})
+const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
@@ -1094,6 +1099,53 @@ const createPatientQrUnit = async (patient: any) => {
   const qrToken = patient.qr_token || crypto.randomUUID()
 
   if (!patient.qr_token) {
+    const { error: patientUpdateError } = await supabase
+      .from('patients')
+      .update({ qr_token: qrToken })
+      .eq('id', patient.id)
+
+    if (patientUpdateError) {
+      showNotification('Nie udało się zapisać tokenu pacjenta: ' + patientUpdateError.message, 'error')
+      return
+    }
+  }
+
+  const { error } = await supabase.from('event_attendee_units').insert([{
+    event_id: id,
+    patient_id: patient.id,
+    application_id: null,
+    unit_type: 'patient',
+    display_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || patient.email || 'Pacjent',
+    first_name: patient.first_name || null,
+    last_name: patient.last_name || null,
+    email: patient.email || null,
+    phone: patient.phone || null,
+    age_group: 'adult',
+    qr_token: qrToken,
+    qr_status: 'active',
+    access_status: 'active',
+    checked_in: false,
+    same_as_main: false,
+    source_data: {
+      pesel: patient.pesel || null
+    }
+  }])
+
+  if (error) {
+    showNotification('Nie udało się wygenerować QR pacjenta: ' + error.message, 'error')
+    return
+  }
+
+  await loadPatients()
+  await loadEventPassData()
+  showNotification('QR pacjenta wygenerowany', 'success')
+}
+
+ 
+
+  const qrToken = patient.qr_token || crypto.randomUUID()
+
+  if (!patient.qr_token) {
     await supabase
       .from('patients')
       .update({ qr_token: qrToken })
@@ -1156,7 +1208,7 @@ const createPatientQrUnit = async (patient: any) => {
     showNotification(`Wygenerowano ${rows.length} jednostek QR`, 'success')
   }
 
-  const insertEventPassScan = async (unit: any, scanType: string) => {
+const insertEventPassScan = async (unit: any, scanType: string) => {
   const { error } = await supabase.from('event_pass_scans').insert([{
     event_id: id,
     application_id: unit.application_id || null,
@@ -1689,7 +1741,53 @@ const allTags = useMemo(() => {
   contractors.forEach(c => c.tags?.forEach((t: string) => tagsSet.add(t)));
   return Array.from(tagsSet).sort();
 }, [contractors]);
+const patientUnitsByPatientId = useMemo(() => {
+  return attendeeUnits.reduce((acc: Record<string, any>, unit: any) => {
+    if (!unit.patient_id) return acc
+    acc[unit.patient_id] = unit
+    return acc
+  }, {})
+}, [attendeeUnits])
 
+const patientQrRows = useMemo(() => {
+  return patients.map((patient: any) => ({
+    patient,
+    unit: patientUnitsByPatientId[patient.id] || null
+  }))
+}, [patients, patientUnitsByPatientId])
+
+const filteredPatientRows = useMemo(() => {
+  const search = patientSearch.toLowerCase()
+
+  return patientQrRows.filter(({ patient, unit }: any) => {
+    const matchesSearch =
+      !search ||
+      `${patient.first_name || ''} ${patient.last_name || ''}`.toLowerCase().includes(search) ||
+      String(patient.email || '').toLowerCase().includes(search) ||
+      String(patient.phone || '').toLowerCase().includes(search) ||
+      String(patient.pesel || '').toLowerCase().includes(search) ||
+      String(patient.qr_token || '').toLowerCase().includes(search) ||
+      String(unit?.qr_token || '').toLowerCase().includes(search)
+
+    const matchesFilter =
+      patientQrFilter === 'all' ||
+      (patientQrFilter === 'no_qr' && !unit) ||
+      (patientQrFilter === 'qr' && !!unit) ||
+      (patientQrFilter === 'checked_in' && unit?.checked_in) ||
+      (patientQrFilter === 'id_issued' && unit?.wristband_issued) ||
+      (patientQrFilter === 'closed' && unit?.wristband_returned)
+
+    return matchesSearch && matchesFilter
+  })
+}, [patientQrRows, patientSearch, patientQrFilter])
+
+const patientQrMetrics = useMemo(() => ({
+  totalPatients: patients.length,
+  qrGenerated: patientQrRows.filter((row: any) => row.unit?.qr_token).length,
+  checkedIn: patientQrRows.filter((row: any) => row.unit?.checked_in).length,
+  idsIssued: patientQrRows.filter((row: any) => row.unit?.wristband_issued).length,
+  visitsClosed: patientQrRows.filter((row: any) => row.unit?.wristband_returned).length,
+}), [patients.length, patientQrRows])
 // ============================================================================
 // ----- 4.3. HANDLERY DLA STOŁÓW I DRAG & DROP -----
 // ============================================================================
@@ -3102,7 +3200,7 @@ const { data: checklistItemData } = await supabase
 setChecklistItems(checklistItemData || [])
 await loadBudgetData()
 await loadEventPassData()
-
+await loadPatients()
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
 
@@ -8881,8 +8979,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
 
-{/* ============================================================================ */}
-{/* SEKCJA: TRANSPORT INTELLIGENCE HUB */}
+
 {/* ============================================================================ */}
 {/* checklista */}
 {/* ============================================================================ */}
@@ -11558,58 +11655,61 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   </div>
 )}
-
 {/* ============================================================================ */}
-{/* event pass / QR */}
+{/* pass QR */}
 {/* ============================================================================ */}
 {activeTab === 'eventpass' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-    
-    {/* NAGŁÓWEK SEKCJI */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-5 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <QrCode size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          <QrCode size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
           Identyfikacja pacjenta i check-in QR
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           Zarządzaj kodami QR pacjentów, check-inem wizyty oraz uprawnieniami recepcji, lekarzy i opiekunów.
         </p>
       </div>
-      
+
       <div className="flex flex-wrap gap-2 shrink-0">
         <HelpButton sectionKey="eventpass" />
-        <button 
-          onClick={loadEventPassData} 
+
+        <button
+          onClick={() => {
+            loadPatients()
+            loadEventPassData()
+          }}
           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
           <RefreshCw size={14} /> Odśwież
         </button>
-        <button 
-          onClick={() => { setStaffAccessForm({ role: 'reception', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
+
+        <button
+          onClick={() => {
+            setStaffAccessForm({
+              role: 'reception',
+              is_active: true,
+              can_entry_checkin: true
+            })
+            setIsStaffAccessModalOpen(true)
+          }}
           className={`px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}`}
         >
           <ShieldCheck size={14} /> Role personelu
         </button>
-        <button 
-          onClick={handleGenerateUnitsForAllApplications} 
-          className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-        >
-          <QrCode size={14} /> Generuj braki QR
-        </button>
       </div>
     </div>
 
-    {/* METRYKI BAZOWE */}
-    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 md:gap-4">
+    {/* METRYKI */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
       {[
-        ['Leady pacjentów', eventPassMetrics.activeApplications, Users],
-        ['Pacjenci łącznie', eventPassMetrics.units, UserRoundPlus],
-        ['Wygenerowane QR', eventPassMetrics.qrGenerated, QrCode],
-        ['Check-in wizyt', eventPassMetrics.checkedIn, ScanLine],
-        ['Karty wydane', eventPassMetrics.wristbandsIssued, BadgeCheck],
-        ['Karty zwrócone', eventPassMetrics.wristbandsReturned, CheckCircle2],
-        ['Role personelu', eventPassMetrics.staffAccess, ShieldCheck],
+        ['Pacjenci w bazie', patientQrMetrics.totalPatients, Users],
+        ['QR wygenerowane', patientQrMetrics.qrGenerated, QrCode],
+        ['Check-in wizyt', patientQrMetrics.checkedIn, ScanLine],
+        ['Identyfikatory wydane', patientQrMetrics.idsIssued, BadgeCheck],
+        ['Wizyty zamknięte', patientQrMetrics.visitsClosed, CheckCircle2],
+        ['Role personelu', staffAccessList.length, ShieldCheck],
       ].map(([label, value, Icon]: any) => (
         <div key={label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[100px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
@@ -11630,30 +11730,31 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       ))}
     </div>
 
-    {/* RAPORT OPERACYJNY (SKANY) */}
+    {/* RAPORT */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className="mb-6">
         <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <BarChart3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+          <BarChart3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
           Raport check-in LIVE
         </h4>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-          Realne skany QR, potwierdzone wizyty, wydane dokumenty i działania personelu na bazie identyfikacji pacjenta.
+          Statusy pacjentów na podstawie QR, check-inu i działań personelu.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Check-in wizyt', value: eventPassOperationalReport.checkedIn, total: eventPassOperationalReport.totalUnits, color: 'bg-emerald-500' },
-          { label: 'Identyfikatory wydane', value: eventPassOperationalReport.wristbandsIssued, total: eventPassOperationalReport.totalUnits, color: 'bg-blue-500' },
-          { label: 'Wizyty zamknięte', value: eventPassOperationalReport.wristbandsReturned, total: eventPassOperationalReport.wristbandsIssued, color: 'bg-slate-500' },
-          { label: 'Dokumenty wydane', value: eventPassOperationalReport.mealsRedeemed, total: eventPassOperationalReport.mealChoices, color: 'bg-amber-500' },
-          { label: 'Pakiety pacjenta', value: eventPassOperationalReport.gadgetsRedeemed, total: eventPassOperationalReport.gadgetChoices, color: 'bg-purple-500' }
+          { label: 'QR aktywne', value: patientQrMetrics.qrGenerated, total: patientQrMetrics.totalPatients, color: 'bg-blue-500' },
+          { label: 'Check-in', value: patientQrMetrics.checkedIn, total: patientQrMetrics.qrGenerated, color: 'bg-emerald-500' },
+          { label: 'ID wydane', value: patientQrMetrics.idsIssued, total: patientQrMetrics.qrGenerated, color: 'bg-indigo-500' },
+          { label: 'Zamknięte wizyty', value: patientQrMetrics.visitsClosed, total: patientQrMetrics.idsIssued, color: 'bg-slate-500' },
         ].map(({ label, value, total, color }: any) => {
           const percent = Number(total || 0) > 0 ? Math.min(Math.round((Number(value || 0) / Number(total || 1)) * 100), 100) : 0
           return (
             <div key={label} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-              <p className={`text-[9px] font-black uppercase tracking-widest leading-tight mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{label}</p>
+              <p className={`text-[9px] font-black uppercase tracking-widest leading-tight mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                {label}
+              </p>
               <p className={`text-xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {value} <span className={`text-[10px] font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>/ {total || 0}</span>
               </p>
@@ -11664,225 +11765,199 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           )
         })}
       </div>
-      
-      {/* Dodatkowe staty tekstowe (Transport) */}
-      <div className={`mt-5 pt-5 border-t flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
-        <p>Pacjentów w QR: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.totalUnits}</span></p>
-        <p>Potrzeby opieki/dojazdu: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportChoices}</span></p>
-        <p>Koordynacje ścieżki: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{eventPassOperationalReport.transportCheckins}</span></p>
+    </div>
+
+    {/* LISTA PACJENTÓW */}
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+      <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+          <input
+            className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all border ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+            placeholder="Szukaj pacjenta po imieniu, nazwisku, PESEL, mailu, telefonie lub tokenie QR..."
+            value={patientSearch}
+            onChange={e => setPatientSearch(e.target.value)}
+          />
+        </div>
+
+        <select
+          className={`border rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-wider outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-white border-slate-300 text-slate-700 focus:border-slate-900'}`}
+          value={patientQrFilter}
+          onChange={e => setPatientQrFilter(e.target.value)}
+        >
+          <option value="all">Wszyscy pacjenci</option>
+          <option value="no_qr">Bez QR</option>
+          <option value="qr">Z QR</option>
+          <option value="checked_in">Po check-in</option>
+          <option value="id_issued">Z wydanym ID</option>
+          <option value="closed">Zamknięte wizyty</option>
+        </select>
       </div>
-    </div>
 
-    {/* LISTA PACJENTÓW I KODÓW QR */}
-<div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+      <div className="space-y-4 p-4 md:p-5">
+        {filteredPatientRows.length === 0 ? (
+          <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+            Brak pacjentów pasujących do filtrów.
+          </div>
+        ) : filteredPatientRows.map(({ patient, unit }: any) => {
+          const isExpanded = expandedPatientIds[patient.id] === true
 
-  <div className={`p-5 border-b flex flex-col md:flex-row gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-    <div className="relative flex-1 min-w-[200px]">
-      <Search size={14} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-      <input
-        className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all border ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-        placeholder="Szukaj pacjenta po imieniu, nazwisku, PESEL, mailu lub telefonie..."
-        value={patientSearch}
-        onChange={e => setPatientSearch(e.target.value)}
-      />
-    </div>
+          return (
+            <div key={patient.id} className={`rounded-2xl border transition-all ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+              <div className="p-4 md:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h4 className={`font-black text-base md:text-lg truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {`${patient.first_name || ''} ${patient.last_name || ''}`.trim() || patient.email || 'Pacjent'}
+                    </h4>
 
-    <button
-      onClick={() => {
-        loadPatients()
-        loadEventPassData()
-      }}
-      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-    >
-      <RefreshCw size={14} /> Odśwież pacjentów
-    </button>
-  </div>
-
-  <div className="space-y-4 p-4 md:p-5">
-    {patients
-      .filter((patient: any) => {
-        const search = patientSearch.toLowerCase()
-        if (!search) return true
-
-        return (
-          `${patient.first_name || ''} ${patient.last_name || ''}`.toLowerCase().includes(search) ||
-          String(patient.email || '').toLowerCase().includes(search) ||
-          String(patient.phone || '').toLowerCase().includes(search) ||
-          String(patient.pesel || '').toLowerCase().includes(search) ||
-          String(patient.qr_token || '').toLowerCase().includes(search)
-        )
-      })
-      .map((patient: any) => {
-        const unit = attendeeUnits.find((u: any) => u.patient_id === patient.id)
-        const isExpanded = expandedApplicationIds[patient.id] === true
-
-        return (
-          <div key={patient.id} className={`rounded-2xl border transition-all ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-
-            <div className="p-4 md:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-5">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h4 className={`font-black text-base md:text-lg truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                    {patient.first_name} {patient.last_name}
-                  </h4>
-
-                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
-                    unit
-                      ? isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}>
-                    {unit ? 'QR aktywny' : 'Brak QR'}
-                  </span>
-
-                  {unit?.checked_in && (
-                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                      Check-in wykonany
+                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+                      unit
+                        ? isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}>
+                      {unit ? 'QR aktywny' : 'Brak QR'}
                     </span>
-                  )}
+
+                    {unit?.checked_in && (
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                        Check-in wykonany
+                      </span>
+                    )}
+
+                    {unit?.wristband_returned && (
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                        Wizyta zamknięta
+                      </span>
+                    )}
+                  </div>
+
+                  <p className={`text-xs font-medium truncate mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {patient.email || 'brak email'} <span className="opacity-50 mx-1">|</span>
+                    {patient.phone || 'brak tel.'} <span className="opacity-50 mx-1">|</span>
+                    PESEL: {patient.pesel || 'brak'}
+                  </p>
                 </div>
 
-                <p className={`text-xs font-medium truncate mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {patient.email || 'brak email'} <span className="opacity-50 mx-1">|</span>
-                  {patient.phone || 'brak tel.'} <span className="opacity-50 mx-1">|</span>
-                  PESEL: {patient.pesel || 'brak'}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                  <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>QR</p>
-                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.qr_token ? 'TAK' : 'NIE'}</p>
-                </div>
-
-                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${unit?.checked_in ? (isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700') : (isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
-                  <p className={`text-[8px] font-black uppercase tracking-widest ${!unit?.checked_in ? (isDarkMode ? 'text-slate-500' : 'text-slate-500') : ''}`}>Check-in</p>
-                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.checked_in ? 'TAK' : 'NIE'}</p>
-                </div>
-
-                <div className={`px-3 py-2 rounded-xl border text-center min-w-[80px] ${unit?.wristband_issued ? (isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700') : (isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200')}`}>
-                  <p className={`text-[8px] font-black uppercase tracking-widest ${!unit?.wristband_issued ? (isDarkMode ? 'text-slate-500' : 'text-slate-500') : ''}`}>ID</p>
-                  <p className="font-black text-sm tabular-nums mt-0.5">{unit?.wristband_issued ? 'TAK' : 'NIE'}</p>
-                </div>
-              </div>
-
-              <div className="shrink-0 flex items-center justify-end gap-2 w-full xl:w-auto">
-                {!unit ? (
-                  <button
-                    onClick={() => createPatientQrUnit(patient)}
-                    className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-sm ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                  >
-                    <QrCode size={14} /> Generuj QR
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setSelectedApplicationForPass(patient)
-                        setSelectedAttendeeUnit(unit)
-                      }}
-                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-                    >
-                      <Eye size={14} /> Podgląd QR
-                    </button>
-
-                    <button
-                      onClick={() => toggleApplicationExpanded(patient.id)}
-                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-                    >
-                      Akcje <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {isExpanded && unit && (
-              <div className={`border-t p-4 md:p-5 ${isDarkMode ? 'border-slate-800 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-1.5 rounded-xl border shadow-sm bg-white ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-                      <QRCode value={unit.qr_token} size={64} />
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    ['QR', unit?.qr_token ? 'TAK' : 'NIE'],
+                    ['Check-in', unit?.checked_in ? 'TAK' : 'NIE'],
+                    ['ID', unit?.wristband_issued ? 'TAK' : 'NIE'],
+                  ].map(([label, value]: any) => (
+                    <div key={label} className={`px-3 py-2 rounded-xl border text-center min-w-[76px] ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                      <p className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{label}</p>
+                      <p className="font-black text-sm tabular-nums mt-0.5">{value}</p>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="min-w-0">
-                      <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                        {unit.display_name}
-                      </p>
-
-                      <p className={`text-[10px] font-mono mt-1 break-all ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                        {unit.qr_token}
-                      </p>
-
+                <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 w-full xl:w-auto">
+                  {!unit ? (
+                    <button
+                      onClick={() => createPatientQrUnit(patient)}
+                      className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 shadow-sm ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                    >
+                      <QrCode size={14} /> Generuj QR
+                    </button>
+                  ) : (
+                    <>
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(unit.qr_token)
-                          showNotification('Token QR skopiowany', 'success')
+                          setSelectedPatientForPass(patient)
+                          setSelectedAttendeeUnit(unit)
                         }}
-                        className={`mt-2 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+                        className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
                       >
-                        <Copy size={12} /> Kopiuj token
+                        <Eye size={14} /> Podgląd QR
+                      </button>
+
+                      <button
+                        onClick={() => setExpandedPatientIds(prev => ({ ...prev, [patient.id]: !prev[patient.id] }))}
+                        className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                      >
+                        Akcje <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {isExpanded && unit && (
+                <div className={`border-t p-4 md:p-5 ${isDarkMode ? 'border-slate-800 bg-slate-900/30' : 'border-slate-100 bg-slate-50/50'}`}>
+                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-1.5 rounded-xl border shadow-sm bg-white ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                        <QRCode value={unit.qr_token} size={64} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          {unit.display_name}
+                        </p>
+                        <p className={`text-[10px] font-mono mt-1 break-all ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                          {unit.qr_token}
+                        </p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(unit.qr_token)
+                            showNotification('Token QR skopiowany', 'success')
+                          }}
+                          className={`mt-2 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                          <Copy size={12} /> Kopiuj token
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0 w-full xl:w-auto">
+                      <button onClick={() => handleCheckInAttendeeUnit(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}>
+                        <ScanLine size={12}/> Check-in
+                      </button>
+
+                      <button onClick={() => handleIssueWristband(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'}`}>
+                        <BadgeCheck size={12}/> Wydaj ID
+                      </button>
+
+                      <button onClick={() => handleReturnWristband(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                        <CheckCircle2 size={12}/> Zamknij wizytę
+                      </button>
+
+                      <button onClick={() => handleResetUnitStatus(unit)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-red-900/20 border-red-800/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}`}>
+                        <XCircle size={12}/> Reset
                       </button>
                     </div>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 shrink-0 w-full xl:w-auto">
-                    <button
-                      onClick={() => handleCheckInAttendeeUnit(unit)}
-                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/40' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
-                    >
-                      <ScanLine size={12}/> Check-in
-                    </button>
-
-                    <button
-                      onClick={() => handleIssueWristband(unit)}
-                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'}`}
-                    >
-                      <BadgeCheck size={12}/> Wydaj ID
-                    </button>
-
-                    <button
-                      onClick={() => handleReturnWristband(unit)}
-                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                    >
-                      <CheckCircle2 size={12}/> Zamknij wizytę
-                    </button>
-
-                    <button
-                      onClick={() => handleResetUnitStatus(unit)}
-                      className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${isDarkMode ? 'bg-red-900/20 border-red-800/50 text-red-400 hover:bg-red-900/40' : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}`}
-                    >
-                      <XCircle size={12}/> Reset
-                    </button>
-                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-    {patients.length === 0 && (
-      <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-        Brak pacjentów w tabeli patients.
+              )}
+            </div>
+          )
+        })}
       </div>
-    )}
-  </div>
-</div>
-      
-    {/* ZARZĄDZANIE OBSŁUGĄ */}
+    </div>
+
+    {/* ROLE PERSONELU */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="min-w-0">
           <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> 
+            <ShieldCheck size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
             Role personelu i dostęp QR
           </h4>
           <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Twórz dedykowane, ograniczone linki dla recepcji, lekarza, managera i opiekuna pacjenta.
           </p>
         </div>
-        <button 
-          onClick={() => { setStaffAccessForm({ role: 'reception', is_active: true, can_entry_checkin: true }); setIsStaffAccessModalOpen(true) }} 
+
+        <button
+          onClick={() => {
+            setStaffAccessForm({
+              role: 'reception',
+              is_active: true,
+              can_entry_checkin: true
+            })
+            setIsStaffAccessModalOpen(true)
+          }}
           className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
           <Plus size={14}/> Dodaj rolę
@@ -11917,7 +11992,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   {staff.is_active !== false ? 'Aktywny' : 'Wyłączony'}
                 </span>
               </div>
-              
+
               <div className="mt-3">
                 <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Uprawnienia QR</p>
                 <p className={`text-[10px] font-bold leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{permissions || 'Brak uprawnień'}</p>
@@ -11932,17 +12007,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     </a>
                     <div className="mt-3 flex gap-2">
                       <button
-                        onClick={() => { navigator.clipboard.writeText(staffPassUrl); showNotification('Link dla obsługi skopiowany', 'success') }}
+                        onClick={() => {
+                          navigator.clipboard.writeText(staffPassUrl)
+                          showNotification('Link dla obsługi skopiowany', 'success')
+                        }}
                         className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
                       >
                         <Copy size={14}/> Kopiuj Link
                       </button>
-                      <a
-                        href={staffPassUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 border ${isDarkMode ? 'bg-[#e8ce7a]/10 border-[#e8ce7a]/30 text-[#e8ce7a] hover:bg-[#e8ce7a]/20' : 'bg-slate-900 border-slate-900 text-[#e8ce7a] hover:bg-black'}`}
-                      >
+                      <a href={staffPassUrl} target="_blank" rel="noopener noreferrer" className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 border ${isDarkMode ? 'bg-[#e8ce7a]/10 border-[#e8ce7a]/30 text-[#e8ce7a] hover:bg-[#e8ce7a]/20' : 'bg-slate-900 border-slate-900 text-[#e8ce7a] hover:bg-black'}`}>
                         <ExternalLink size={14}/> Otwórz
                       </a>
                     </div>
@@ -11957,9 +12030,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
     </div>
 
-    {/* ================= MODALE ================= */}
-    
-    {/* SZCZEGÓŁY QR GOŚCIA */}
+    {/* MODAL QR */}
     {selectedAttendeeUnit && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
         <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -11969,15 +12040,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 {selectedAttendeeUnit.display_name}
               </h3>
               <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Karta i kod QR uczestnika do wydruku lub wysyłki ręcznej.
+                Karta i kod QR pacjenta do wydruku lub wysyłki ręcznej.
               </p>
             </div>
             <button onClick={() => setSelectedAttendeeUnit(null)} className={`p-2 rounded-full transition-colors shrink-0 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
               <X size={20}/>
             </button>
           </div>
-          
-          {/* Wizytówka QR */}
+
           <div className={`p-6 rounded-[24px] border flex flex-col md:flex-row items-center gap-6 mb-6 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             {selectedAttendeeUnit.qr_token ? (
               <div className={`p-3 rounded-2xl border shadow-sm bg-white shrink-0 ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
@@ -11988,36 +12058,39 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 Brak QR
               </div>
             )}
-            
+
             <div className="w-full text-center md:text-left">
-              <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Kod Textowy (ID)</p>
+              <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Token QR</p>
               <p className={`font-mono text-xs p-3 rounded-xl border break-all select-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-blue-400' : 'bg-white border-slate-200 text-blue-600'}`}>
                 {selectedAttendeeUnit.qr_token || 'Brak'}
               </p>
-              
+
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
                 <button
-                  onClick={() => { navigator.clipboard.writeText(selectedAttendeeUnit.qr_token); showNotification('Token skopiowany', 'success') }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedAttendeeUnit.qr_token)
+                    showNotification('Token skopiowany', 'success')
+                  }}
                   className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-900 hover:bg-black text-white'}`}
                 >
-                  <Copy size={14} /> Kopiuj Kod
+                  <Copy size={14} /> Kopiuj kod
                 </button>
                 <button
                   onClick={() => window.print()}
                   className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 border ${isDarkMode ? 'bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                 >
-                  <Printer size={14} /> Drukuj Etykietę
+                  <Printer size={14} /> Drukuj
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-2 gap-3">
             {[
-              ['Typ wejściówki', selectedAttendeeUnit.unit_type],
-              ['Bilet', selectedAttendeeUnit.ticket_type],
-              ['ID Opaski', selectedAttendeeUnit.wristband_code || 'Brak'],
-              ['Status wejścia', selectedAttendeeUnit.checked_in ? 'Obecny' : 'Oczekujący'],
+              ['Typ', selectedAttendeeUnit.unit_type],
+              ['Pacjent ID', selectedAttendeeUnit.patient_id || 'Brak'],
+              ['ID identyfikatora', selectedAttendeeUnit.wristband_code || 'Brak'],
+              ['Status wizyty', selectedAttendeeUnit.checked_in ? 'Po check-in' : 'Oczekujący'],
             ].map(([label, value]) => (
               <div key={label} className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
                 <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{label}</p>
@@ -12025,51 +12098,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </div>
             ))}
           </div>
-
-          {(() => {
-            const details = getEventPassUnitDetails(selectedAttendeeUnit, selectedApplicationForPass)
-            return (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/30' : 'bg-emerald-50 border-emerald-200'}`}>
-                  <h4 className={`font-black flex items-center gap-2 text-sm ${isDarkMode ? 'text-emerald-400' : 'text-emerald-800'}`}><UtensilsCrossed size={16}/> Catering</h4>
-                  <p className={`text-xs mt-2 font-bold ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-700'}`}>Dieta: {selectedAttendeeUnit.diet || selectedApplicationForPass?.diet || 'Brak'}</p>
-                  <p className={`text-xs font-bold ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-700'}`}>Alergie: {selectedAttendeeUnit.allergies || selectedApplicationForPass?.allergies || 'Brak'}</p>
-                  <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-emerald-800/30' : 'border-emerald-200/50'}`}>
-                    <p className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-emerald-500' : 'text-emerald-800'}`}>Zarezerwowane Posiłki</p>
-                    {details.meals.length > 0 ? details.meals.map((meal: any) => (
-                      <p key={`${meal.attendee_unit_id || meal.application_id}-${meal.meal_id}`} className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>• {meal.label}</p>
-                    )) : <p className={`text-xs italic ${isDarkMode ? 'text-emerald-600/50' : 'text-emerald-700/60'}`}>Brak wyborów.</p>}
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-blue-900/10 border-blue-900/30' : 'bg-blue-50 border-blue-200'}`}>
-                  <h4 className={`font-black flex items-center gap-2 text-sm ${isDarkMode ? 'text-blue-400' : 'text-blue-800'}`}><Gift size={16}/> Gadżety</h4>
-                  <div className="mt-3 space-y-1.5">
-                    {details.gadgets.length > 0 ? details.gadgets.map((gadget: any) => (
-                      <p key={`${gadget.attendee_unit_id || gadget.application_id}-${gadget.gadget_id}`} className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>• {gadget.label} {gadget.selected_size ? `(${gadget.selected_size})` : ''}</p>
-                    )) : <p className={`text-xs italic ${isDarkMode ? 'text-blue-600/50' : 'text-blue-700/60'}`}>Brak wyborów.</p>}
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-purple-900/10 border-purple-900/30' : 'bg-purple-50 border-purple-200'}`}>
-                  <h4 className={`font-black flex items-center gap-2 text-sm ${isDarkMode ? 'text-purple-400' : 'text-purple-800'}`}><Clock size={16}/> Warsztaty / Sesje</h4>
-                  <div className="mt-3 space-y-1.5">
-                    {details.sessions.length > 0 ? details.sessions.map((session: any) => (
-                      <p key={`${session.attendee_unit_id || session.application_id}-${session.session_id}`} className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>• {session.label}</p>
-                    )) : <p className={`text-xs italic ${isDarkMode ? 'text-purple-600/50' : 'text-purple-700/60'}`}>Brak zapisów.</p>}
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-amber-900/10 border-amber-900/30' : 'bg-amber-50 border-amber-200'}`}>
-                  <h4 className={`font-black flex items-center gap-2 text-sm ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}><Bus size={16}/> Transport</h4>
-                  <div className="mt-3 space-y-1.5">
-                    <p className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{details.transport?.transport || 'Brak transportu'}</p>
-                    {details.transport?.transport_address && <p className={`text-xs ${isDarkMode ? 'text-amber-400/80' : 'text-amber-800/80'}`}>{details.transport.transport_address}</p>}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
         </div>
       </div>
     )}
@@ -12095,28 +12123,39 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <form onSubmit={handleSaveStaffAccess} className="space-y-6">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Osoba / Stanowisko *</label>
-              <input required className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. Recepcja Główna (Kasia)" value={staffAccessForm.name || ''} onChange={e => setStaffAccessForm({ ...staffAccessForm, name: e.target.value })}/>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Osoba / stanowisko *</label>
+              <input
+                required
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                placeholder="np. Recepcja główna"
+                value={staffAccessForm.name || ''}
+                onChange={e => setStaffAccessForm({ ...staffAccessForm, name: e.target.value })}
+              />
             </div>
+
             <div>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rola systemowa</label>
-              <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={staffAccessForm.role || 'reception'} onChange={e => setStaffAccessForm({ ...staffAccessForm, role: e.target.value })}>
+              <select
+                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                value={staffAccessForm.role || 'reception'}
+                onChange={e => setStaffAccessForm({ ...staffAccessForm, role: e.target.value })}
+              >
                 <option value="reception">Recepcja</option>
                 <option value="doctor">Lekarz</option>
                 <option value="coordinator">Opiekun pacjenta</option>
-                <option value="manager">Manager (pełny dostęp)</option>
+                <option value="manager">Manager</option>
               </select>
             </div>
-            
+
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Uprawnienia akcji (Skaner QR)</p>
+              <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Uprawnienia akcji</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   ['can_entry_checkin', 'Check-in wizyty'],
-                  ['can_meal_redemption', 'Zalecenia / dokumenty'],
+                  ['can_meal_redemption', 'Dokumenty'],
                   ['can_gadget_redemption', 'Pakiet pacjenta'],
-                  ['can_transport_checkin', 'Koordynacja ścieżki'],
-                  ['can_wristband_issue', 'Wydanie identyfikatora'],
+                  ['can_transport_checkin', 'Ścieżka pacjenta'],
+                  ['can_wristband_issue', 'Wydanie ID'],
                   ['can_wristband_return', 'Zamknięcie wizyty'],
                 ].map(([key, label]) => (
                   <label key={key} className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
@@ -12127,7 +12166,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <span className={`text-[10px] font-black uppercase tracking-wider ${!!staffAccessForm[key] ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
                       {label}
                     </span>
-                    <input type="checkbox" checked={!!staffAccessForm[key]} onChange={e => setStaffAccessForm({ ...staffAccessForm, [key]: e.target.checked })} className="sr-only"/>
+                    <input
+                      type="checkbox"
+                      checked={!!staffAccessForm[key]}
+                      onChange={e => setStaffAccessForm({ ...staffAccessForm, [key]: e.target.checked })}
+                      className="sr-only"
+                    />
                     <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${!!staffAccessForm[key] ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white') : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')}`}>
                       {!!staffAccessForm[key] && <CheckCircle2 size={12} />}
                     </div>
@@ -12135,22 +12179,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 ))}
               </div>
             </div>
-
-            <label className={`relative flex items-center justify-between p-5 rounded-xl border-2 cursor-pointer transition-all ${
-              staffAccessForm.is_active !== false 
-                ? (isDarkMode ? 'border-emerald-500/50 bg-emerald-900/10' : 'border-emerald-500 bg-emerald-50 shadow-sm')
-                : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-            }`}>
-              <div>
-                <p className={`font-black text-sm ${staffAccessForm.is_active !== false ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-700') : (isDarkMode ? 'text-slate-500' : 'text-slate-600')}`}>
-                  Konto Aktywne
-                </p>
-              </div>
-              <input type="checkbox" checked={staffAccessForm.is_active !== false} onChange={e => setStaffAccessForm({ ...staffAccessForm, is_active: e.target.checked })} className="sr-only"/>
-              <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${staffAccessForm.is_active !== false ? 'bg-emerald-500 text-white' : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')}`}>
-                {staffAccessForm.is_active !== false && <CheckCircle2 size={14} />}
-              </div>
-            </label>
 
             <button type="submit" className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}>
               Utwórz dostęp
