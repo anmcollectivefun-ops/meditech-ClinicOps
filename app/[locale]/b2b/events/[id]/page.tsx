@@ -6111,15 +6111,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             ) : (
               approvedApps
               .filter(app => {
+                const patientId = (app as any).patient_id || attendeeUnits.find((unit: any) => unit.application_id === app.id)?.patient_id
+                const linkedPatient = patientId ? patients.find((patient: any) => patient.id === patientId) : null
+                if (!linkedPatient) return false
+
                 const query = todayPatientSearch.toLowerCase()
-                const fullName = `${app.first_name || ''} ${app.last_name || ''}`.toLowerCase()
-                const pesel = String((app as any).pesel || '')
-                const phone = String((app as any).phone || '')
+                const fullName = `${linkedPatient.first_name || ''} ${linkedPatient.last_name || ''}`.toLowerCase()
+                const pesel = String(linkedPatient.pesel || '')
+                const phone = String(linkedPatient.phone || '')
                 return fullName.includes(query) || pesel.includes(todayPatientSearch) || phone.includes(todayPatientSearch)
               })
               .map(app => {
                 const isExpanded = expandedPatientDocs === app.id;
                 const patientId = (app as any).patient_id || attendeeUnits.find((unit: any) => unit.application_id === app.id)?.patient_id;
+                const linkedPatient = patientId ? patients.find((patient: any) => patient.id === patientId) : null;
+                const displayPatient = linkedPatient || app;
                 
                 // --- Logika Statusu: Szukamy zgód w bazie na podstawie patient_id z aplikacji ---
                 const consents = patientId ? (patientConsentsByPatientId[patientId] || []) : [];
@@ -6146,7 +6152,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                         </div>
                         <div className="min-w-0">
                           <h5 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                            {app.first_name} {app.last_name}
+                            {displayPatient.first_name} {displayPatient.last_name}
                           </h5>
                           <p className={`text-xs font-bold mt-0.5 ${
                             isMissingInterview ? (isDarkMode ? 'text-red-400' : 'text-red-600') :
@@ -6156,7 +6162,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                             {isMissingInterview ? 'Brak wywiadu medycznego!' : isMissingConsent ? 'Oczekuje na podpis zgody zabiegowej' : 'Komplet dokumentów'}
                           </p>
                           <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Zabieg: {(app as any).ticket_type || (app as any).ticket_name || 'Konsultacja'} | Tel: {(app as any).phone || 'brak'}
+                            Zabieg: {(app as any).ticket_type || (app as any).ticket_name || 'Konsultacja'} | Tel: {displayPatient.phone || 'brak'}
                           </p>
                         </div>
                       </div>
@@ -6193,7 +6199,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                       <div className={`p-5 border-t animate-in slide-in-from-top-2 ${isDarkMode ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'}`}>
                         <div className="flex items-center justify-between mb-4">
                           <h6 className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Teczka pacjenta: {app.first_name} {app.last_name}
+                            Teczka pacjenta: {displayPatient.first_name} {displayPatient.last_name}
                           </h6>
                           <button 
                             onClick={() => {
