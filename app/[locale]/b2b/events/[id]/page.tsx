@@ -6296,9 +6296,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <button 
           type="button"
           onClick={openNewConsentTemplateCreator}
-          className={`w-full py-4 border-2 border-dashed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${isDarkMode ? 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 bg-slate-900/50' : 'border-slate-300 text-slate-500 hover:text-slate-900 hover:border-slate-400 bg-slate-50'}`}
+          className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] hover:bg-[#d8bd65]' : 'bg-slate-900 text-[#e8ce7a] hover:bg-black'}`}
         >
-          <Plus size={16} /> Nowy Szablon (Ręcznie)
+          <Sparkles size={16} /> Kreator Zgód AI
         </button>
       </div>
     </div>
@@ -6597,10 +6597,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Treść Szablonu / Pytania
-                </label>
+              <div className="flex flex-col gap-3 mb-3">
+                <div className="flex items-center justify-between gap-3">
+                  <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Treść Szablonu / Pytania
+                  </label>
+                </div>
                 <button
                   type="button"
                   onClick={() => openAiTextAssist({
@@ -6614,10 +6616,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     placeholder: 'Tu pojawi się roboczy szkic zgody, wywiadu lub zaleceń do zatwierdzenia.',
                     onApply: (text: string) => setConsentTemplateForm((prev: any) => ({ ...prev, content_template: text }))
                   })}
-                  className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
+                  className={`w-full rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] ${isDarkMode ? 'bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
                 >
-                  <Sparkles size={12}/> Generuj szkielet AI
+                  <Sparkles size={16} /> Utwórz z pomocą AI
                 </button>
+                <p className={`text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                  AI przygotuje roboczy szkic dokumentu medycznego. Przed użyciem z pacjentem zatwierdź treść medycznie i prawnie.
+                </p>
               </div>
               <textarea
                 rows={10}
