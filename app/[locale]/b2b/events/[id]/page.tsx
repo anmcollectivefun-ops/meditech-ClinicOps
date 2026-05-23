@@ -4529,6 +4529,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       title: 'Pacjent i opieka',
       desc: 'Historia, wizyty, QR i dokumentacja',
       items: [
+        { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja pacjenta', count: tiers.length },
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
@@ -4542,7 +4543,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       desc: 'Leady, rejestracja i follow-up',
       items: [
         { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length, urgent: true },
-        { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja wizyt', count: tiers.length },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
         { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
         { tabId: 'minutowka' as TabModule, icon: ClipboardList, label: 'Plan dnia kliniki' }
