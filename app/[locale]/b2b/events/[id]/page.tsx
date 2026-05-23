@@ -595,10 +595,16 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
   const loadPartnersCatalog = async () => {
     // Pobieramy prawdziwe dane lekarzy i preparatów
-    const { data } = await supabase.from('event_partners').select('*').eq('event_id', id);
+    const { data, error } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true });
+    if (error) {
+      console.warn('event_partners catalog load error:', error.message)
+      setDoctorsList([])
+      setPreparationsList([])
+      return
+    }
     if (data) {
       setDoctorsList(data.filter(p => p.type === 'speaker' || p.type === 'doctor'));
-      setPreparationsList(data.filter(p => p.type === 'preparation'));
+      setPreparationsList(data.filter(p => p.type === 'preparation' || p.type === 'sponsor'));
     }
   }
   // PAMIĘTAJ: dodaj loadPartnersCatalog() do swojego głównego useEffect() !
@@ -2044,8 +2050,19 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
   };
 
   const loadPartners = useCallback(async () => {
-  const { data } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
-  if (data) setPartners(data)
+  const { data, error } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
+  if (error) {
+    console.warn('event_partners load error:', error.message)
+    setPartners([])
+    setDoctorsList([])
+    setPreparationsList([])
+    return
+  }
+  if (data) {
+    setPartners(data)
+    setDoctorsList(data.filter((p: any) => p.type === 'speaker' || p.type === 'doctor'))
+    setPreparationsList(data.filter((p: any) => p.type === 'preparation' || p.type === 'sponsor'))
+  }
 }, [id, supabase])
 
 // ===== CONTRACTORS =====
@@ -3150,9 +3167,10 @@ const handleSavePartner = async (e: React.FormEvent) => {
     if (newFiles.partnerPhoto) {
       photoUrl = await uploadFile(newFiles.partnerPhoto, id, 'partner');
     }
+    const doctorDisplayName = `${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim();
     const data = {
       event_id: id,
-      type: 'speaker',
+      type: 'doctor',
       display_order: partnerForm.display_order || 0,
       is_visible: partnerForm.is_visible !== false,
       first_name: partnerForm.first_name,
@@ -3162,17 +3180,24 @@ const handleSavePartner = async (e: React.FormEvent) => {
       bio: partnerForm.bio,
       photo_url: photoUrl || partnerForm.photo_url,
       website_url: partnerForm.website_url,
+      sponsor_name: doctorDisplayName || partnerForm.sponsor_name || null,
+      sponsor_category: partnerForm.title || partnerForm.sponsor_category || null,
+      logo_url: photoUrl || partnerForm.logo_url || partnerForm.photo_url || null,
     };
+    let result;
     if (isEditingPartner && partnerForm.id) {
-      await supabase.from('event_partners').update(data).eq('id', partnerForm.id);
+      result = await supabase.from('event_partners').update(data).eq('id', partnerForm.id);
     } else {
-      await supabase.from('event_partners').insert([data]);
+      result = await supabase.from('event_partners').insert([data]);
     }
+    if (result.error) throw result.error;
     await loadPartners();
     setIsPartnerModalOpen(false);
+    setPartnerForm({});
     setNewFiles({ ...newFiles, partnerPhoto: null });
-    showNotification('Zapisano pomyślnie', 'success');
-  } catch (err) { showNotification('Błąd zapisu', 'error'); } finally { setUpdating(false); }
+    setIsEditingPartner(false);
+    showNotification('Lekarz zapisany', 'success');
+  } catch (err: any) { showNotification('Błąd zapisu lekarza: ' + (err?.message || 'nieznany błąd'), 'error'); } finally { setUpdating(false); }
 };
 
 const handleSavePreparation = async (e: React.FormEvent) => {
@@ -3189,25 +3214,33 @@ const handleSavePreparation = async (e: React.FormEvent) => {
       type: 'preparation',
       display_order: preparationForm.display_order || 0,
       is_visible: preparationForm.is_visible !== false,
+      first_name: preparationForm.sponsor_name || null,
+      last_name: '',
+      title: preparationForm.sponsor_category || null,
+      company: preparationForm.sponsor_category || null,
       sponsor_name: preparationForm.sponsor_name,
       sponsor_category: preparationForm.sponsor_category,
       bio: preparationForm.bio,
       logo_url: imageUrl,
+      photo_url: imageUrl,
     };
 
+    let result;
     if (isEditingPreparation && preparationForm.id) {
-      await supabase.from('event_partners').update(data).eq('id', preparationForm.id);
+      result = await supabase.from('event_partners').update(data).eq('id', preparationForm.id);
     } else {
-      await supabase.from('event_partners').insert([data]);
+      result = await supabase.from('event_partners').insert([data]);
     }
+    if (result.error) throw result.error;
 
     await loadPartners();
     setIsPreparationModalOpen(false);
     setPreparationForm({});
+    setIsEditingPreparation(false);
     setNewFiles({ ...newFiles, partnerPhoto: null });
     showNotification('Preparat zapisany', 'success');
-  } catch (err) {
-    showNotification('Błąd zapisu preparatu', 'error');
+  } catch (err: any) {
+    showNotification('Błąd zapisu preparatu: ' + (err?.message || 'nieznany błąd'), 'error');
   } finally {
     setUpdating(false);
   }
@@ -3216,10 +3249,11 @@ const handleSavePreparation = async (e: React.FormEvent) => {
 const handleDeletePartner = async (id: string) => {
   if (!confirm('Usunąć?')) return;
   try {
-    await supabase.from('event_partners').delete().eq('id', id);
+    const { error } = await supabase.from('event_partners').delete().eq('id', id);
+    if (error) throw error;
     await loadPartners();
     showNotification('Usunięto', 'success');
-  } catch (err) { showNotification('Błąd', 'error'); }
+  } catch (err: any) { showNotification('Błąd usuwania: ' + (err?.message || 'nieznany błąd'), 'error'); }
 };
 
 const handlePartnerDragEnd = async (event: DragEndEvent) => {
@@ -7437,7 +7471,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Preparat / Sprzęt</label>
                   <select value={treatmentForm.preparation_id || ''} onChange={e => setTreatmentForm({ ...treatmentForm, preparation_id: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300'}`}>
                     <option value="">-- Opcjonalnie --</option>
-                    {preparationsList.map((p: any) => <option key={p.id} value={p.id}>{p.sponsor_name}</option>)}
+                    {preparationsList.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.sponsor_name || p.first_name || p.title || 'Preparat bez nazwy'}
+                        {p.sponsor_category || p.company ? ` (${p.sponsor_category || p.company})` : ''}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -7573,7 +7612,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <button
             onClick={() => {
-              setPartnerForm({ type: 'speaker' })
+              setPartnerForm({ type: 'doctor', is_visible: true })
               setIsEditingPartner(false)
               setIsPartnerModalOpen(true)
             }}
@@ -7584,7 +7623,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <button
             onClick={() => {
-              setPreparationForm({ type: 'preparation' })
+              setPreparationForm({ type: 'preparation', is_visible: true })
               setIsEditingPreparation(false)
               setIsPreparationModalOpen(true)
             }}
