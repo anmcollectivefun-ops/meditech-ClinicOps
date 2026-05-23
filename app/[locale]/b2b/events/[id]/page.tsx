@@ -14,7 +14,7 @@ import {
   ClipboardList, MapPin, Globe, BarChart3, LayoutGrid, Layers, ListChecks,
   Clock, Calendar, CalendarPlus, Wallet, FileText, FileSignature, Download, Printer,
   Truck, Car, Bus, Smartphone, Share2, TrendingDown, TrendingUp, Phone,
-  UtensilsCrossed, Wine, Coffee, Shirt, Gift, Award,
+  UtensilsCrossed, Wine, Coffee, Shirt, Award,
   Send, MessageSquare, Mail, Video, Mic,
   Music4, Image as ImageIcon, Type, Palette,
   Zap, Activity, Bed, File as FileIcon, Users2, Stethoscope,
@@ -37,7 +37,7 @@ import jsPDF from 'jspdf'
 type TabModule =
   | 'rekrutacja' | 'logistyka' | 'edycja'
   | 'harmonogram' | 'eko'
-  | 'komunikacja' | 'checklista' | 'finanse' | 'gadgets'
+  | 'komunikacja' | 'checklista' | 'finanse'
   | 'dostawcy' | 'minutowka'
   | 'bilety' | 'prelegenci' | 'materialy'
   | 'eventpass' | 'strona_uczestnika';
@@ -319,13 +319,11 @@ const [newFiles, setNewFiles] = useState<{
   pageBg: File | null;
   rsvpImg: File | null;
   sessionImg: File | null;
-  gadgetImg: File | null;
   mealImg: File | null;
   transportImg: File | null;
   partnerPhoto: File | null;
   contractorInvoice: File | null;
   menuSectionImg: File | null;
-  gadgetsSectionImg: File | null;
   transportSectionImg: File | null;
   workshopsSectionImg: File | null;
   liveSectionImg: File | null;
@@ -334,7 +332,6 @@ const [newFiles, setNewFiles] = useState<{
   themeImg2: File | null;
   themeImg3: File | null;
   themeImg4: File | null;
-  gadgetSectionImg: File | null;
 }>({
   cover: null,
   logo: null,
@@ -344,13 +341,11 @@ const [newFiles, setNewFiles] = useState<{
   pageBg: null,
   rsvpImg: null,
   sessionImg: null,
-  gadgetImg: null,
   mealImg: null,
   transportImg: null,
   partnerPhoto: null,
   contractorInvoice: null,
   menuSectionImg: null,
-  gadgetsSectionImg: null,
   transportSectionImg: null,
   workshopsSectionImg: null,
   liveSectionImg: null,
@@ -359,7 +354,6 @@ const [newFiles, setNewFiles] = useState<{
   themeImg2: null,
   themeImg3: null,
   themeImg4: null,
-  gadgetSectionImg: null,
 })
   // ----- newFiles -----
   // ----- newFiles -----
@@ -368,10 +362,6 @@ const [newFiles, setNewFiles] = useState<{
   const [isEditingSession, setIsEditingSession] = useState(false)
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [updating, setUpdating] = useState(false)
-
-  const [gadgets, setGadgets] = useState<any[]>([])
-  const [gadgetForm, setGadgetForm] = useState<any>({})
-  const [isEditingGadget, setIsEditingGadget] = useState(false)
 
   const [meals, setMeals] = useState<any[]>([])
   const [mealForm, setMealForm] = useState<any>({})
@@ -387,8 +377,7 @@ const [newFiles, setNewFiles] = useState<{
   const [unitCosts, setUnitCosts] = useState({
     meal: 150,
     accommodation: 350,
-    transport: 80,
-    gadget: 45
+    transport: 80
   })
 
   const [budgetItems, setBudgetItems] = useState<any[]>([])
@@ -1081,7 +1070,6 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     if (fieldKey.includes('title')) {
       if (sectionKey === 'menu') return 'Menu wydarzenia'
       if (sectionKey === 'transport') return 'Transport i dojazd'
-      if (sectionKey === 'gadgets') return 'Gadżety dla uczestników'
       if (sectionKey === 'workshops') return 'Warsztaty i aktywności'
       if (sectionKey === 'faq') return 'Najważniejsze informacje'
       return `Sekcja wydarzenia ${eventTitle}`
@@ -1090,7 +1078,6 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     if (fieldKey.includes('cta')) {
       if (sectionKey === 'menu') return 'Wybierz menu'
       if (sectionKey === 'transport') return 'Potwierdź transport'
-      if (sectionKey === 'gadgets') return 'Wybierz gadżet'
       if (sectionKey === 'workshops') return 'Zapisz się'
       return 'Sprawdź szczegóły'
     }
@@ -1809,7 +1796,6 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
     manager: 'Manager',
     entry: 'Recepcja',
     kitchen: 'Recepcja',
-    gadgets: 'Opiekun pacjenta',
     transport: 'Opiekun pacjenta'
   } as Record<string, string>)[String(role || '')] || 'Personel'
 
@@ -1822,7 +1808,6 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
 
   const publicSectionConfigs = [
     { key: 'menu', label: 'Zalecenia po wizycie', icon: UtensilsCrossed, operational: true, actionField: 'menu_selection_enabled', actionLabel: 'Włącz zalecenia dla pacjenta', imageFileKey: 'menuSectionImg', placeholderTitle: 'Zalecenia medyczne', placeholderDescription: 'Opisz zalecenia przed lub po zabiegu, dietę, leki albo przygotowanie do wizyty.' },
-    { key: 'gadgets', label: 'Pakiety pacjenta', icon: Gift, operational: true, actionField: 'gadgets_selection_enabled', actionLabel: 'Włącz wybór pakietu pacjenta', imageFileKey: 'gadgetsSectionImg', placeholderTitle: 'Pakiet pacjenta', placeholderDescription: 'Opisz pakiety, materiały lub dodatki przekazywane pacjentowi.' },
     { key: 'workshops', label: 'Wizyty / konsultacje', icon: Clock, operational: true, actionField: 'workshops_signup_enabled', actionLabel: 'Włącz zapisy na wizyty', imageFileKey: 'workshopsSectionImg', placeholderTitle: 'Wizyty i konsultacje', placeholderDescription: 'Opisz dostępne wizyty, konsultacje i procedury.' },
     { key: 'eventpass', label: 'Check-in QR', icon: QrCode, operational: true, actionField: 'eventpass_qr_visible', actionLabel: 'Pokaż kod QR pacjenta', placeholderTitle: 'Identyfikacja pacjenta', placeholderDescription: 'Opisz użycie kodu QR do check-inu wizyty i dostępu personelu.' },
     { key: 'theme', label: 'Standard placówki', icon: Palette, placeholderTitle: 'Standard obsługi', placeholderDescription: 'Opisz standard wizyty, komfort i doświadczenie pacjenta.' },
@@ -1896,7 +1881,6 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       setNewFiles(prev => ({
         ...prev,
         menuSectionImg: null,
-        gadgetsSectionImg: null,
         transportSectionImg: null,
         workshopsSectionImg: null,
         liveSectionImg: null
@@ -2591,27 +2575,6 @@ const patientQrMetrics = useMemo(() => ({
     }
   }
 
-  const handleImportGadgetsToBudget = async () => {
-    try {
-      const rows = gadgetSummary
-        .filter((summary: any) => summary.totalQuantity > 0 && Number(summary.gadget.unit_cost || 0) > 0 && !hasBudgetSource('gadget', summary.gadget.id))
-        .map((summary: any) => {
-          const gross = Number(summary.totalQuantity || 0) * Number(summary.gadget.unit_cost || 0)
-          const net = Number((gross / 1.23).toFixed(2))
-          return {
-            event_id: id, source_type: 'gadget', source_id: summary.gadget.id, type: 'expense', category: 'gadgets',
-            title: `Gadżety - ${summary.gadget.name}`, description: `Wybrane przez gości: ${summary.totalQuantity} szt.`,
-            net_amount: net, vat_rate: 23, vat_amount: Number((gross - net).toFixed(2)), gross_amount: gross,
-            paid_amount: 0, payment_status: 'planned', currency: 'PLN', is_active: true
-          }
-        })
-      const count = await insertBudgetRows(rows)
-      showNotification(`Dodano ${count} pozycji gadżetów do budżetu`, 'success')
-    } catch (err: any) {
-      showNotification('Błąd importu gadżetów: ' + err.message, 'error')
-    }
-  }
-
   const handleImportChecklistToBudget = async () => {
     try {
       const rows = checklistItems
@@ -2928,7 +2891,7 @@ const patientQrMetrics = useMemo(() => ({
     setUpdating(true);
     try {
       const config = {
-        sessions, meals, gadgets, unitCosts,
+        sessions, meals, unitCosts,
         dressCode: { title: editForm.dc_title, ladies: editForm.dc_ladies, gents: editForm.dc_gents }
       };
 
@@ -2966,7 +2929,6 @@ const patientQrMetrics = useMemo(() => ({
   { key: 'page_bg_image_url', file: newFiles.pageBg, prefix: 'pagebg' },
   { key: 'rsvp_image_url', file: newFiles.rsvpImg, prefix: 'rsvp' },
   { key: 'transport_image_url', file: newFiles.transportImg, prefix: 'transport' },
-  { key: 'gadget_section_image_url', file: newFiles.gadgetSectionImg, prefix: 'gadget-section' },
 
   { key: 'theme_main_image_url', file: newFiles.themeMain, prefix: 'theme-main' },
   { key: 'theme_image_1_url', file: newFiles.themeImg1, prefix: 'theme-1' },
@@ -3001,7 +2963,6 @@ const patientQrMetrics = useMemo(() => ({
 
       // Opcjonalnie: usuwamy puste pola techniczne, jeśli React je dodał
       delete (cleanData as any).event_sessions;
-      delete (cleanData as any).event_gadgets;
 
       // 4. Zapis do bazy danych
       const { error } = await supabase
@@ -3029,17 +2990,14 @@ setNewFiles({
   pageBg: null,
   rsvpImg: null,
   sessionImg: null,
-  gadgetImg: null,
   mealImg: null,
   transportImg: null,
   partnerPhoto: null,
   contractorInvoice: null,
   menuSectionImg: null,
-  gadgetsSectionImg: null,
   transportSectionImg: null,
   workshopsSectionImg: null,
   liveSectionImg: null,
-  gadgetSectionImg: null,
 
   themeMain: null,
   themeImg1: null,
@@ -3104,81 +3062,6 @@ setNewFiles({
       showNotification('Sesja usunięta', 'success');
     } catch (err: any) {
       showNotification('Błąd usuwania: ' + err.message, 'error');
-    }
-  };
-
-  const handleSaveGadget = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdating(true);
-    try {
-      let imageUrl = gadgetForm.image_url || null;
-      if (newFiles.gadgetImg) {
-        imageUrl = await uploadFile(newFiles.gadgetImg, id, 'gadget');
-      }
-      const gadgetData = {
-  event_id: id,
-  name: gadgetForm.name,
-  public_label: gadgetForm.public_label || gadgetForm.name,
-  description: gadgetForm.description,
-  category: gadgetForm.category || 'eco',
-  eco_type: gadgetForm.eco_type || 'standard',
-  co2_cost_kg: gadgetForm.co2_cost_kg || 0,
-  unit_cost: gadgetForm.unit_cost || 0,
-  max_quantity: gadgetForm.max_quantity || null,
-  size_required: gadgetForm.size_required || false,
-  stock_quantity: Number(gadgetForm.stock_quantity || 0),
-  max_per_person: Math.max(Number(gadgetForm.max_per_person || 1), 1),
-  track_stock: gadgetForm.track_stock !== false,
-  is_required_choice: gadgetForm.is_required_choice === true,
-  allow_decline: gadgetForm.allow_decline !== false,
-  low_stock_threshold: Number(gadgetForm.low_stock_threshold || 5),
-  available_sizes: gadgetForm.size_required === true ? parseSizes(gadgetForm.available_sizes) : [],
-  requires_confirmation: gadgetForm.requires_confirmation || false,
-  stock_note: gadgetForm.stock_note || null,
-  sort_order: gadgetForm.sort_order || 0,
-  is_active: gadgetForm.is_active !== false,
-  image_url: imageUrl
-};
-
-      const { error } = gadgetForm.id
-        ? await supabase.from('event_gadgets').update(gadgetData).eq('id', gadgetForm.id)
-        : await supabase.from('event_gadgets').insert([gadgetData]);
-
-      if (error) throw error;
-
-      const { data: gadg } = await supabase.from('event_gadgets').select('*').eq('event_id', id).order('sort_order', { ascending: true });
-      setGadgets(gadg || []);
-      setIsEditingGadget(false);
-      showNotification('Katalog gadżetów zaktualizowany', 'success');
-    } catch (err: any) {
-      console.error('Gadget save error:', {
-        message: err?.message,
-        details: err?.details,
-        hint: err?.hint,
-        code: err?.code,
-        gadgetData: {
-          event_id: id,
-          name: gadgetForm.name,
-          stock_quantity: Number(gadgetForm.stock_quantity || 0),
-          max_per_person: Math.max(Number(gadgetForm.max_per_person || 1), 1),
-          track_stock: gadgetForm.track_stock !== false,
-          available_sizes: gadgetForm.size_required === true ? parseSizes(gadgetForm.available_sizes) : []
-        }
-      });
-      showNotification('Błąd: ' + (err?.message || 'Nie udało się zapisać gadżetu'), 'error');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleDeleteGadget = async (gadgetId: string) => {
-    if (!confirm('Usunąć ten gadżet z katalogu?')) return;
-    try {
-      await supabase.from('event_gadgets').delete().eq('id', gadgetId);
-      setGadgets(gadgets.filter(g => g.id !== gadgetId));
-      showNotification('Gadżet usunięty', 'success');
-    } catch (err: any) {
-      showNotification('Błąd: ' + err.message, 'error');
     }
   };
 
@@ -3482,7 +3365,6 @@ const loadEventData = useCallback(async () => {
       const { data: ev } = await supabase.from('b2b_events').select('*').eq('id', id).single()
       const { data: apps } = await supabase.from('b2b_applications').select('*').eq('event_id', id).order('created_at', { ascending: false })
       const { data: sess } = await supabase.from('event_sessions').select('*').eq('event_id', id).order('start_time', { ascending: true })
-      const { data: gadg } = await supabase.from('event_gadgets').select('*').eq('event_id', id).order('sort_order', { ascending: true })
       const { data: tierData } = await supabase.from('ticket_tiers').select('*').eq('event_id', id).order('sort_order', { ascending: true }).order('created_at', { ascending: true })
       const { data: promoData } = await supabase.from('promo_codes').select('*').eq('event_id', id).order('created_at', { ascending: false })
      // const { data: speakerData } = await supabase.from('event_speakers').select('*').eq('event_id', id).order('created_at', { ascending: true })//
@@ -3505,7 +3387,6 @@ const { data: checklistItemData } = await supabase
       setEditForm(ev)
       setApplications(apps || [])
       setSessions(sess || [])
-      setGadgets(gadg || [])
       setCateringOffers([])
       setEventVideos([])
       setMeals([])
@@ -3715,7 +3596,7 @@ const transportAnalytics = useMemo(() => {
       })),
       gadgets: gadgetChoiceRows.map((choice: any) => ({
         ...choice,
-        label: gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.public_label || gadgets.find((gadget: any) => gadget.id === choice.gadget_id)?.name || choice.gadget_id || 'Gadżet'
+        label: choice.gadget_id || 'Pakiet'
       })),
       sessions: sessionRows.map((choice: any) => ({
         ...choice,
@@ -3727,63 +3608,6 @@ const transportAnalytics = useMemo(() => {
         notes: app?.extra_notes
       }
     }
-  }
-
-  const gadgetSummary = useMemo(() => {
-  return gadgets.map(gadget => {
-    const choices = attendeeGadgetChoices.filter((choice: any) =>
-      choice.gadget_id === gadget.id &&
-      choice.status !== 'cancelled' &&
-      choice.declined_gadget !== true
-    )
-    const totalQuantity = choices.reduce((sum, choice) => sum + Number(choice.quantity || 1), 0)
-    const maxQuantity = gadget.max_quantity || null
-    const remaining = maxQuantity !== null ? Math.max(maxQuantity - totalQuantity, 0) : null
-    const totalCO2 = totalQuantity * Number(gadget.co2_cost_kg || 0)
-
-    const sizeBreakdown = choices.reduce((acc: Record<string, number>, choice: any) => {
-      const size = choice.selected_size || 'Brak rozmiaru'
-      acc[size] = (acc[size] || 0) + Number(choice.quantity || 1)
-      return acc
-    }, {})
-
-    return {
-      gadget,
-      choices,
-      totalQuantity,
-      maxQuantity,
-      remaining,
-      totalCO2,
-      sizeBreakdown
-    }
-  })
-}, [gadgets, attendeeGadgetChoices])
-
-  const getGadgetReservedQuantity = (gadgetId: string) => {
-    const perUnitReserved = attendeeGadgetChoices
-      .filter((choice: any) => choice.gadget_id === gadgetId && choice.status !== 'cancelled' && choice.declined_gadget !== true)
-      .reduce((sum: number, choice: any) => sum + Number(choice.quantity || 1), 0)
-
-    return perUnitReserved
-  }
-
-  const getGadgetRedeemedQuantity = (gadgetId: string) => {
-    return gadgetRedemptions
-      .filter((redemption: any) => redemption.gadget_id === gadgetId)
-      .reduce((sum: number) => sum + 1, 0)
-  }
-
-  const getGadgetAvailableQuantity = (gadget: any) => {
-    if (gadget.track_stock === false) return Infinity
-    return Math.max(Number(gadget.stock_quantity || 0) - getGadgetReservedQuantity(gadget.id), 0)
-  }
-
-  const getGadgetStockStatus = (gadget: any) => {
-    if (gadget.track_stock === false) return 'unlimited'
-    const available = getGadgetAvailableQuantity(gadget)
-    if (available <= 0) return 'sold_out'
-    if (available <= Number(gadget.low_stock_threshold || 5)) return 'low_stock'
-    return 'available'
   }
 
   const activeBudgetItems = useMemo(() => budgetItems.filter((item: any) => item.is_active !== false), [budgetItems])
@@ -3982,8 +3806,6 @@ const transportAnalytics = useMemo(() => {
     const safeApplications = Array.isArray(applications) ? applications : []
     const safeApprovedApps = Array.isArray(approvedApps) ? approvedApps : []
     const safeMeals = Array.isArray(meals) ? meals : []
-    const safeGadgets = Array.isArray(gadgets) ? gadgets : []
-    const safeGadgetChoices = Array.isArray(attendeeGadgetChoices) ? attendeeGadgetChoices : []
     const safeCarpoolingAds = Array.isArray(carpoolingAds) ? carpoolingAds : []
     const safeFleet = Array.isArray(fleet) ? fleet : []
     const safeContractors = Array.isArray(contractors) ? contractors : []
@@ -4048,21 +3870,9 @@ const transportAnalytics = useMemo(() => {
 
     const menuCo2Saved = Number((vegeMeals * 1.2).toFixed(1))
 
-    const gadgetReserved = safeGadgetChoices.filter(
-      (choice: any) => choice.declined_gadget !== true && choice.status !== 'declined' && choice.status !== 'cancelled'
-    ).length
-
-    const gadgetStock = safeGadgets.reduce(
-      (sum: number, gadget: any) =>
-        sum + Number(gadget.stock_quantity || gadget.quantity || gadget.total_quantity || 0),
-      0
-    )
-
-    const gadgetOverstockCount = Math.max(gadgetStock - gadgetReserved, 0)
-    const gadgetWasteRisk =
-      gadgetStock > 0 ? Math.round((gadgetOverstockCount / gadgetStock) * 100) : 0
-
-    const gadgetsCo2Saved = Number((Math.max(gadgetReserved, 0) * 0.25).toFixed(1))
+    const gadgetOverstockCount = 0
+    const gadgetWasteRisk = 0
+    const gadgetsCo2Saved = 0
 
     const foodWastePortionsRisk = totalApplications > 0
       ? Math.max(totalApplications - confirmedRsvp, 0)
@@ -4092,7 +3902,6 @@ const transportAnalytics = useMemo(() => {
       totalApplications > 0,
       realCarpoolingChoices > 0,
       vegeMeals > 0,
-      gadgetReserved > 0,
       localSuppliersCount > 0,
       safeCateringOffers.length > 0,
       safeBudgetItems.length > 0,
@@ -4109,7 +3918,6 @@ const transportAnalytics = useMemo(() => {
 
     const estimatedCostSavings = Math.max(Math.round(
       (avoidedPrintsCount * 0.5) +
-      (gadgetOverstockCount * 15) +
       (foodWastePortionsRisk * 45 * 0.35)
     ), 0)
 
@@ -4119,7 +3927,7 @@ const transportAnalytics = useMemo(() => {
       realCarpoolingChoices > 0 || transportEfficiency > 50 ? 20 : 0,
       vegeMeals > 0 ? 15 : 0,
       localSuppliersCount > 0 ? 15 : 0,
-      gadgetReserved > 0 || gadgetWasteRisk < 30 ? 10 : 0
+      avoidedPrintsCount > 0 ? 10 : 0
     ].reduce((sum, value) => sum + value, 0))
 
     const resolveScore = {
@@ -4187,28 +3995,6 @@ const transportAnalytics = useMemo(() => {
         co2: 'transport współdzielony',
         actionLabel: 'Przejdź do transportu',
         area: 'Transport'
-      })
-    }
-
-    if (gadgetWasteRisk > 30) {
-      recommendations.push({
-        title: 'Ogranicz zamówienie gadżetów',
-        description: 'Zapas gadżetów jest większy niż aktualne wybory uczestników.',
-        impact: 'średni',
-        co2: 'średnia redukcja',
-        actionLabel: 'Przejdź do gadżetów',
-        area: 'Gadżety'
-      })
-    }
-
-    if (gadgetOverstockCount > 0) {
-      recommendations.push({
-        title: 'Zamów gadżety według realnych wyborów uczestników',
-        description: `AI Eco Engine widzi ${gadgetOverstockCount} szt. potencjalnej nadwyżki względem aktualnych wyborów.`,
-        impact: 'średni',
-        co2: 'mniej odpadów',
-        actionLabel: 'Przejdź do gadżetów',
-        area: 'Gadżety'
       })
     }
 
@@ -4289,12 +4075,6 @@ const transportAnalytics = useMemo(() => {
         description: 'Liczba pozycji vege / vegan wykrytych w menu.'
       },
       {
-        name: 'Gadżety',
-        status: gadgetWasteRisk > 30 ? 'ryzyko' : 'dobrze',
-        value: `${gadgetOverstockCount} szt.`,
-        description: 'Ryzyko nadwyżek gadżetów względem wyborów uczestników.'
-      },
-      {
         name: 'Materiały cyfrowe',
         status: avoidedPrintsCount > 0 ? 'dobrze' : 'monitoring',
         value: `${avoidedPrintsCount}`,
@@ -4357,11 +4137,6 @@ const transportAnalytics = useMemo(() => {
         detail: `${vegeMeals} pozycji vege / vegan`
       },
       {
-        label: 'Gadżety',
-        value: `${gadgetsCo2Saved} kg`,
-        detail: `${gadgetReserved} świadomych wyborów gadżetów`
-      },
-      {
         label: 'Uniknięte wydruki',
         value: `${avoidedPrintsCount} szt.`,
         detail: 'zaproszenia, identyfikatory, materiały i informacje przeniesione do kanałów cyfrowych'
@@ -4419,8 +4194,6 @@ const transportAnalytics = useMemo(() => {
     applications,
     approvedApps,
     meals,
-    gadgets,
-    attendeeGadgetChoices,
     fleet,
     carpoolingAds,
     transportCarpoolStats,
@@ -4755,8 +4528,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       items: [
         { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
         { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
-        { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' },
-        { tabId: 'gadgets' as TabModule, icon: Gift, label: 'Pakiety pacjenta', count: gadgets.length }
+        { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' }
       ]
     }
   ]
@@ -5497,8 +5269,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 </header>
 
-
-     <main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
+<main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
 
  {/* ============================================================================ */}
   {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów)  nie zamykaj zamniesz wszystko*/}
@@ -5574,10 +5345,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </div>
         </div>
-
-        {/* ============================================================================ */}
-        {/* GRID GŁÓWNY - ZMODYFIKOWANY ABY LEWE MENU ZAWSZE BYŁO W LINII, A NIE FIXED */}
-        {/* ============================================================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start">
 
           {/* LEWY SIDEBAR (Używamy kolumn Grida zamiast pozycjonowania fixed!) */}
@@ -5634,8 +5401,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           {/* Główna zawartość zajmuje całą dostępną szerokość po usunięciu prawego panelu raportów. */}
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
-
-
 
 {/* ============================================================================ */}
 {/* PORTAL PACJENTA / STRONA PUBLICZNA */}
@@ -5903,7 +5668,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   </form>
 )}
-
 
 {/* ============================================================================ */}
 {/* edycja strony */}
@@ -6189,10 +5953,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   </form>
 )}
-
-
-
-
 
 {/* ============================================================================ */}
 {/* DOKUMENTACJA I WYWIAD MEDYCZNY (Dawne 'materialy') */}
@@ -7136,10 +6896,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-
-
-
-
 {/* ============================================================================ */}
 {/* ZABIEGI I WIZYTY (Zarządzanie Katalogiem i Rejestracja) - Wersja Ostateczna */}
 {/* ============================================================================ */}
@@ -7586,7 +7342,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
   </div>
 )}
-
 
 {/* ============================================================================ */}
 {/* lekarze */}
@@ -8091,662 +7846,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
 {/* ============================================================================ */}
 {/* dress code */}
-{/* ============================================================================ */}
-{activeTab === 'gadgets' && (
-  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-
-    {/* PODSUMOWANIE WYBORÓW RSVP */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className={`p-5 md:p-6 border-b flex flex-col md:flex-row md:items-start justify-between gap-4 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
-        <div className="flex items-start gap-3">
-          <div className={`p-2.5 rounded-xl shrink-0 ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
-            <BarChart3 size={20} />
-          </div>
-          <div>
-            <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Podsumowanie wyborów gości
-            </h3>
-            <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Tutaj widzisz realne zapotrzebowanie z RSVP - bez produkowania nadwyżki.
-            </p>
-          </div>
-        </div>
-        <HelpButton sectionKey="operations" />
-      </div>
-
-      {/* AI Overstock Guard */}
-      <div className="p-5 md:p-6 pb-0">
-        <div className={`flex items-start gap-3 p-4 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-gradient-to-r from-[#253a2a]/40 to-[#0f172a] border-[#e8ce7a]/20' : 'bg-gradient-to-r from-amber-50 to-white border-amber-200/60'}`}>
-          <Sparkles size={18} className={`shrink-0 mt-0.5 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-amber-500'}`} />
-          <div>
-            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-amber-600'}`}>
-              AI Overstock Guard
-            </p>
-            <p className={`text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-amber-900'}`}>
-              Lokalny alert: wykryto potencjalną nadwyżkę <strong className="font-black">{displayedEcoAnalysis.gadgetOverstockCount} szt.</strong> gadżetów względem aktualnych wyborów uczestników. AI wkrótce zasugeruje bezpieczne optymalizacje zamówień.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {gadgetSummary.length === 0 ? (
-        <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Brak gadżetów do podsumowania.
-        </div>
-      ) : (
-        <div className={`mt-6 divide-y ${isDarkMode ? 'divide-slate-800' : 'divide-slate-100'}`}>
-          {gadgetSummary.map(summary => (
-            <div key={summary.gadget.id} className={`p-5 md:p-6 transition-colors ${isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className={`w-16 h-16 rounded-2xl overflow-hidden border shrink-0 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
-                    {summary.gadget.image_url ? (
-                      <img
-                        src={summary.gadget.image_url}
-                        alt={summary.gadget.name || 'Gadżet'}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Gift size={24} className={isDarkMode ? 'text-slate-600' : 'text-slate-400'} />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <h4 className={`font-black text-base truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                        {summary.gadget.name}
-                      </h4>
-
-                      {summary.gadget.eco_type === 'tree' && (
-                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                          Drzewo
-                        </span>
-                      )}
-
-                      {summary.gadget.eco_type === 'none' && (
-                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          Bez gadżetu
-                        </span>
-                      )}
-                    </div>
-
-                    <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Wybrało: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{summary.totalQuantity}</strong> osób
-                      {summary.maxQuantity !== null && (
-                        <> / limit: <strong>{summary.maxQuantity}</strong></>
-                      )}
-                    </p>
-
-                    {summary.maxQuantity !== null && (
-                      <div className={`w-full max-w-xs h-1.5 rounded-full mt-2.5 overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            summary.totalQuantity > summary.maxQuantity ? 'bg-red-500' : (isDarkMode ? 'bg-blue-500' : 'bg-slate-800')
-                          }`}
-                          style={{
-                            width: `${Math.min((summary.totalQuantity / summary.maxQuantity) * 100, 100)}%`
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {summary.gadget.size_required && Object.keys(summary.sizeBreakdown).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {Object.entries(summary.sizeBreakdown).map(([size, count]) => (
-                          <span
-                            key={size}
-                            className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border ${isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'}`}
-                          >
-                            {size}: {count as number}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center lg:min-w-[300px] shrink-0">
-                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Wybrane
-                    </p>
-                    <p className={`text-xl font-black mt-1 tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      {summary.totalQuantity}
-                    </p>
-                  </div>
-
-                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-emerald-50 border-emerald-200'}`}>
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-emerald-500' : 'text-emerald-600'}`}>
-                      AI Estimate
-                    </p>
-                    <p className={`text-sm font-black mt-2 leading-tight ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                      AUTO
-                    </p>
-                  </div>
-
-                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-amber-900/20 border-amber-800/50' : 'bg-amber-50 border-amber-200'}`}>
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-amber-500' : 'text-amber-600'}`}>
-                      Zostało
-                    </p>
-                    <p className={`text-xl font-black mt-1 tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>
-                      {summary.remaining !== null ? summary.remaining : '∞'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {summary.choices.length > 0 && (
-                <details className="mt-5 group">
-                  <summary className={`cursor-pointer text-[10px] font-black uppercase tracking-widest flex items-center gap-2 select-none transition-colors ${isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'}`}>
-                    <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
-                    Pokaż listę osób ({summary.choices.length})
-                  </summary>
-
-                  <div className={`mt-3 rounded-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                    {summary.choices.map((choice, idx) => (
-                      <div
-                        key={choice.id}
-                        className={`px-4 py-3 flex justify-between items-center text-xs ${idx !== summary.choices.length - 1 ? (isDarkMode ? 'border-b border-slate-800/60' : 'border-b border-slate-200') : ''}`}
-                      >
-                        <span className={`font-black truncate pr-4 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
-                          {choice.b2b_applications?.first_name} {choice.b2b_applications?.last_name}
-                          {choice.selected_size && (
-                            <span className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}> - rozm. {choice.selected_size}</span>
-                          )}
-                        </span>
-                        <span className={`font-medium truncate text-right ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                          {choice.b2b_applications?.company_name || choice.b2b_applications?.email}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* KATALOG GADŻETÓW */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="min-w-0">
-        <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <Gift size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Katalog gadżetów
-        </h3>
-        <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zdefiniuj gadżety, limity, rozmiary i stany magazynowe.
-        </p>
-      </div>
-
-      {!isEditingGadget && (
-        <button
-          onClick={() => {
-            setGadgetForm({})
-            setIsEditingGadget(true)
-          }}
-          className={`shrink-0 px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-        >
-          <Plus size={14} />
-          Dodaj gadżet
-        </button>
-      )}
-    </div>
-
-    {/* FORMULARZ GADŻETU */}
-    {isEditingGadget ? (
-      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-        <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-          <h4 className={`font-black flex items-center gap-2 text-base md:text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            <Edit3 size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
-            {gadgetForm.id ? 'Edycja gadżetu' : 'Nowy gadżet'}
-          </h4>
-          <button
-            onClick={() => setIsEditingGadget(false)}
-            className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSaveGadget} className="p-5 md:p-6 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Nazwa gadżetu *
-              </label>
-              <input
-                required
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={gadgetForm.name || ''}
-                onChange={e => setGadgetForm({ ...gadgetForm, name: e.target.value })}
-                placeholder="np. Torba bawełniana GOTS"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Kategoria
-              </label>
-              <select
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.category || 'eco'}
-                onChange={e => setGadgetForm({ ...gadgetForm, category: e.target.value })}
-              >
-                <option value="eco">Ekologiczny</option>
-                <option value="premium">Premium</option>
-                <option value="standard">Standardowy</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Krótki opis
-            </label>
-            <textarea
-              rows={3}
-              className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-              value={gadgetForm.description || ''}
-              onChange={e => setGadgetForm({ ...gadgetForm, description: e.target.value })}
-              placeholder="Opisz gadżet dla gości..."
-            />
-            {/* Przycisk AI wywołujący funkcję podpowiedzi opisu */}
-            <div className="mt-2">
-              <AiTextAssistButton
-                eventId={id}
-                sectionKey="gadgets"
-                fieldKey="description"
-                currentValue={gadgetForm.description || ''}
-                placeholder="Krótki angażujący opis gadżetu..."
-                onApply={(text) => setGadgetForm({ ...gadgetForm, description: text })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Typ eco
-              </label>
-              <select
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.eco_type || 'standard'}
-                onChange={e => setGadgetForm({ ...gadgetForm, eco_type: e.target.value })}
-              >
-                <option value="standard">Standardowy gadżet</option>
-                <option value="eco">Eco gadżet</option>
-                <option value="tree">Posadzenie drzewa</option>
-                <option value="donation">Darowizna / cel społeczny</option>
-                <option value="none">Nie chcę gadżetu</option>
-              </select>
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Koszt jednostkowy
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={gadgetForm.unit_cost || ''}
-                onChange={e => setGadgetForm({ ...gadgetForm, unit_cost: Number(e.target.value || 0) })}
-                placeholder="np. 25.00"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Kolejność
-              </label>
-              <input
-                type="number"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.sort_order || 0}
-                onChange={e => setGadgetForm({ ...gadgetForm, sort_order: Number(e.target.value || 0) })}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Publiczna nazwa / etykieta
-            </label>
-            <input
-              className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-              value={gadgetForm.public_label || ''}
-              onChange={e => setGadgetForm({ ...gadgetForm, public_label: e.target.value })}
-              placeholder="np. Posadź drzewo zamiast odbierać gadżet"
-            />
-          </div>
-
-          <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Notatka magazynowa / produkcyjna (Ukryta)
-            </label>
-            <textarea
-              rows={2}
-              className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-              value={gadgetForm.stock_note || ''}
-              onChange={e => setGadgetForm({ ...gadgetForm, stock_note: e.target.value })}
-              placeholder="np. zamówić dopiero po zamknięciu RSVP"
-            />
-          </div>
-
-          <div className={`rounded-2xl border px-5 py-4 ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/30' : 'bg-emerald-50/50 border-emerald-200/50'}`}>
-            <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-              <Sparkles size={12}/> Wyliczane automatycznie przez AI
-            </p>
-            <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
-              Nie musisz znać śladu węglowego tej pozycji. AI Eco Engine oszacuje go automatycznie na podstawie danych organizacyjnych i wyborów gości.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Limit sztuk
-              </label>
-              <input
-                type="number"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={gadgetForm.max_quantity || ''}
-                onChange={e => setGadgetForm({ ...gadgetForm, max_quantity: parseInt(e.target.value || '0') })}
-                placeholder="Bez limitu"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Sztuk na stanie
-              </label>
-              <input
-                type="number"
-                min="0"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.stock_quantity ?? 0}
-                onChange={e => setGadgetForm({ ...gadgetForm, stock_quantity: Number(e.target.value || 0) })}
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szt. na osobę
-              </label>
-              <input
-                type="number"
-                min="1"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.max_per_person ?? 1}
-                onChange={e => setGadgetForm({ ...gadgetForm, max_per_person: Number(e.target.value || 1) })}
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Próg niskiego
-              </label>
-              <input
-                type="number"
-                min="0"
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                value={gadgetForm.low_stock_threshold ?? 5}
-                onChange={e => setGadgetForm({ ...gadgetForm, low_stock_threshold: Number(e.target.value || 5) })}
-              />
-            </div>
-          </div>
-
-          {gadgetForm.size_required === true && (
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Dostępne rozmiary
-              </label>
-              <input
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={Array.isArray(gadgetForm.available_sizes) ? gadgetForm.available_sizes.join(',') : (gadgetForm.available_sizes || '')}
-                onChange={e => setGadgetForm({ ...gadgetForm, available_sizes: e.target.value })}
-                placeholder="np. XS,S,M,L,XL"
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`p-4 md:p-5 border rounded-2xl ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-              <label className={`text-[10px] font-black uppercase tracking-widest block mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Zdjęcie gadżetu
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300 file:border-slate-700' : 'text-slate-700 file:bg-white file:border-slate-300'}`}
-                onChange={e => setNewFiles({ ...newFiles, gadgetImg: e.target.files ? e.target.files[0] : null })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[
-              {
-                key: 'size_required',
-                title: 'Wymaga rozmiaru',
-                desc: 'Np. dla koszulek',
-                checked: gadgetForm.size_required || false,
-                onChange: (checked: boolean) =>
-                  setGadgetForm({
-                    ...gadgetForm,
-                    size_required: checked,
-                    available_sizes: checked ? gadgetForm.available_sizes : []
-                  })
-              },
-              {
-                key: 'track_stock',
-                title: 'Śledzenie stanu',
-                desc: 'Blokuje wybór po wyczerpaniu',
-                checked: gadgetForm.track_stock !== false,
-                onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, track_stock: checked })
-              },
-              {
-                key: 'is_required_choice',
-                title: 'Wybór wymagany',
-                desc: 'Gość musi wybrać gadżet',
-                checked: gadgetForm.is_required_choice === true,
-                onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, is_required_choice: checked })
-              },
-              {
-                key: 'allow_decline',
-                title: 'Można zrezygnować',
-                desc: 'Opcja „Nie chcę gadżetu”',
-                checked: gadgetForm.allow_decline !== false,
-                onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, allow_decline: checked })
-              },
-              {
-                key: 'is_active',
-                title: 'Aktywny',
-                desc: 'Czy widoczny dla gości?',
-                checked: gadgetForm.is_active !== false,
-                onChange: (checked: boolean) => setGadgetForm({ ...gadgetForm, is_active: checked })
-              }
-            ].map(item => (
-              <label
-                key={item.key}
-                className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  item.checked
-                    ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900 shadow-md' : 'border-slate-900 bg-slate-50 shadow-md')
-                    : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-white hover:bg-slate-50')
-                }`}
-              >
-                <div>
-                  <p className={`font-black text-sm ${item.checked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>
-                    {item.title}
-                  </p>
-                  <p className={`text-[10px] font-medium mt-1 ${item.checked ? (isDarkMode ? 'text-slate-400' : 'text-slate-500') : (isDarkMode ? 'text-slate-500' : 'text-slate-400')}`}>
-                    {item.desc}
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  onChange={e => item.onChange(e.target.checked)}
-                  className="sr-only"
-                />
-                <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
-                  item.checked
-                    ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
-                    : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
-                }`}>
-                  {item.checked && <CheckCircle2 size={12} />}
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <button
-            type="submit"
-            disabled={updating}
-            className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
-          >
-            {updating ? 'Zapisywanie...' : 'Zapisz gadżet'}
-          </button>
-        </form>
-      </div>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {gadgets.length === 0 ? (
-          <div className={`col-span-full p-12 text-center font-bold text-sm rounded-3xl border-2 border-dashed ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-            Brak gadżetów w katalogu. Dodaj pierwszy produkt.
-          </div>
-        ) : gadgets.map(gadget => {
-          const reserved = getGadgetReservedQuantity(gadget.id)
-          const redeemed = getGadgetRedeemedQuantity(gadget.id)
-          const available = getGadgetAvailableQuantity(gadget)
-          const stockStatus = getGadgetStockStatus(gadget)
-          const statusLabel =
-            stockStatus === 'unlimited'
-              ? 'Bez limitu'
-              : stockStatus === 'sold_out'
-                ? 'Niedostępny'
-                : stockStatus === 'low_stock'
-                  ? 'Ostatnie sztuki'
-                  : 'Dostępny'
-
-          const statusClass =
-            stockStatus === 'unlimited'
-              ? (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200')
-              : stockStatus === 'sold_out'
-                ? (isDarkMode ? 'bg-red-900/30 text-red-400 border-red-800/50' : 'bg-red-50 text-red-700 border-red-200')
-                : stockStatus === 'low_stock'
-                  ? (isDarkMode ? 'bg-amber-900/30 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200')
-                  : (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
-
-          return (
-            <div
-              key={gadget.id}
-              className={`flex flex-col border rounded-3xl overflow-hidden hover:shadow-lg transition-all group relative ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-slate-50 border-slate-200'} ${gadget.is_active === false ? 'opacity-60' : ''}`}
-            >
-              {/* Przyciski Akcji */}
-              <div className={`absolute top-3 right-3 z-10 flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl shadow-md border ${isDarkMode ? 'bg-slate-800/90 border-slate-700 backdrop-blur-md' : 'bg-white/90 border-slate-200 backdrop-blur-md'}`}>
-                <button
-                  onClick={() => {
-                    setGadgetForm(gadget)
-                    setIsEditingGadget(true)
-                  }}
-                  className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`}
-                >
-                  <Edit3 size={16} />
-                </button>
-
-                <button
-                  onClick={() => handleDeleteGadget(gadget.id)}
-                  className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-600'}`}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-
-              {/* Obrazek Gadżetu */}
-              <div className={`h-52 relative overflow-hidden ${isDarkMode ? 'bg-slate-900' : 'bg-slate-200'}`}>
-                {gadget.image_url ? (
-                  <img
-                    src={gadget.image_url}
-                    alt={gadget.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon size={40} className={isDarkMode ? 'text-slate-700' : 'text-slate-400'} />
-                  </div>
-                )}
-
-                {gadget.category === 'eco' && (
-                  <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border shadow-sm ${isDarkMode ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800' : 'bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
-                    ECO
-                  </span>
-                )}
-
-                {gadget.is_active === false && (
-                  <span className={`absolute bottom-3 left-3 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border shadow-sm ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-800 text-white border-slate-700'}`}>
-                    Nieaktywny
-                  </span>
-                )}
-              </div>
-
-              {/* Szczegóły w Kafelku */}
-              <div className={`p-5 flex-1 flex flex-col justify-between border-t ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-                <div>
-                  <h5 className={`font-black text-lg pr-14 line-clamp-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                    {gadget.name}
-                  </h5>
-
-                  <p className={`text-xs mt-1.5 font-medium line-clamp-2 min-h-[36px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {gadget.description || 'Brak opisu dla gości.'}
-                  </p>
-                </div>
-
-                {/* Siatka Danych */}
-                <div className={`mt-5 grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                  <div>
-                    <span className="opacity-60 block text-[8px] mb-0.5">Na stanie</span>
-                    <span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{Number(gadget.stock_quantity || 0)} szt.</span>
-                  </div>
-                  <div>
-                    <span className="opacity-60 block text-[8px] mb-0.5">Zarezerwowane</span>
-                    <span className={`text-xs ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{reserved} szt.</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span className="opacity-60 block text-[8px] mb-0.5">Wydane gościom</span>
-                    <span className={`text-xs ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{redeemed}</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span className="opacity-60 block text-[8px] mb-0.5">Pozostało</span>
-                    <span className={`text-xs ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{available === Infinity ? '∞' : available}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-5">
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md border ${isDarkMode ? 'text-emerald-500 bg-emerald-900/10 border-emerald-900/30' : 'text-emerald-700 bg-emerald-50 border-emerald-100'}`}>
-                    AI Eco: auto
-                  </span>
-
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md border ${statusClass}`}>
-                    {statusLabel}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    )}
-  </div>
-)}
-
-{/* ============================================================================ */}
-{/* finanse */}
 {/* ============================================================================ */}
 {activeTab === 'finanse' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -9449,7 +8548,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-
 {/* ============================================================================ */}
 {/* podwykonawca */}
 {/* ============================================================================ */}
@@ -10076,8 +9174,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
   </div>
 )}
-
-
 
 {/* ============================================================================ */}
 {/* checklista */}
@@ -10715,7 +9811,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
   </div>
 )}
-
 
 {/* ============================================================================ */}
 {/* REJESTRACJA PACJENTÓW (Główna Baza) - Zastępuje stare 'bilety' */}
@@ -11432,9 +10527,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   )
 })()}
 
-
-
-
 {/* ============================================================================ */}
 {/* pass QR */}
 {/* ============================================================================ */}
@@ -12016,7 +11108,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-
 {/*============================================================================ */}
 {/* logistyka  chyba ukryta*/}
 {/* ============================================================================*/}
@@ -12382,21 +11473,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-
-{/* ---------------------------------------------------------------
-  Domyślny placeholder dla nieistniejących zakładek
-  --------------------------------------------------------------- */}
-    {!['rekrutacja', 'logistyka', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'gadgets', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
+    {!['rekrutacja', 'logistyka', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
   <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
 )}
    </div>
-
-
         </div>
       </main>
-
-
-{/* edycja gości */}
 
       {editingGuest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
@@ -12417,10 +11499,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   )
 }
 
-
-// ==========================================================================
-// 6. KOMPONENTY POMOCNICZE (useState)
-// ==========================================================================
 
 const PlaceholderView = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
   <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm p-8 md:p-16 text-center">
