@@ -1542,6 +1542,58 @@ const AiTextAssistButton = ({
       maximumFractionDigits: 2
     })} ${currency}`
 
+  const clinicBudgetCategoryLabels: Record<string, string> = {
+    gadgets: 'Preparaty i materiały',
+    contractors: 'Usługi zewnętrzne',
+    venue: 'Czynsz, gabinety i lokalizacja',
+    venue_hotel: 'Czynsz, gabinety i lokalizacja',
+    location: 'Czynsz, gabinety i lokalizacja',
+    marketing: 'Marketing i pierwszy kontakt',
+    decorations: 'Wyposażenie i estetyka gabinetów',
+    decor: 'Wyposażenie i estetyka gabinetów',
+    technical: 'Sprzęt i serwis',
+    av: 'Sprzęt i serwis',
+    other: 'Inne koszty kliniki',
+    income: 'Przychody z wizyt',
+    tickets: 'Przychody z wizyt',
+    visit_income: 'Przychody z wizyt',
+    medical_team: 'Personel medyczny',
+    preparations: 'Preparaty i materiały',
+    equipment: 'Sprzęt i serwis',
+    diagnostics: 'Diagnostyka i laboratoria',
+    administration: 'Administracja i recepcja',
+    facility: 'Czynsz, gabinety i lokalizacja',
+    it_systems: 'IT i systemy',
+  }
+
+  const clinicBudgetNameAliases: Record<string, string> = {
+    'gadżety': 'Preparaty i materiały',
+    'gadzety': 'Preparaty i materiały',
+    'podwykonawcy': 'Usługi zewnętrzne',
+    'obiekt / lokalizacja': 'Czynsz, gabinety i lokalizacja',
+    'obiekt/lokalizacja': 'Czynsz, gabinety i lokalizacja',
+    'dekoracje': 'Wyposażenie i estetyka gabinetów',
+    'technika': 'Sprzęt i serwis',
+    'inne': 'Inne koszty kliniki',
+    'przychody': 'Przychody z wizyt',
+  }
+
+  const getClinicBudgetCategoryName = (category: any) => {
+    if (!category) return '-'
+    const slug = String(category.slug || category.category || category || '').toLowerCase()
+    const name = String(category.name || category || '').trim()
+    return clinicBudgetCategoryLabels[slug] || clinicBudgetNameAliases[name.toLowerCase()] || name || slug || '-'
+  }
+
+  const getClinicBudgetSourceLabel = (sourceType?: string | null) => {
+    const source = String(sourceType || '').toLowerCase()
+    if (source === 'tickets') return 'wizyty'
+    if (source === 'contractor') return 'usługa zewnętrzna'
+    if (source === 'appointment') return 'wizyta'
+    if (source === 'manual') return 'ręcznie'
+    return sourceType || '-'
+  }
+
   const isLocalDateTimeValue = (value: string) =>
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?!.*(?:Z|[+-]\d{2}:?\d{2}))/.test(value)
 
@@ -1621,7 +1673,10 @@ const AiTextAssistButton = ({
       if (paymentsRes.error) console.warn('event_budget_payments load error', paymentsRes.error)
 
       setBudgetItems(itemsRes.data || [])
-      setBudgetCategories(categoriesRes.data || [])
+      setBudgetCategories((categoriesRes.data || []).map((category: any) => ({
+        ...category,
+        display_name: getClinicBudgetCategoryName(category),
+      })))
       setBudgetTransfers(transfersRes.data || [])
       setBudgetPayments(paymentsRes.data || [])
     } catch (err) {
@@ -2617,7 +2672,7 @@ const patientQrMetrics = useMemo(() => ({
       { name: 'Diagnostyka i laboratoria', slug: 'diagnostics', planned_budget: 0, color: '#0891b2', sort_order: 4 },
       { name: 'Marketing i pierwszy kontakt', slug: 'marketing', planned_budget: 0, color: '#db2777', sort_order: 5 },
       { name: 'Administracja i recepcja', slug: 'administration', planned_budget: 0, color: '#64748b', sort_order: 6 },
-      { name: 'Czynsz i media', slug: 'facility', planned_budget: 0, color: '#ca8a04', sort_order: 7 },
+      { name: 'Czynsz, gabinety i lokalizacja', slug: 'facility', planned_budget: 0, color: '#ca8a04', sort_order: 7 },
       { name: 'IT i systemy', slug: 'it_systems', planned_budget: 0, color: '#475569', sort_order: 8 },
       { name: 'Inne koszty kliniki', slug: 'other', planned_budget: 0, color: '#94a3b8', sort_order: 9 },
       { name: 'Przychody z wizyt', slug: 'visit_income', planned_budget: 0, color: '#16a34a', sort_order: 10 }
@@ -2879,7 +2934,7 @@ const patientQrMetrics = useMemo(() => ({
       source_id: null,
       type: 'income',
       category: 'income',
-      title: 'Przychody z biletów',
+      title: 'Przychody z wizyt',
       description: `Oczekiwany przychód: ${formatMoney(expectedTicketRevenue)}`,
       net_amount: paidTicketRevenue,
       vat_rate: 0,
@@ -2895,9 +2950,9 @@ const patientQrMetrics = useMemo(() => ({
     const { error } = existing
       ? await supabase.from('event_budget_items').update(data).eq('id', existing.id)
       : await supabase.from('event_budget_items').insert([data])
-    if (error) return showNotification('Błąd importu biletów: ' + error.message, 'error')
+    if (error) return showNotification('Błąd importu przychodów: ' + error.message, 'error')
     await loadBudgetData()
-    showNotification('Przychody z biletów przeliczone', 'success')
+    showNotification('Przychody z wizyt przeliczone', 'success')
   }
 
   const handleSaveRegistrationSettings = async () => {
@@ -4082,6 +4137,7 @@ const transportAnalytics = useMemo(() => {
     const usagePercent = plannedBudget ? Math.round((usedBudget / plannedBudget) * 100) : 0
     return {
       ...category,
+      display_name: getClinicBudgetCategoryName(category),
       planned_budget: plannedBudget,
       used_budget: usedBudget,
       paid_amount: paidAmount,
@@ -8226,11 +8282,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-4 h-4 rounded-full shrink-0 shadow-inner" style={{ backgroundColor: category.color || '#94a3b8' }}/>
-              <h5 className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{category.name}</h5>
+              <h5 className={`font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{category.display_name || getClinicBudgetCategoryName(category)}</h5>
             </div>
             <div className="flex gap-1.5 shrink-0">
               <button onClick={() => { setBudgetTransferForm({ currency: 'PLN', from_category_id: category.id }); setIsBudgetTransferModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-900'}`} title="Przenieś z tej kategorii"><ArrowRightLeft size={14}/></button>
-              <button onClick={() => { setBudgetCategoryForm(category); setIsEditingBudgetCategory(true); setIsBudgetCategoryModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><Edit3 size={14}/></button>
+              <button onClick={() => { setBudgetCategoryForm({ ...category, name: category.display_name || getClinicBudgetCategoryName(category) }); setIsEditingBudgetCategory(true); setIsBudgetCategoryModalOpen(true) }} className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-blue-900/20 text-blue-400 hover:bg-blue-900/40' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}><Edit3 size={14}/></button>
             </div>
           </div>
 
@@ -8272,7 +8328,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
           <select className={`border rounded-xl px-3 py-2 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={budgetFilterCategory} onChange={e => setBudgetFilterCategory(e.target.value)}>
             <option value="all">Kategorie</option>
-            {budgetCategories.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+            {budgetCategories.map((c: any) => <option key={c.id} value={c.slug}>{getClinicBudgetCategoryName(c)}</option>)}
           </select>
           <select className={`border rounded-xl px-3 py-2 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`} value={budgetFilterType} onChange={e => setBudgetFilterType(e.target.value)}>
             <option value="all">Typy</option><option value="expense">Wydatki</option><option value="income">Przychody</option>
@@ -8306,8 +8362,8 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     <p className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</p>
                     <p className={`text-[10px] mt-0.5 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.description || '-'}</p>
                   </td>
-                  <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{item.category}</td>
-                  <td className={`p-4 text-[10px] font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.source_type}</td>
+                  <td className={`p-4 text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{getClinicBudgetCategoryName({ slug: item.category, name: item.category })}</td>
+                  <td className={`p-4 text-[10px] font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{getClinicBudgetSourceLabel(item.source_type)}</td>
                   <td className={`p-4 text-[10px] font-black uppercase tracking-wider ${item.type === 'income' ? (isDarkMode ? 'text-blue-400' : 'text-blue-600') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>{item.type}</td>
                   <td className={`p-4 text-xs tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{formatMoney(item.net_amount, item.currency)}</td>
                   <td className={`p-4 text-[10px] tabular-nums ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{formatMoney(item.vat_amount, item.currency)}<br/>({item.vat_rate}%)</td>
@@ -8365,9 +8421,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div key={t.id} className={`flex items-center justify-between gap-3 border-b pb-3 text-xs ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                 <div className="min-w-0">
                   <span className={`font-black flex items-center gap-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    <span className="truncate max-w-[100px] sm:max-w-none">{from?.name || '-'}</span>
+                    <span className="truncate max-w-[100px] sm:max-w-none">{getClinicBudgetCategoryName(from)}</span>
                     <ArrowRightLeft size={10} className="shrink-0 mx-1 opacity-50" />
-                    <span className="truncate max-w-[100px] sm:max-w-none">{to?.name || '-'}</span>
+                    <span className="truncate max-w-[100px] sm:max-w-none">{getClinicBudgetCategoryName(to)}</span>
                   </span>
                   <span className={`text-[10px] mt-1 block truncate ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{t.reason || 'Brak powoda'}</span>
                 </div>
@@ -8407,7 +8463,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetItemForm.category || 'other'} onChange={e => setBudgetItemForm({ ...budgetItemForm, category: e.target.value })}>
-              {budgetCategories.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+              {budgetCategories.map((c: any) => <option key={c.id} value={c.slug}>{getClinicBudgetCategoryName(c)}</option>)}
               <option value="other">Inne</option>
             </select>
           </div>
@@ -8667,14 +8723,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Z Kategorii</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetTransferForm.from_category_id || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, from_category_id: e.target.value })}>
               <option value="">Wybierz...</option>
-              {budgetCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name} ({formatMoney(c.planned_budget)})</option>)}
+              {budgetCategories.map((c: any) => <option key={c.id} value={c.id}>{getClinicBudgetCategoryName(c)} ({formatMoney(c.planned_budget)})</option>)}
             </select>
           </div>
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Do Kategorii</label>
             <select className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} value={budgetTransferForm.to_category_id || ''} onChange={e => setBudgetTransferForm({ ...budgetTransferForm, to_category_id: e.target.value })}>
               <option value="">Wybierz...</option>
-              {budgetCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {budgetCategories.map((c: any) => <option key={c.id} value={c.id}>{getClinicBudgetCategoryName(c)}</option>)}
             </select>
           </div>
         </div>
