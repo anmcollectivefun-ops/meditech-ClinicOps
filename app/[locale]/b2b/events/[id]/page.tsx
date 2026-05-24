@@ -635,7 +635,7 @@ const [newFiles, setNewFiles] = useState<{
     { id: '2', category: 'Catering', name: 'EkoFood Solutions', contactPerson: 'Marek Nowak', email: 'kontakt@ekofood.pl', phone: '+48 600 700 800', status: 'Wycena' },
     { id: '3', category: 'Transport', name: 'Bus-Trans sp. z o.o.', contactPerson: 'Piotr Wiśniewski', email: 'biuro@bustrans.pl', phone: '+48 700 800 900', status: 'Brak kontaktu' }
   ])
-
+const [clinicDayTasks, setClinicDayTasks] = useState<any[]>([])
   const [runOfShow, setRunOfShow] = useState<any[]>([
     { id: '1', time: '06:00', task: 'Wjazd ekipy technicznej (Scena i AV)', assignee: 'Firma AV', location: 'Sala Główna', status: 'done', isCritical: true },
     { id: '2', time: '08:00', task: 'Rozstawienie cateringu - przerwa kawowa', assignee: 'Catering', location: 'Foyer', status: 'pending', isCritical: false },
@@ -837,6 +837,64 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   // Listy słownikowe pobierane z event_partners
   const [doctorsList, setDoctorsList] = useState<any[]>([])
   const [preparationsList, setPreparationsList] = useState<any[]>([])
+  const dayKeyByJsDay: Record<number, string> = {
+  0: 'sun',
+  1: 'mon',
+  2: 'tue',
+  3: 'wed',
+  4: 'thu',
+  5: 'fri',
+  6: 'sat'
+}
+
+const selectedAppointmentTreatment = useMemo(() => {
+  return treatments.find((treatment: any) => treatment.id === appointmentForm.treatment_id) || null
+}, [treatments, appointmentForm.treatment_id])
+
+const selectedAppointmentDoctor = useMemo(() => {
+  if (!selectedAppointmentTreatment?.doctor_id) return null
+  return doctorsList.find((doctor: any) => doctor.id === selectedAppointmentTreatment.doctor_id) || null
+}, [doctorsList, selectedAppointmentTreatment])
+
+const selectedAppointmentDoctorSchedule = useMemo(() => {
+  return getWorkSchedule(selectedAppointmentDoctor?.work_schedule)
+}, [selectedAppointmentDoctor])
+
+const appointmentAvailableDays = useMemo(() => {
+  return workDayOptions
+    .map(([day, label]) => {
+      const daySchedule = selectedAppointmentDoctorSchedule.week?.[day]
+      const isAvailable =
+        daySchedule?.enabled &&
+        ['working', 'duty'].includes(daySchedule?.status)
+
+      return {
+        day,
+        label,
+        isAvailable,
+        start: daySchedule?.start || '',
+        end: daySchedule?.end || '',
+        status: daySchedule?.status || 'off',
+        note: daySchedule?.note || ''
+      }
+    })
+    .filter(day => day.isAvailable)
+}, [selectedAppointmentDoctorSchedule])
+
+const isAppointmentDateAllowed = (dateTimeValue?: string) => {
+  if (!dateTimeValue || !selectedAppointmentDoctor) return true
+
+  const date = new Date(dateTimeValue)
+  if (Number.isNaN(date.getTime())) return false
+
+  const dayKey = dayKeyByJsDay[date.getDay()]
+  const daySchedule = selectedAppointmentDoctorSchedule.week?.[dayKey]
+
+  return Boolean(
+    daySchedule?.enabled &&
+    ['working', 'duty'].includes(daySchedule?.status)
+  )
+}
 
   const loadPartnersCatalog = async () => {
     // Pobieramy prawdziwe dane lekarzy i preparatów
@@ -928,7 +986,170 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
 
     setAppointmentsList(data || [])
   }
+const loadClinicDayTasks = useCallback(async () => {
+  const { data, error } = await supabase
+    .from('clinic_day_tasks')
+    .select('*')
+    .eq('event_id', id)
+    .order('date', { ascending: true })
+    .order('time', { ascending: true })
 
+  if (error) {
+    console.warn('Clinic day tasks load error:', error.message)
+    setClinicDayTasks([])
+    return
+  }
+
+  setClinicDayTasks(data || [])
+}, [id, supabase])
+
+const handleSaveClinicDayTask = async () => {
+  if (!newRosTask.task) {
+    showNotification('Wpisz treść zadania.', 'error')
+    return
+  }
+
+  const { error } = await supabase.from('clinic_day_tasks').insert([{
+    event_id: id,
+    patient_id: newRosTask.patient_id || null,
+    appointment_id: newRosTask.appointment_id || null,
+    doctor_id: newRosTask.doctor_id || null,
+    task: newRosTask.task,
+    task_type: newRosTask.task_type || 'clinic_task',
+    date: newRosTask.date || todayIso,
+    time: newRosTask.time || null,
+    assignee: newRosTask.assignee || null,
+    location: newRosTask.location || null,
+    note: newRosTask.note || null,
+    status: 'pending',
+    is_critical: !!newRosTask.isCritical,
+    updated_at: new Date().toISOString()
+  }])
+
+  if (error) {
+    showNotification('Błąd zapisu zadania kliniki: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+  setNewRosTask({ date: '', time: '', task: '', assignee: '', location: '', note: '', isCritical: false })
+  showNotification('Zadanie kliniki zapisane.', 'success')
+}
+
+const handleToggleClinicDayTask = async (task: any) => {
+  const nextStatus = task.status === 'done' ? 'pending' : 'done'
+
+  const { error } = await supabase
+    .from('clinic_day_tasks')
+    .update({ status: nextStatus, updated_at: new Date().toISOString() })
+    .eq('id', task.id)
+
+  if (error) {
+    showNotification('Błąd zmiany statusu zadania: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+}
+
+const handleDeleteClinicDayTask = async (taskId: string) => {
+  if (!confirm('Usunąć zadanie kliniki?')) return
+
+  const { error } = await supabase
+    .from('clinic_day_tasks')
+    .delete()
+    .eq('id', taskId)
+
+  if (error) {
+    showNotification('Błąd usuwania zadania: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+  showNotification('Zadanie usunięte.', 'success')
+}
+
+const handleSaveClinicDayTask = async () => {
+  if (!newRosTask.task) {
+    showNotification('Wpisz treść zadania.', 'error')
+    return
+  }
+
+  const payload = {
+    event_id: id,
+    patient_id: newRosTask.patient_id || null,
+    appointment_id: newRosTask.appointment_id || null,
+    doctor_id: newRosTask.doctor_id || null,
+    task: newRosTask.task,
+    task_type: newRosTask.task_type || 'clinic_task',
+    date: newRosTask.date || todayIso,
+    time: newRosTask.time || null,
+    assignee: newRosTask.assignee || null,
+    location: newRosTask.location || null,
+    note: newRosTask.note || null,
+    status: 'pending',
+    is_critical: !!newRosTask.isCritical,
+    updated_at: new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('clinic_day_tasks')
+    .insert([payload])
+
+  if (error) {
+    showNotification('Błąd zapisu zadania kliniki: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+  setNewRosTask({
+    date: '',
+    time: '',
+    task: '',
+    assignee: '',
+    location: '',
+    note: '',
+    isCritical: false
+  })
+
+  showNotification('Zadanie kliniki zapisane.', 'success')
+}
+
+const handleToggleClinicDayTask = async (task: any) => {
+  const nextStatus = task.status === 'done' ? 'pending' : 'done'
+
+  const { error } = await supabase
+    .from('clinic_day_tasks')
+    .update({
+      status: nextStatus,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', task.id)
+
+  if (error) {
+    showNotification('Błąd zmiany statusu zadania: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+}
+
+const handleDeleteClinicDayTask = async (taskId: string) => {
+  if (!confirm('Usunąć zadanie kliniki?')) return
+
+  const { error } = await supabase
+    .from('clinic_day_tasks')
+    .delete()
+    .eq('id', taskId)
+
+  if (error) {
+    showNotification('Błąd usuwania zadania: ' + error.message, 'error')
+    return
+  }
+
+  await loadClinicDayTasks()
+  showNotification('Zadanie usunięte.', 'success')
+}
   const loadPatientClinicalNotes = useCallback(async () => {
     const { data, error } = await supabase
       .from('patient_clinical_notes')
@@ -993,6 +1214,7 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       showNotification('Wpis dodany do historii pacjenta', 'success')
       setDoctorRecordForm({ record_type: 'visit_note' })
       await loadPatientClinicalNotes()
+      await loadClinicDayTasks()
     } catch (err: any) {
       showNotification('Błąd zapisu wpisu lekarza: ' + err.message, 'error')
     } finally {
@@ -4179,7 +4401,7 @@ const { data: checklistItemData } = await supabase
     } finally {
       setLoading(false)
     }
-  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates, loadPatientClinicalNotes])
+  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates, loadPatientClinicalNotes, loadClinicDayTasks])
 
   useEffect(() => {
     loadEventData()
@@ -6726,7 +6948,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-
 {/* ============================================================================ */}
 {/* DOKUMENTACJA I WYWIAD MEDYCZNY (Dawne 'materialy') */}
 {/* ============================================================================ */}
@@ -7957,14 +8178,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 required
                 value={appointmentForm.treatment_id}
                 onChange={e => {
-                  const selectedTreatment = treatments.find((t: any) => t.id === e.target.value)
-                  setAppointmentForm({
-                    ...appointmentForm,
-                    treatment_id: e.target.value,
-                    price_amount: selectedTreatment?.price_amount ?? '',
-                    currency: selectedTreatment?.currency || appointmentForm.currency || 'PLN'
-                  })
-                }}
+  const selectedTreatment = treatments.find((t: any) => t.id === e.target.value)
+
+  setAppointmentForm({
+    ...appointmentForm,
+    treatment_id: e.target.value,
+    appointment_date: '',
+    price_amount: selectedTreatment?.price_amount ?? '',
+    currency: selectedTreatment?.currency || appointmentForm.currency || 'PLN'
+  })
+}}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
                 <option value="">-- Wybierz usługę z bazy --</option>
@@ -7979,14 +8202,73 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="md:col-span-2">
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>3. Data i godzina *</label>
-              <input 
-                required
-                type="datetime-local"
-                value={appointmentForm.appointment_date}
-                onChange={e => setAppointmentForm({ ...appointmentForm, appointment_date: e.target.value })}
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
-              />
+             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${
+  isDarkMode ? 'text-slate-400' : 'text-slate-600'
+}`}>
+  3. Data i godzina zgodna z grafikiem lekarza *
+</label>
+
+{selectedAppointmentTreatment && selectedAppointmentDoctor ? (
+  <div
+    className={`mb-3 rounded-2xl border p-3 ${
+      isDarkMode
+        ? 'bg-slate-950 border-slate-800'
+        : 'bg-slate-50 border-slate-200'
+    }`}
+  >
+    <p
+      className={`text-[10px] font-black uppercase tracking-widest mb-2 ${
+        isDarkMode ? 'text-slate-400' : 'text-slate-500'
+      }`}
+    >
+      Dostępne dni lekarza:
+    </p>
+
+    <div className="flex flex-wrap gap-2">
+      {appointmentAvailableDays.map(day => (
+        <span
+          key={day.day}
+          className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase border ${
+            isDarkMode
+              ? 'bg-emerald-900/20 text-emerald-300 border-emerald-800/50'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }`}
+        >
+          {day.label}
+          {day.start && day.end ? ` ${day.start}-${day.end}` : ''}
+        </span>
+      ))}
+    </div>
+  </div>
+) : null}
+
+<input
+  required
+  type="datetime-local"
+  value={appointmentForm.appointment_date}
+  onChange={e => {
+    const nextValue = e.target.value
+
+    if (!isAppointmentDateAllowed(nextValue)) {
+      showNotification(
+        'Ten lekarz nie pracuje w wybranym dniu.',
+        'error'
+      )
+
+      return
+    }
+
+    setAppointmentForm({
+      ...appointmentForm,
+      appointment_date: nextValue
+    })
+  }}
+  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${
+    isDarkMode
+      ? 'bg-slate-950 border-slate-700 text-white'
+      : 'bg-slate-50 border-slate-300 text-slate-900'
+  }`}
+/>
               </div>
               <div>
                 <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena wizyty</label>
@@ -11322,110 +11604,161 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 
-{/* ============================================================================ */}
-{/* ORGANIZER / CENTRUM DOWODZENIA (Z WIZUALNYM KALENDARZEM) */}
-{/* =========================================================================== */}
 {activeTab === 'minutowka' && (() => {
+  const getPatientName = (patientId?: string) => {
+    const patient = patients.find((p: any) => p.id === patientId)
+    return patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : 'Pacjent'
+  }
 
-  // 1. AGREGACJA WSZYSTKICH WYDARZEŃ Z CAŁEGO PLANNERA
+  const getDoctorName = (doctorId?: string) => {
+    const doctor = doctorsList.find((d: any) => d.id === doctorId)
+    return doctor ? `${doctor.first_name || ''} ${doctor.last_name || ''}`.trim() : 'Lekarz nieprzypisany'
+  }
+
+  const getTreatmentName = (appointment: any) => {
+    const treatment = treatments.find((t: any) => t.id === appointment.treatment_id)
+    return treatment?.name || appointment.treatment_name || 'Zabieg'
+  }
+
+  const todayAppointments = appointmentsList
+    .filter((a: any) => String(a.appointment_date || '').slice(0, 10) === todayIso)
+    .sort((a: any, b: any) => String(a.appointment_date || '').localeCompare(String(b.appointment_date || '')))
+
+  const pendingConsents = patientConsents.filter((c: any) => c.status !== 'signed')
+
+  const openPortalRequests = patientPortalRequests.filter((r: any) =>
+    !['answered', 'closed'].includes(String(r.status || '').toLowerCase())
+  )
+
   const aggregatedEvents = (() => {
-    const allEvents: any[] = [];
+    const allEvents: any[] = []
 
-    // Z Minutówki
-    runOfShow.forEach((task: any) => {
-      if (task.date) {
-        allEvents.push({
-          id: `ros-${task.id}`,
-          date: task.date,
-          time: task.time,
-          title: task.task,
-          source: 'Minutówka',
-          isCritical: task.isCritical,
-          color: task.isCritical ? 'bg-red-500' : 'bg-[#253a2a]'
-        });
-      }
-    });
+    appointmentsList.forEach((appointment: any) => {
+      if (!appointment.appointment_date) return
 
-    // Z Harmonogramu (Agenda)
-    sessions.forEach((session: any) => {
-      if (session.start_time) {
-        const dateObj = new Date(session.start_time);
-        if (!isNaN(dateObj.getTime())) {
-          allEvents.push({
-            id: `session-${session.id}`,
-            date: dateObj.toISOString().slice(0, 10),
-            time: dateObj.toISOString().slice(11, 16),
-            title: session.title,
-            source: 'Agenda',
-            isCritical: false,
-            color: 'bg-indigo-500'
-          });
-        }
-      }
-    });
+      allEvents.push({
+        id: `appointment-${appointment.id}`,
+        date: String(appointment.appointment_date).slice(0, 10),
+        time: String(appointment.appointment_date).slice(11, 16),
+        title: `${getTreatmentName(appointment)} — ${
+          appointment.patients
+            ? `${appointment.patients.first_name || ''} ${appointment.patients.last_name || ''}`.trim()
+            : getPatientName(appointment.patient_id)
+        }`,
+        source: 'Zabieg',
+        doctor: getDoctorName(appointment.doctor_id),
+        isCritical: false,
+        color: 'bg-cyan-500'
+      })
+    })
 
-    // Z Finansów (Płatności dla podwykonawców)
-    contractors.forEach((contractor: any) => {
-      if (contractor.payment_due_date && contractor.payment_status !== 'paid') {
-        allEvents.push({
-          id: `payment-${contractor.id}`,
-          date: contractor.payment_due_date,
-          time: '12:00', // Domyślna godzina dla terminów płatności
-          title: `Płatność: ${contractor.name} (${contractor.gross_amount || contractor.amount} PLN)`,
-          source: 'Finanse',
-          isCritical: true, // Płatności traktujemy jako ważne
-          color: 'bg-amber-500'
-        });
-      }
-    });
+    clinicDayTasks.forEach((task: any) => {
+      if (!task.date) return
 
-    return allEvents.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  })();
+      allEvents.push({
+        id: `clinic-task-${task.id}`,
+        date: task.date,
+        time: task.time || '09:00',
+        title: task.task,
+        source: task.task_type || 'Zadanie kliniki',
+        assignee: task.assignee,
+        location: task.location,
+        isCritical: task.is_critical,
+        color: task.is_critical ? 'bg-red-500' : 'bg-emerald-500'
+      })
+    })
 
-  // Pomocnicze funkcje do kalendarza
-  const today = new Date();
-  const currentMonth = organizerCurrentMonth;
-  const currentYear = organizerCurrentYear;
+    pendingConsents.forEach((consent: any) => {
+      const relatedAppointment = appointmentsList.find((a: any) => a.id === consent.appointment_id)
+      const dateSource = relatedAppointment?.appointment_date || consent.created_at
+      if (!dateSource) return
 
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  // Zabezpieczenie, aby poniedziałek był pierwszym dniem (0 to niedziela w JS)
-  const offsetDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+      allEvents.push({
+        id: `consent-${consent.id}`,
+        date: String(dateSource).slice(0, 10),
+        time: '08:00',
+        title: `Brak podpisanej zgody — ${getPatientName(consent.patient_id)}`,
+        source: 'Dokumenty',
+        isCritical: true,
+        color: 'bg-amber-500'
+      })
+    })
+
+    openPortalRequests.forEach((request: any) => {
+      const dateSource = request.created_at || new Date().toISOString()
+
+      allEvents.push({
+        id: `portal-${request.id}`,
+        date: String(dateSource).slice(0, 10),
+        time: String(dateSource).slice(11, 16) || '09:00',
+        title: `Odpowiedz pacjentowi — ${
+          request.patients
+            ? `${request.patients.first_name || ''} ${request.patients.last_name || ''}`.trim()
+            : getPatientName(request.patient_id)
+        }`,
+        source: 'Portal Pacjenta',
+        isCritical: false,
+        color: 'bg-indigo-500'
+      })
+    })
+
+    return allEvents.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
+  })()
+
+  const currentMonth = organizerCurrentMonth
+  const currentYear = organizerCurrentYear
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
+  const offsetDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
 
   const nextMonth = () => {
-    if (currentMonth === 11) { setOrganizerCurrentMonth(0); setOrganizerCurrentYear(currentYear + 1); }
-    else setOrganizerCurrentMonth(currentMonth + 1);
-  };
+    if (currentMonth === 11) {
+      setOrganizerCurrentMonth(0)
+      setOrganizerCurrentYear(currentYear + 1)
+    } else {
+      setOrganizerCurrentMonth(currentMonth + 1)
+    }
+  }
 
   const prevMonth = () => {
-    if (currentMonth === 0) { setOrganizerCurrentMonth(11); setOrganizerCurrentYear(currentYear - 1); }
-    else setOrganizerCurrentMonth(currentMonth - 1);
-  };
+    if (currentMonth === 0) {
+      setOrganizerCurrentMonth(11)
+      setOrganizerCurrentYear(currentYear - 1)
+    } else {
+      setOrganizerCurrentMonth(currentMonth - 1)
+    }
+  }
 
-  const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+  const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']
+  const selectedDateEvents = aggregatedEvents.filter(e => e.date === selectedCalendarDate)
 
-  // Wydarzenia dla klikniętego dnia w kalendarzu
-  const selectedDateEvents = aggregatedEvents.filter(e => e.date === selectedCalendarDate);
+  const quickClinicTasks = [
+    'Sprawdź zgody przed dzisiejszymi zabiegami',
+    'Wyślij SMS z przypomnieniem na jutro',
+    'Dodaj zalecenia pozabiegowe do Portalu Pacjenta',
+    'Odpowiedz na wiadomości z Portalu Pacjenta',
+    'Zweryfikuj płatność po wizycie',
+    'Przygotuj gabinet i preparaty do zabiegu'
+  ]
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
-
-      {/* 1. HERO */}
-      <section className={`relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-6 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-br from-slate-900 to-[#0f172a] border-slate-700' : 'bg-gradient-to-br from-slate-900 to-[#1e293b] border-slate-800'}`}>
-        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#e8ce7a]/10 blur-3xl pointer-events-none" />
-        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+      <section className={`relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-6 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-colors duration-200 ${
+        isDarkMode ? 'bg-gradient-to-br from-slate-900 to-[#0f172a] border-slate-700' : 'bg-gradient-to-br from-slate-900 to-[#1e293b] border-slate-800'
+      }`}>
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8ce7a]/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#e8ce7a] backdrop-blur-md">
-            <ClipboardList size={14} />
-            Organizer & Kalendarz
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
+            <Stethoscope size={14} />
+            Plan dnia kliniki
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-            Centrum Dowodzenia Eventu
+            Medyczne centrum dnia
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            Oś czasu Twojego wydarzenia. Dodawaj zadania (minutówkę), a system automatycznie ściągnie tutaj również
-            terminy płatności do podwykonawców oraz sesje z agendy. Pełna kontrola w jednym kalendarzu.
+            Dzisiejsze zabiegi, grafiki lekarzy, zgody pacjentów, zadania recepcji i komunikacja z Portalem Pacjenta w jednym miejscu.
           </p>
         </div>
 
@@ -11435,20 +11768,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             onClick={() => window.print()}
             className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 transition-colors border border-white/15"
           >
-            <Printer size={14} /> Drukuj plan
+            <Printer size={14} /> Drukuj plan dnia
           </button>
         </div>
       </section>
 
-      {/* 2. STATYSTYKI GŁÓWNE */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
-          { label: 'Wszystkie Zdarzenia', value: aggregatedEvents.length, icon: Calendar, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
-          { label: 'Oczekujące Płatności', value: aggregatedEvents.filter(e => e.source === 'Finanse').length, icon: Wallet, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-          { label: 'Zadania Minutówki', value: runOfShow.length, icon: ClipboardList, color: isDarkMode ? 'text-slate-300' : 'text-slate-700' },
-          { label: 'Punkty Agendy', value: sessions.length, icon: Clock, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' }
+          { label: 'Dzisiejsze zabiegi', value: todayAppointments.length, icon: Activity, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-600' },
+          { label: 'Lekarze w grafiku', value: doctorsList.length, icon: Stethoscope, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
+          { label: 'Zgody do podpisu', value: pendingConsents.length, icon: FileSignature, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+          { label: 'Otwarte sprawy', value: openPortalRequests.length, icon: MessageSquare, color: isDarkMode ? 'text-indigo-400' : 'text-indigo-600' }
         ].map((item: any) => (
-          <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${
+            isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'
+          }`}>
             <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
               <item.icon size={80} className={isDarkMode ? 'text-white' : 'text-slate-900'} />
             </div>
@@ -11468,57 +11802,56 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-
-        {/* LEWA KOLUMNA: KALENDARZ I AI ASSIST */}
         <div className="xl:col-span-5 space-y-6">
-
-          {/* AI ASSIST PANEL */}
-          <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-gradient-to-br from-indigo-950/40 to-slate-900 border-indigo-900/50' : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100'}`}>
+          <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm transition-colors ${
+            isDarkMode ? 'bg-gradient-to-br from-cyan-950/40 to-slate-900 border-cyan-900/50' : 'bg-gradient-to-br from-cyan-50 to-white border-cyan-100'
+          }`}>
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
+              <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-600'}`}>
                 <Sparkles size={20} />
               </div>
               <div>
-                <p className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                  AI Time Management
+                <p className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${isDarkMode ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                  Asystent organizacji dnia
                 </p>
                 <h4 className={`text-sm md:text-base font-black leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Analiza harmonogramu
+                  Co wymaga uwagi?
                 </h4>
 
                 <div className="mt-3 space-y-2">
-                  {aggregatedEvents.filter(e => e.source === 'Finanse').length > 0 && (
+                  {pendingConsents.length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                       <span className="text-amber-500 mt-0.5">/</span>
-                      Masz oczekujące terminy płatności do podwykonawców. Upewnij się, że budżet jest zabezpieczony na te daty.
+                      Masz {pendingConsents.length} dokumentów do podpisu lub weryfikacji przed wizytą.
                     </p>
                   )}
-                  {aggregatedEvents.length === 0 && (
+                  {openPortalRequests.length > 0 && (
                     <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                       <span className="text-indigo-500 mt-0.5">/</span>
-                      Twój kalendarz jest pusty. Dodaj zadania organizacyjne, by AI mogło zacząć śledzić obłożenie pracą przed eventem.
+                      Masz {openPortalRequests.length} otwartych spraw z Portalu Pacjenta.
                     </p>
                   )}
-                  {aggregatedEvents.filter(e => e.isCritical).length > 0 && (
-                    <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      <span className="text-red-500 mt-0.5">/</span>
-                      W kalendarzu znajdują się punkty krytyczne. Przypisz im priorytet na dzisiejszej odprawie.
-                    </p>
-                  )}
+                  <p className={`text-xs font-medium flex items-start gap-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <span className="text-cyan-500 mt-0.5">/</span>
+                    Dzisiaj zaplanowano {todayAppointments.length} wizyt/zabiegów.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* WIZUALNY KALENDARZ */}
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
             <div className="flex items-center justify-between mb-6">
               <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {monthNames[currentMonth]} {currentYear}
               </h4>
               <div className="flex gap-2">
-                <button onClick={prevMonth} className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}><ChevronDown size={16} className="rotate-90" /></button>
-                <button onClick={nextMonth} className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}><ChevronDown size={16} className="-rotate-90" /></button>
+                <button type="button" onClick={prevMonth} className={`p-2 rounded-xl ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+                  <ChevronDown size={16} className="rotate-90" />
+                </button>
+                <button type="button" onClick={nextMonth} className={`p-2 rounded-xl ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+                  <ChevronDown size={16} className="-rotate-90" />
+                </button>
               </div>
             </div>
 
@@ -11529,45 +11862,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
 
             <div className="grid grid-cols-7 gap-1 md:gap-2">
-              {/* Puste dni na początku miesiąca */}
               {Array.from({ length: offsetDays }).map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0"></div>
+                <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0" />
               ))}
 
-              {/* Dni miesiąca */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isSelected = selectedCalendarDate === formattedDate;
-                const isToday = todayIso === formattedDate;
-
-                // Szukamy zdarzeń na dany dzień (do oznaczenia kropek)
-                const dayEvents = aggregatedEvents.filter(e => e.date === formattedDate);
-                const hasCritical = dayEvents.some(e => e.isCritical);
-                const hasFinance = dayEvents.some(e => e.source === 'Finanse');
-                const hasAgenda = dayEvents.some(e => e.source === 'Agenda');
+                const day = i + 1
+                const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const isSelected = selectedCalendarDate === formattedDate
+                const isToday = todayIso === formattedDate
+                const dayEvents = aggregatedEvents.filter(e => e.date === formattedDate)
+                const hasAppointment = dayEvents.some(e => e.source === 'Zabieg')
+                const hasCritical = dayEvents.some(e => e.isCritical)
+                const hasPortal = dayEvents.some(e => e.source === 'Portal Pacjenta')
 
                 return (
                   <button
                     key={day}
+                    type="button"
                     onClick={() => setSelectedCalendarDate(formattedDate)}
                     className={`aspect-square relative flex flex-col items-center justify-center rounded-xl transition-all border ${
                       isSelected
-                        ? (isDarkMode ? 'bg-slate-800 border-[#e8ce7a] text-white shadow-md' : 'bg-slate-900 border-slate-900 text-white shadow-md')
+                        ? (isDarkMode ? 'bg-slate-800 border-cyan-400 text-white' : 'bg-slate-900 border-slate-900 text-white')
                         : isToday
-                          ? (isDarkMode ? 'bg-slate-800/50 border-slate-600 text-[#e8ce7a]' : 'bg-slate-100 border-slate-300 text-slate-900')
-                          : (isDarkMode ? 'bg-transparent border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50')
+                          ? (isDarkMode ? 'bg-slate-800/50 border-slate-600 text-cyan-300' : 'bg-slate-100 border-slate-300 text-slate-900')
+                          : (isDarkMode ? 'bg-transparent border-slate-800 text-slate-400 hover:bg-slate-800' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50')
                     }`}
                   >
                     <span className="text-xs md:text-sm font-black">{day}</span>
-
-                    {/* Wskaźniki zdarzeń pod numerem dnia */}
                     {dayEvents.length > 0 && (
                       <div className="absolute bottom-1.5 flex gap-0.5">
-                        {hasCritical && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
-                        {hasFinance && !hasCritical && <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>}
-                        {hasAgenda && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>}
-                        {!hasCritical && !hasFinance && !hasAgenda && <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>}
+                        {hasAppointment && <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />}
+                        {hasCritical && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                        {hasPortal && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                        {!hasAppointment && !hasCritical && !hasPortal && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
                       </div>
                     )}
                   </button>
@@ -11577,137 +11905,152 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
             <div className={`mt-6 pt-5 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
               <h5 className={`text-xs font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Zdarzenia dla: {selectedCalendarDate}
+                Plan na dzień: {selectedCalendarDate}
               </h5>
 
-              <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2 max-h-[260px] overflow-y-auto custom-scrollbar pr-1">
                 {selectedDateEvents.length === 0 ? (
                   <p className={`text-xs font-medium italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Brak zaplanowanych zadań, płatności i agendy na ten dzień.
+                    Brak zaplanowanych wizyt, zadań i spraw pacjentów na ten dzień.
                   </p>
-                ) : (
-                  selectedDateEvents.map((ev: any) => (
-                    <div key={ev.id} className={`p-3 rounded-xl border flex items-start gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-700/50' : 'bg-slate-50 border-slate-200'}`}>
-                      <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${ev.color}`}></span>
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{ev.time}</span>
-                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'}`}>{ev.source}</span>
-                        </div>
-                        <p className={`text-xs font-black leading-snug ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{ev.title}</p>
+                ) : selectedDateEvents.map((ev: any) => (
+                  <div key={ev.id} className={`p-3 rounded-xl border flex items-start gap-3 ${isDarkMode ? 'bg-slate-900/50 border-slate-700/50' : 'bg-slate-50 border-slate-200'}`}>
+                    <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${ev.color}`} />
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{ev.time}</span>
+                        <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'}`}>{ev.source}</span>
                       </div>
+                      <p className={`text-xs font-black leading-snug ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{ev.title}</p>
+                      {ev.doctor && <p className={`mt-1 text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{ev.doctor}</p>}
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* PRAWA KOLUMNA: DODAWANIE MINUTÓWKI I LISTA */}
         <div className="xl:col-span-7 space-y-6">
+          <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+            <h4 className={`font-black text-sm uppercase tracking-wider mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Dzisiejsze zabiegi i wizyty
+            </h4>
+
+            <div className="space-y-3 max-h-[360px] overflow-y-auto custom-scrollbar pr-1">
+              {todayAppointments.length === 0 ? (
+                <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                  Brak wizyt zaplanowanych na dzisiaj.
+                </div>
+              ) : todayAppointments.map((appointment: any) => {
+                const patientName = appointment.patients
+                  ? `${appointment.patients.first_name || ''} ${appointment.patients.last_name || ''}`.trim()
+                  : getPatientName(appointment.patient_id)
+
+                const relatedConsents = patientConsents.filter((c: any) =>
+                  c.patient_id === appointment.patient_id &&
+                  (!c.appointment_id || c.appointment_id === appointment.id)
+                )
+
+                const unsignedConsents = relatedConsents.filter((c: any) => c.status !== 'signed')
+
+                return (
+                  <div key={appointment.id} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                            {String(appointment.appointment_date).slice(11, 16)}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded border text-[8px] font-black uppercase ${
+                            unsignedConsents.length > 0 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                          }`}>
+                            {unsignedConsents.length > 0 ? 'Brak zgody' : 'Dokumenty OK'}
+                          </span>
+                        </div>
+                        <p className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{getTreatmentName(appointment)}</p>
+                        <p className={`text-xs font-bold mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {patientName} • {getDoctorName(appointment.doctor_id)}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewRosTask({
+                            date: todayIso,
+                            time: String(appointment.appointment_date).slice(11, 16),
+                            task: `Przygotować dokumenty i zalecenia po zabiegu: ${patientName}`,
+                            assignee: 'Recepcja / opiekun pacjenta',
+                            location: 'Portal Pacjenta',
+                            note: '',
+                            isCritical: unsignedConsents.length > 0,
+                            patient_id: appointment.patient_id,
+                            appointment_id: appointment.id,
+                            doctor_id: appointment.doctor_id
+                          })
+                        }}
+                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-cyan-300 hover:bg-slate-700' : 'bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100'}`}
+                      >
+                        Utwórz zadanie
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center gap-3 mb-5">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-slate-800 text-[#e8ce7a]' : 'bg-slate-100 text-slate-700'}`}>
-                <Plus size={18} />
-              </div>
-              <div>
-                <h4 className={`font-black text-sm uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Dodaj Zadanie Operacyjne (Minutówka)
-                </h4>
-              </div>
+            <h4 className={`font-black text-sm uppercase tracking-wider mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Dodaj zadanie medyczne / recepcyjne
+            </h4>
+
+            <div className="mb-4 flex flex-wrap gap-2">
+              {quickClinicTasks.map(task => (
+                <button
+                  key={task}
+                  type="button"
+                  onClick={() => setNewRosTask({ ...newRosTask, task })}
+                  className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                >
+                  {task}
+                </button>
+              ))}
             </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Data</label>
-                  <input
-                    type="date"
-                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                    value={newRosTask.date || ''}
-                    onChange={e => setNewRosTask({ ...newRosTask, date: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Godzina</label>
-                  <input
-                    type="time"
-                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                    value={newRosTask.time}
-                    onChange={e => setNewRosTask({ ...newRosTask, time: e.target.value })}
-                  />
-                </div>
+                <input type="date" value={newRosTask.date || ''} onChange={e => setNewRosTask({ ...newRosTask, date: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                <input type="time" value={newRosTask.time || ''} onChange={e => setNewRosTask({ ...newRosTask, time: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
               </div>
 
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zadanie / Akcja *</label>
-                <textarea
-                  rows={2}
-                  className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  placeholder="Np. odbiór dekoracji, briefing ekipy AV..."
-                  value={newRosTask.task}
-                  onChange={e => setNewRosTask({ ...newRosTask, task: e.target.value })}
-                />
-              </div>
+              <textarea
+                rows={2}
+                placeholder="Np. sprawdzić zgodę pacjenta, wysłać SMS, dodać zalecenia pozabiegowe..."
+                value={newRosTask.task || ''}
+                onChange={e => setNewRosTask({ ...newRosTask, task: e.target.value })}
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Osoba / Ekipa</label>
-                  <input
-                    type="text"
-                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    placeholder="np. Ania / Technik"
-                    value={newRosTask.assignee}
-                    onChange={e => setNewRosTask({ ...newRosTask, assignee: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Lokalizacja</label>
-                  <input
-                    type="text"
-                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                    placeholder="np. Foyer Główne"
-                    value={newRosTask.location}
-                    onChange={e => setNewRosTask({ ...newRosTask, location: e.target.value })}
-                  />
-                </div>
+                <input placeholder="np. recepcja, dr Kowalska" value={newRosTask.assignee || ''} onChange={e => setNewRosTask({ ...newRosTask, assignee: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`} />
+                <input placeholder="np. Gabinet 1, Portal Pacjenta" value={newRosTask.location || ''} onChange={e => setNewRosTask({ ...newRosTask, location: e.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`} />
               </div>
 
               <div className="flex items-center justify-between pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={newRosTask.isCritical}
-                    onChange={e => setNewRosTask({ ...newRosTask, isCritical: e.target.checked })}
-                  />
-                  <div className={`w-10 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${isDarkMode ? 'bg-slate-700 peer-checked:bg-red-500' : 'bg-slate-200 peer-checked:bg-red-500'}`} />
+                  <input type="checkbox" className="sr-only peer" checked={!!newRosTask.isCritical} onChange={e => setNewRosTask({ ...newRosTask, isCritical: e.target.checked })} />
+                  <div className={`relative w-10 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${isDarkMode ? 'bg-slate-700 peer-checked:bg-red-500' : 'bg-slate-200 peer-checked:bg-red-500'}`} />
                   <span className={`text-[10px] font-black uppercase tracking-widest ${newRosTask.isCritical ? 'text-red-500' : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`}>
-                    Zadanie Krytyczne
+                    Pilne
                   </span>
                 </label>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!newRosTask.time || !newRosTask.task) return
-                    setRunOfShow([
-                      ...runOfShow,
-                      {
-                        ...newRosTask,
-                        id: Date.now().toString(),
-                        status: 'pending',
-                        date: newRosTask.date || (event?.event_date ? String(event.event_date).slice(0, 10) : todayIso)
-                      }
-                    ].sort((a, b) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`)))
-
-                    setNewRosTask({ date: '', time: '', task: '', assignee: '', location: '', note: '', isCritical: false })
-                  }}
-                  className={`px-6 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-105 active:scale-95 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                  onClick={handleSaveClinicDayTask}
+                  className={`px-6 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-105 active:scale-95 ${isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'}`}
                 >
                   Zapisz
                 </button>
@@ -11715,99 +12058,86 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             </div>
           </div>
 
-          {/* LISTA ZADAŃ W MINUTÓWCE */}
           <div className={`rounded-[28px] border shadow-sm p-5 md:p-6 transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
             <h4 className={`font-black text-sm uppercase tracking-wider mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Lista Minutówki ({runOfShow.length})
+              Lista zadań kliniki ({clinicDayTasks.length})
             </h4>
 
-            <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-              {runOfShow.length === 0 ? (
+            <div className="space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar pr-2">
+              {clinicDayTasks.length === 0 ? (
                 <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                  Brak punktów w minutówce operacyjnej.
+                  Brak zadań operacyjnych kliniki.
                 </div>
-              ) : (
-                runOfShow
-                  .sort((a: any, b: any) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`))
-                  .map((task: any) => (
-                    <div
-                      key={task.id}
-                      className={`relative border rounded-2xl p-4 transition-all group ${
-                        task.status === 'done'
-                          ? (isDarkMode ? 'bg-slate-900/30 border-emerald-900/30 opacity-60' : 'bg-slate-50 border-emerald-100 opacity-60')
-                          : task.isCritical
-                            ? (isDarkMode ? 'bg-red-900/10 border-red-900/40 shadow-sm' : 'bg-red-50/50 border-red-200 shadow-sm')
-                            : (isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm')
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 min-w-0 flex-1">
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newRos = runOfShow.map((t: any) =>
-                                t.id === task.id ? { ...t, status: t.status === 'done' ? 'pending' : 'done' } : t
-                              )
-                              setRunOfShow(newRos)
-                            }}
-                            className={`mt-0.5 w-6 h-6 rounded flex items-center justify-center shrink-0 border-2 transition-colors ${
-                              task.status === 'done'
-                                ? 'bg-emerald-500 border-emerald-500 text-white'
-                                : (isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-slate-50 border-slate-300')
-                            }`}
-                          >
-                            {task.status === 'done' && <CheckCircle2 size={16} />}
-                          </button>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center flex-wrap gap-2 mb-1.5">
-                              <span className={`text-[10px] font-black uppercase tracking-widest ${task.status === 'done' ? (isDarkMode ? 'text-slate-500' : 'text-slate-400') : (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900')}`}>
-                                {task.time || '-'}
-                              </span>
-                              <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-                                {formatPlannerDate(task.date || event?.event_date)}
-                              </span>
-                              {task.isCritical && task.status !== 'done' && (
-                                <span className="px-2 py-0.5 bg-red-500 text-white border border-red-600 text-[8px] font-black uppercase tracking-wider rounded">
-                                  Krytyczne
-                                </span>
-                              )}
-                            </div>
-
-                            <p className={`text-sm font-black leading-snug ${task.status === 'done' ? (isDarkMode ? 'text-slate-500 line-through' : 'text-slate-400 line-through') : (isDarkMode ? 'text-white' : 'text-slate-900')}`}>
-                              {task.task}
-                            </p>
-
-                            <div className="mt-3 flex flex-wrap gap-2 text-[9px] font-black uppercase tracking-wider">
-                              {task.assignee && (
-                                <span className={`px-2 py-1 rounded flex items-center gap-1 border ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-                                  <Users size={10} /> {task.assignee}
-                                </span>
-                              )}
-                              {task.location && (
-                                <span className={`px-2 py-1 rounded flex items-center gap-1 border ${isDarkMode ? 'bg-purple-900/20 border-purple-800/50 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-700'}`}>
-                                  <MapPin size={10} /> {task.location}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
+              ) : clinicDayTasks
+                .sort((a: any, b: any) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`))
+                .map((task: any) => (
+                  <div key={task.id} className={`relative border rounded-2xl p-4 transition-all group ${
+                    task.status === 'done'
+                      ? (isDarkMode ? 'bg-slate-900/30 border-emerald-900/30 opacity-60' : 'bg-slate-50 border-emerald-100 opacity-60')
+                      : task.is_critical
+                        ? (isDarkMode ? 'bg-red-900/10 border-red-900/40 shadow-sm' : 'bg-red-50/50 border-red-200 shadow-sm')
+                        : (isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm')
+                  }`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 min-w-0 flex-1">
                         <button
                           type="button"
-                          onClick={() => setRunOfShow(runOfShow.filter((t: any) => t.id !== task.id))}
-                          className={`p-2 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all ${isDarkMode ? 'hover:bg-red-900/30 text-slate-600 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-600'}`}
+                          onClick={() => handleToggleClinicDayTask(task)}
+                          className={`mt-0.5 w-6 h-6 rounded flex items-center justify-center shrink-0 border-2 transition-colors ${
+                            task.status === 'done'
+                              ? 'bg-emerald-500 border-emerald-500 text-white'
+                              : (isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-slate-50 border-slate-300')
+                          }`}
                         >
-                          <Trash2 size={16} />
+                          {task.status === 'done' && <CheckCircle2 size={16} />}
                         </button>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${task.status === 'done' ? (isDarkMode ? 'text-slate-500' : 'text-slate-400') : (isDarkMode ? 'text-cyan-300' : 'text-slate-900')}`}>
+                              {task.time || '-'}
+                            </span>
+                            <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                              {formatPlannerDate(task.date || todayIso)}
+                            </span>
+                            {task.is_critical && task.status !== 'done' && (
+                              <span className="px-2 py-0.5 bg-red-500 text-white border border-red-600 text-[8px] font-black uppercase tracking-wider rounded">
+                                Pilne
+                              </span>
+                            )}
+                          </div>
+
+                          <p className={`text-sm font-black leading-snug ${task.status === 'done' ? (isDarkMode ? 'text-slate-500 line-through' : 'text-slate-400 line-through') : (isDarkMode ? 'text-white' : 'text-slate-900')}`}>
+                            {task.task}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap gap-2 text-[9px] font-black uppercase tracking-wider">
+                            {task.assignee && (
+                              <span className={`px-2 py-1 rounded flex items-center gap-1 border ${isDarkMode ? 'bg-blue-900/20 border-blue-800/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                                <Users size={10} /> {task.assignee}
+                              </span>
+                            )}
+                            {task.location && (
+                              <span className={`px-2 py-1 rounded flex items-center gap-1 border ${isDarkMode ? 'bg-purple-900/20 border-purple-800/50 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-700'}`}>
+                                <MapPin size={10} /> {task.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClinicDayTask(task.id)}
+                        className={`p-2 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all ${isDarkMode ? 'hover:bg-red-900/30 text-slate-600 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-600'}`}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                  ))
-              )}
+                  </div>
+                ))}
             </div>
           </div>
-
         </div>
       </div>
     </div>
