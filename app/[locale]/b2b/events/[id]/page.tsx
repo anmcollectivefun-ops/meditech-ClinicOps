@@ -318,7 +318,6 @@ const SortablePartnerItem = ({
         </div>
       </div>
      <details
-  open
   className={`mt-4 rounded-2xl border ${
     isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'
   }`}
