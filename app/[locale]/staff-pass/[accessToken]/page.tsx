@@ -245,12 +245,10 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
     }
 
     loadStaffAccess()
-  }, [accessToken])
+  }, [accessToken, supabase])
 
   useEffect(() => {
-    return () => {
-      stopQrScanner()
-    }
+    return () => { stopQrScanner() }
   }, [])
 
   useEffect(() => {
@@ -311,7 +309,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
     }
 
     loadStaffWorkspace()
-  }, [staffAccess])
+  }, [staffAccess, supabase])
 
   const logActionError = (action: string, error: any, payload: any) => {
     console.error('Staff pass action error:', {
@@ -372,51 +370,38 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       supabase.from('event_sessions').select('*').eq('event_id', unit.event_id)
     ])
 
-    if (appRes.error) console.warn('Staff pass application load error:', appRes.error.message)
-    if (gadgetChoiceRes.error) console.warn('Staff pass gadget choices load error:', gadgetChoiceRes.error.message)
-    if (sessionRes.error) console.warn('Staff pass session signups load error:', sessionRes.error.message)
-    if (gadgetRedemptionRes.error) console.warn('Staff pass gadget redemptions load error:', gadgetRedemptionRes.error.message)
-    if (gadgetsRes.error) console.warn('Staff pass gadgets load error:', gadgetsRes.error.message)
-    if (sessionsRes.error) console.warn('Staff pass sessions load error:', sessionsRes.error.message)
-
     const sourceData = typeof unit.source_data === 'string'
-      ? (() => {
-          try {
-            return JSON.parse(unit.source_data)
-          } catch {
-            return {}
-          }
-        })()
+      ? (() => { try { return JSON.parse(unit.source_data) } catch { return {} } })()
       : (unit.source_data || {})
+
     const fallbackGadgetChoices = Array.isArray(sourceData?.selectedGadgetIds)
-      ? sourceData.selectedGadgetIds
-          .filter(Boolean)
-          .map((gadgetId: string) => ({
-            event_id: unit.event_id,
-            application_id: unit.application_id,
-            attendee_unit_id: unit.id,
-            gadget_id: gadgetId,
-            quantity: 1,
-            status: 'selected',
-            declined_gadget: false,
-            source: 'attendee_unit_source_data'
-          }))
+      ? sourceData.selectedGadgetIds.filter(Boolean).map((gadgetId: string) => ({
+          event_id: unit.event_id,
+          application_id: unit.application_id,
+          attendee_unit_id: unit.id,
+          gadget_id: gadgetId,
+          quantity: 1,
+          status: 'selected',
+          declined_gadget: false,
+          source: 'attendee_unit_source_data'
+        }))
       : []
+
     const resolvedGadgetChoices = (gadgetChoiceRes.data || []).length > 0
       ? (gadgetChoiceRes.data || [])
       : fallbackGadgetChoices
+
     const fallbackSessionSignups = Array.isArray(sourceData?.selectedSessionIds)
-      ? sourceData.selectedSessionIds
-          .filter(Boolean)
-          .map((sessionId: string) => ({
-            event_id: unit.event_id,
-            application_id: unit.application_id,
-            attendee_unit_id: unit.id,
-            session_id: sessionId,
-            status: 'signed_up',
-            source: 'attendee_unit_source_data'
-          }))
+      ? sourceData.selectedSessionIds.filter(Boolean).map((sessionId: string) => ({
+          event_id: unit.event_id,
+          application_id: unit.application_id,
+          attendee_unit_id: unit.id,
+          session_id: sessionId,
+          status: 'signed_up',
+          source: 'attendee_unit_source_data'
+        }))
       : []
+
     const resolvedSessionSignups = (sessionRes.data || []).length > 0
       ? (sessionRes.data || [])
       : fallbackSessionSignups
@@ -544,16 +529,8 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
 
   const stopHtml5QrScanner = async () => {
     if (!html5QrCodeRef.current) return
-    try {
-      await html5QrCodeRef.current.stop()
-    } catch (err) {
-      console.warn('html5-qrcode stop skipped:', err)
-    }
-    try {
-      await html5QrCodeRef.current.clear()
-    } catch (err) {
-      console.warn('html5-qrcode clear skipped:', err)
-    }
+    try { await html5QrCodeRef.current.stop() } catch (err) {}
+    try { await html5QrCodeRef.current.clear() } catch (err) {}
     html5QrCodeRef.current = null
   }
 
@@ -589,9 +566,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       await scanner.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 240, height: 240 } },
-        (decodedText: string) => {
-          void handleScannedToken(decodedText)
-        },
+        (decodedText: string) => { void handleScannedToken(decodedText) },
         () => {}
       )
     } catch (err: any) {
@@ -639,20 +614,15 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       const scanLoop = async () => {
         const video = videoRef.current
         if (!video || !streamRef.current) return
-
         try {
           if (video.readyState >= 2 && !qrSearchLoadingRef.current) {
             const codes = await detector.detect(video)
             const token = codes?.[0]?.rawValue || codes?.[0]?.rawValue?.toString()
             if (token) await handleScannedToken(token)
           }
-        } catch (scanError) {
-          console.warn('QR scan frame skipped:', scanError)
-        }
-
+        } catch (scanError) {}
         scanFrameRef.current = requestAnimationFrame(scanLoop)
       }
-
       scanFrameRef.current = requestAnimationFrame(scanLoop)
     } catch (err: any) {
       console.warn('QR scanner unavailable:', err?.message || err)
@@ -959,6 +929,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
         </div>
       </header>
 
+      {/* MAIN CONTAINER */}
       <main className="relative z-10 max-w-[1600px] w-full mx-auto px-4 py-6 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start">
           
@@ -1484,11 +1455,12 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
+            {/* WIDOK: ANALITYKA AI */}
             {activeTab === 'analytics' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-8 shadow-sm text-center transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <Stethoscope size={48} className={`mx-auto mb-4 transition-colors ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`} />
-                  <h3 className="text-2xl font-black mb-2">Analityka AI & Raporty</h3>
+                  <h3 className={`text-2xl font-black mb-2 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Analityka AI & Raporty</h3>
                   <p className={`text-sm max-w-lg mx-auto transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                     Moduł przeznaczony wyłącznie dla ról analitycznych i menedżerskich.
                   </p>
