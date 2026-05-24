@@ -4342,74 +4342,95 @@ const toggleChecklistGroupOpen = async (group: any) => {
 // ----- 4.5. EFEKT GŁÓWNY (ładowanie danych) -----
 // ============================================================================
 const loadEventData = useCallback(async () => {
-    try {
-      const { data: ev } = await supabase.from('b2b_events').select('*').eq('id', id).single()
-      const { data: apps } = await supabase.from('b2b_applications').select('*').eq('event_id', id).order('created_at', { ascending: false })
-      const { data: sess } = await supabase.from('event_sessions').select('*').eq('event_id', id).order('start_time', { ascending: true })
-      const { data: tierData } = await supabase.from('ticket_tiers').select('*').eq('event_id', id).order('sort_order', { ascending: true }).order('created_at', { ascending: true })
-      const { data: promoData } = await supabase.from('promo_codes').select('*').eq('event_id', id).order('created_at', { ascending: false })
-     // const { data: speakerData } = await supabase.from('event_speakers').select('*').eq('event_id', id).order('created_at', { ascending: true })//
-const { data: checklistGroupData } = await supabase
-  .from('event_checklist_groups')
-  .select('*')
-  .eq('event_id', id)
-  .order('display_order', { ascending: true })
+  try {
+    const { data: ev } = await supabase.from('b2b_events').select('*').eq('id', id).single()
+    const { data: apps } = await supabase.from('b2b_applications').select('*').eq('event_id', id).order('created_at', { ascending: false })
+    const { data: sess } = await supabase.from('event_sessions').select('*').eq('event_id', id).order('start_time', { ascending: true })
+    const { data: tierData } = await supabase.from('ticket_tiers').select('*').eq('event_id', id).order('sort_order', { ascending: true }).order('created_at', { ascending: true })
+    const { data: promoData } = await supabase.from('promo_codes').select('*').eq('event_id', id).order('created_at', { ascending: false })
 
-const { data: checklistItemData } = await supabase
-  .from('event_checklist_items')
-  .select('*')
-  .eq('event_id', id)
-  .order('display_order', { ascending: true })
+    const { data: checklistGroupData } = await supabase
+      .from('event_checklist_groups')
+      .select('*')
+      .eq('event_id', id)
+      .order('display_order', { ascending: true })
 
-      const { data: partnerData } = await supabase.from('event_partners').select('*').eq('event_id', id).order('display_order', { ascending: true })
-      const { data: contractorData } = await supabase.from('contractors').select('*').eq('event_id', id).order('created_at', { ascending: false })
+    const { data: checklistItemData } = await supabase
+      .from('event_checklist_items')
+      .select('*')
+      .eq('event_id', id)
+      .order('display_order', { ascending: true })
 
-      setEvent(ev)
-      setEditForm(ev)
-      setApplications(apps || [])
-      setSessions(sess || [])
-      setCateringOffers([])
-      setEventVideos([])
-      setMeals([])
-      setTiers(tierData || [])
-      setPromoCodes(promoData || [])
-      //setSpeakers(speakerData || [])//
-      setPartners(partnerData || [])
-      setContractors(contractorData || [])
-      setOrganizedRoutes([])
-      setTransportStops([])
-      setFleet([])
-      setChecklistGroups(checklistGroupData || [])
-      setChecklistItems(checklistItemData || [])
-      await loadBudgetData()
-      await loadEventPassData()
-      await loadPatients()
-      await loadPatientPortalRequests()
-      await loadPatientPortalMessages()
-      await loadPatientConsents()
-      await loadConsentTemplates() // <--- DODANO TUTAJ
-      await loadTreatmentsCatalog()
-      await loadPartnersCatalog()
-      await loadAppointments()
-      await loadPatientClinicalNotes()
+    const { data: partnerData } = await supabase
+      .from('event_partners')
+      .select('*')
+      .eq('event_id', id)
+      .order('display_order', { ascending: true })
 
-      setMenuItems(generateMockMenu())
-      calculateEcoMetrics(apps || [])
+    const { data: contractorData } = await supabase
+      .from('contractors')
+      .select('*')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
 
-    } catch (error) {
-      showNotification('Błąd ładowania danych', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates, loadPatientClinicalNotes, loadClinicDayTasks])
+    setEvent(ev)
+    setEditForm(ev)
+    setApplications(apps || [])
+    setSessions(sess || [])
+    setCateringOffers([])
+    setEventVideos([])
+    setMeals([])
+    setTiers(tierData || [])
+    setPromoCodes(promoData || [])
+    setPartners(partnerData || [])
+    setContractors(contractorData || [])
+    setOrganizedRoutes([])
+    setTransportStops([])
+    setFleet([])
+    setChecklistGroups(checklistGroupData || [])
+    setChecklistItems(checklistItemData || [])
 
-  useEffect(() => {
-    loadEventData()
-  }, [loadEventData])
+    await loadBudgetData()
+    await loadEventPassData()
+    await loadPatients()
+    await loadPatientPortalRequests()
+    await loadPatientPortalMessages()
+    await loadPatientConsents()
+    await loadConsentTemplates()
+    await loadTreatmentsCatalog()
+    await loadPartnersCatalog()
+    await loadAppointments()
+    await loadPatientClinicalNotes()
+    await loadClinicDayTasks()
 
-  useEffect(() => {
-    loadEcoAiReport()
-  }, [loadEcoAiReport])
+    setMenuItems(generateMockMenu())
+    calculateEcoMetrics(apps || [])
+  } catch (error) {
+    showNotification('Błąd ładowania danych', 'error')
+  } finally {
+    setLoading(false)
+  }
+}, [
+  id,
+  supabase,
+  loadBudgetData,
+  loadEventPassData,
+  loadPatients,
+  loadPatientPortalRequests,
+  loadPatientPortalMessages,
+  loadPatientConsents,
+  loadConsentTemplates,
+  loadPatientClinicalNotes,
+  loadClinicDayTasks
+])
+
+useEffect(() => {
+  loadEventData()
+}, [loadEventData])
+
+useEffect(() => {
+  loadEcoAiReport()
+}, [loadEcoAiReport])
 
 
 // ============================================================================
