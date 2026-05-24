@@ -5484,7 +5484,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       data-active-tab={activeTab}
       className={`planner-shell ${isDarkMode ? 'planner-dark' : ''} min-h-screen font-sans pb-20`}
     >
-      <style jsx global>{`
+
+
+ <style jsx global>{`
         .planner-shell {
           --app-bg: var(--clinic-bg);
           --app-surface: var(--clinic-panel);
@@ -5503,21 +5505,20 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           color: var(--app-text);
         }
         .planner-shell.planner-dark {
-          --app-bg: #071016;
-          --app-surface: #101a22;
-          --app-surface-muted: #0b1218;
-          --app-surface-soft: #132330;
-          --app-border: rgba(255, 255, 255, 0.10);
-          --app-text: #ffffff;
-          --app-text-muted: #94a3b8;
-          --app-primary: #071016;
-          --app-accent: #67e8f9;
-          --app-danger: #f87171;
-          --app-success: #60a5fa;
+          --app-bg: #f8fafc;
+          --app-surface: #ffffff;
+          --app-surface-muted: #f8fafc;
+          --app-border: #e2e8f0;
+          --app-text: #0f172a;
+          --app-text-muted: #64748b;
+          --app-primary: #0f172a;
+          --app-accent: #e8ce7a;
+          --app-danger: #dc2626;
+          --app-success: #047857;
           background:
-            radial-gradient(circle at top right, rgba(103, 232, 249, 0.14), transparent 34rem),
-            radial-gradient(circle at top left, rgba(16, 185, 129, 0.10), transparent 30rem),
-            linear-gradient(180deg, #071016 0%, #0b151c 100%);
+           radial-gradient(circle at 16% 10%, rgba(103, 232, 249, 0.12), transparent 34rem),
+            radial-gradient(circle at 84% 16%, rgba(16, 185, 129, 0.08), transparent 30rem),
+            var(--app-bg);
         }
         .planner-metric-grid {
           display: grid;
@@ -5712,6 +5713,21 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           opacity: 0.72;
         }
       `}</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl font-black text-xs md:text-sm animate-in slide-in-from-top-2 ${
