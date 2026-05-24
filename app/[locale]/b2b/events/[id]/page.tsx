@@ -5145,6 +5145,64 @@ const transportAnalytics = useMemo(() => {
   }, [staffAccessList])
   const quickStaffPassUrl = getStaffPassUrl(quickStaffAccess?.access_token)
   const quickStaffPassShortUrl = quickStaffAccess?.access_token ? `/staff-pass/${String(quickStaffAccess.access_token).slice(0, 8)}...` : ''
+  const quickReceptionAccess = useMemo(() => {
+    const activeStaff = staffAccessList.filter((staff: any) => staff.access_token && staff.is_active !== false)
+    return activeStaff.find((staff: any) => staff.role === 'reception' || staff.can_view_messages || staff.can_view_appointments) || null
+  }, [staffAccessList])
+  const quickDoctorAccess = useMemo(() => {
+    const activeStaff = staffAccessList.filter((staff: any) => staff.access_token && staff.is_active !== false)
+    return activeStaff.find((staff: any) => staff.role === 'doctor') || null
+  }, [staffAccessList])
+  const quickManagerAccess = useMemo(() => {
+    const activeStaff = staffAccessList.filter((staff: any) => staff.access_token && staff.is_active !== false)
+    return activeStaff.find((staff: any) => staff.role === 'manager') || null
+  }, [staffAccessList])
+  const quickAccessCards = [
+    {
+      key: 'patient-portal',
+      title: 'Portal pacjenta',
+      desc: 'Logowanie PESEL, dokumenty, wizyty i wiadomości pacjenta.',
+      url: publicLink,
+      short: publicLink.replace(/^https?:\/\//, ''),
+      icon: Globe,
+      accent: 'bg-cyan-300 text-[#071016]',
+      copyMessage: 'Link Portalu Pacjenta skopiowany',
+      emptyAction: null,
+    },
+    {
+      key: 'reception',
+      title: 'Dostęp recepcji',
+      desc: quickReceptionAccess ? `Panel: ${quickReceptionAccess.name || 'recepcja'}` : 'Utwórz dostęp dla recepcji w module identyfikacji.',
+      url: quickReceptionAccess?.access_token ? getStaffPassUrl(quickReceptionAccess.access_token) : '',
+      short: quickReceptionAccess?.access_token ? `/staff-pass/${String(quickReceptionAccess.access_token).slice(0, 8)}...` : 'Brak linku',
+      icon: Users,
+      accent: 'bg-[#e8ce7a] text-[#071016]',
+      copyMessage: 'Link recepcji skopiowany',
+      emptyAction: () => setActiveTab('eventpass' as TabModule),
+    },
+    {
+      key: 'doctor',
+      title: 'Dostęp lekarza',
+      desc: quickDoctorAccess ? `Panel: ${quickDoctorAccess.name || 'lekarz'}` : 'Dodaj link dla lekarza, aby pracował na karcie pacjenta.',
+      url: quickDoctorAccess?.access_token ? getStaffPassUrl(quickDoctorAccess.access_token) : '',
+      short: quickDoctorAccess?.access_token ? `/staff-pass/${String(quickDoctorAccess.access_token).slice(0, 8)}...` : 'Brak linku',
+      icon: Stethoscope,
+      accent: 'bg-emerald-300 text-[#071016]',
+      copyMessage: 'Link lekarza skopiowany',
+      emptyAction: () => setActiveTab('eventpass' as TabModule),
+    },
+    {
+      key: 'manager',
+      title: 'Dostęp managera',
+      desc: quickManagerAccess ? `Panel: ${quickManagerAccess.name || 'manager'}` : 'Pełny dostęp zarządczy można utworzyć w rolach personelu.',
+      url: quickManagerAccess?.access_token ? getStaffPassUrl(quickManagerAccess.access_token) : '',
+      short: quickManagerAccess?.access_token ? `/staff-pass/${String(quickManagerAccess.access_token).slice(0, 8)}...` : 'Brak linku',
+      icon: ShieldCheck,
+      accent: 'bg-indigo-300 text-[#071016]',
+      copyMessage: 'Link managera skopiowany',
+      emptyAction: () => setActiveTab('eventpass' as TabModule),
+    },
+  ]
 
 
 // ============================================================================
@@ -6155,14 +6213,14 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         )}
       </div>
 
-      {/* Znaczek ECO EVENT - Zaktualizowany na spójne złoto+grafit zamiast zieleni */}
+      {/* Znaczek ClinicOps */}
       <span className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-colors ${
         isDarkMode
           ? 'bg-[#e8ce7a] text-[#0f172a]'
           : 'bg-slate-900 text-[#e8ce7a]'
       }`}>
-        <Leaf size={12} className={isDarkMode ? 'text-[#0f172a]' : 'text-[#e8ce7a]'} />
-        Eco Event
+        <Activity size={12} className={isDarkMode ? 'text-[#0f172a]' : 'text-[#e8ce7a]'} />
+        ClinicOps
       </span>
     </div>
   </div>
@@ -6171,76 +6229,80 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 <main className="max-w-[1600px] w-full mx-auto px-3 md:px-4 py-4 md:py-8">
 
  {/* ============================================================================ */}
-  {/* BANER LINKU / QR (Teraz z pełnym Dark Mode i bez starych kolorów)  nie zamykaj zamniesz wszystko*/}
+  {/* CENTRUM SKRÓTÓW MEDYCZNYCH */}
  {/* ============================================================================ */}
-        <div className={`rounded-[24px] md:rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-xl mb-6 md:mb-8 border transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-900 border-slate-800'}`}>
-          <div className={`absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 rounded-full blur-3xl pointer-events-none ${isDarkMode ? 'bg-[#e8ce7a]/10' : 'bg-blue-500/20'}`}></div>
-          <div className="relative z-10 flex flex-col xl:flex-row gap-5 md:gap-6">
-            <div className="flex flex-col sm:flex-row items-center gap-5 md:gap-6 flex-1">
-              <div className="bg-white p-2.5 md:p-3 rounded-2xl shadow-inner shrink-0">
-                <QRCode value={publicLink} size={90} />
-              </div>
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-lg md:text-xl font-black mb-2 flex items-center justify-center sm:justify-start gap-2 text-white">
-                  <Globe size={20} className="text-[#e8ce7a]" /> Centrum Dowodzenia ANM
-                </h3>
-                <p className="text-slate-400 text-xs md:text-sm mb-4 font-medium">
-                  Udostępnij link zaproszenia gościom. QR na tym pasku prowadzi tylko do publicznej strony wydarzenia.
-                </p>
-                <div className="bg-black/30 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Link zaproszenia</p>
-                  <a href={publicLink} target="_blank" rel="noopener noreferrer" className="block text-[11px] md:text-xs font-mono font-bold text-[#e8ce7a] truncate hover:underline">
-                    {publicLink}
-                  </a>
-                  <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
-                    <button onClick={() => { navigator.clipboard.writeText(publicLink); showNotification('Link zaproszenia skopiowany', 'success') }} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 text-white">
-                      <Copy size={14} /> Kopiuj link
-                    </button>
-                    <a href={publicLink} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-[#e8ce7a] hover:bg-[#d4b963] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5">
-                      <ExternalLink size={14} /> Otwórz zaproszenie
-                    </a>
-                    <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 text-white">
-                      <Printer size={14} /> Drukuj QR
-                    </button>
-                  </div>
+        <div className={`rounded-[24px] md:rounded-[32px] p-5 md:p-7 relative overflow-hidden shadow-xl mb-6 md:mb-8 border transition-colors duration-300 ${isDarkMode ? 'bg-[#071016] border-slate-800' : 'bg-[#071016] border-slate-800'}`}>
+          <div className="absolute top-0 right-0 w-40 md:w-72 h-40 md:h-72 rounded-full blur-3xl pointer-events-none bg-cyan-300/10" />
+          <div className="relative z-10 grid grid-cols-1 xl:grid-cols-[0.8fr_2fr] gap-5 md:gap-6">
+            <div className="flex flex-col sm:flex-row xl:flex-col gap-5">
+              <div className="flex items-center gap-4">
+                <div className="bg-white p-2.5 md:p-3 rounded-2xl shadow-inner shrink-0">
+                  <QRCode value={publicLink} size={88} />
                 </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">ClinicOps</p>
+                  <h3 className="mt-1 text-xl md:text-2xl font-black text-white leading-tight">
+                    Centrum dostępu kliniki
+                  </h3>
+                  <p className="mt-2 text-xs md:text-sm text-slate-400 font-medium leading-relaxed">
+                    Jeden panel, różne role: pacjent, recepcja, lekarz i manager korzystają z tych samych danych.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-2">
+                {[
+                  { label: 'Pacjenci', value: patients.length, icon: Users, tab: 'bilety' as TabModule },
+                  { label: 'Wizyty', value: appointmentsList.length, icon: CalendarPlus, tab: 'harmonogram' as TabModule },
+                  { label: 'Dokumenty', value: patientConsents.length, icon: FileSignature, tab: 'materialy' as TabModule },
+                  { label: 'Personel', value: staffAccessList.length, icon: ShieldCheck, tab: 'eventpass' as TabModule },
+                ].map((item: any) => (
+                  <button key={item.label} type="button" onClick={() => setActiveTab(item.tab)} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-left transition hover:bg-white/[0.1]">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.label}</p>
+                      <item.icon size={14} className="text-cyan-200" />
+                    </div>
+                    <p className="mt-2 text-xl font-black text-white tabular-nums">{item.value}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="xl:w-[340px] bg-black/30 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Link dla obsługi na miejscu</p>
-                {quickStaffPassUrl ? (
-                  <>
-                    <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="block font-mono text-[11px] font-bold text-[#e8ce7a] truncate hover:underline mb-1">
-                      {quickStaffPassShortUrl}
-                    </a>
-                    <p className="text-[10px] font-medium text-slate-400">
-                      Szybki dostęp: {quickStaffAccess?.name || quickStaffAccess?.role || 'obsługa'}
-                    </p>
-                  </>
-                ) : (
-                  <div>
-                    <p className="text-xs font-bold text-slate-400">Brak dostępu obsługi</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              {quickAccessCards.map((card: any) => {
+                const CardIcon = card.icon
+                const hasUrl = Boolean(card.url)
+                return (
+                  <div key={card.key} className="rounded-[22px] border border-white/10 bg-black/25 p-4 flex flex-col justify-between min-h-[220px]">
+                    <div>
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${card.accent}`}>
+                        <CardIcon size={19} />
+                      </div>
+                      <h4 className="mt-4 text-sm font-black text-white">{card.title}</h4>
+                      <p className="mt-2 text-[11px] font-medium leading-relaxed text-slate-400 min-h-[48px]">{card.desc}</p>
+                      <p className={`mt-3 truncate font-mono text-[10px] font-bold ${hasUrl ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
+                        {card.short}
+                      </p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {hasUrl ? (
+                        <>
+                          <button type="button" onClick={() => { navigator.clipboard.writeText(card.url); showNotification(card.copyMessage, 'success') }} className="rounded-xl bg-white/10 px-3 py-2.5 text-[9px] font-black uppercase tracking-wider text-white transition hover:bg-white/20 flex items-center justify-center gap-1.5">
+                            <Copy size={13} /> Kopiuj
+                          </button>
+                          <a href={card.url} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-white/10 px-3 py-2.5 text-[9px] font-black uppercase tracking-wider text-white transition hover:bg-white/20 flex items-center justify-center gap-1.5">
+                            <ExternalLink size={13} /> Otwórz
+                          </a>
+                        </>
+                      ) : (
+                        <button type="button" onClick={card.emptyAction} className="col-span-2 rounded-xl bg-[#e8ce7a] px-3 py-2.5 text-[9px] font-black uppercase tracking-wider text-[#071016] transition hover:bg-[#d4b963] flex items-center justify-center gap-1.5">
+                          <Plus size={13} /> Utwórz dostęp
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                {quickStaffPassUrl ? (
-                  <>
-                    <button onClick={() => { navigator.clipboard.writeText(quickStaffPassUrl); showNotification('Link obsługi skopiowany', 'success') }} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
-                      <Copy size={14} /> Kopiuj
-                    </button>
-                    <a href={quickStaffPassUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex justify-center items-center gap-1.5 text-white">
-                      <ExternalLink size={14} /> Otwórz
-                    </a>
-                  </>
-                ) : (
-                  <button onClick={() => setActiveTab('eventpass')} className="w-full py-2.5 bg-[#e8ce7a] text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-wider flex justify-center items-center gap-1.5">
-                    <ShieldCheck size={14} /> Skonfiguruj dostęp
-                  </button>
-                )}
-              </div>
+                )
+              })}
             </div>
           </div>
         </div>
