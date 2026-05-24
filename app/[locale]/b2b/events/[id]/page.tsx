@@ -527,7 +527,7 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const [patientReplyDrafts, setPatientReplyDrafts] = useState<Record<string, string>>({})
   const [aiReplyLoadingId, setAiReplyLoadingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabModule>('rekrutacja')
+  const [activeTab, setActiveTab] = useState<TabModule>('komunikacja')
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [openNavGroup, setOpenNavGroup] = useState('Pierwszy kontakt')
@@ -707,6 +707,25 @@ const [journeyTaskForm, setJourneyTaskForm] = useState<any>({
   due_date: '',
   assigned_to: '',
   journey_action: 'followup'
+})
+const [isJourneyAiModalOpen, setIsJourneyAiModalOpen] = useState(false)
+const [isJourneyAnalysisModalOpen, setIsJourneyAnalysisModalOpen] = useState(false)
+const [isJourneyWorkflowModalOpen, setIsJourneyWorkflowModalOpen] = useState(false)
+const [journeyAiModalData, setJourneyAiModalData] = useState<any>({
+  title: '',
+  action: '',
+  priority: 'normal',
+  journey_action: 'followup'
+})
+const [journeyWorkflowForm, setJourneyWorkflowForm] = useState<any>({
+  template: 'after_treatment',
+  create_aftercare: true,
+  create_followup: true,
+  create_recall: true,
+  create_next_treatment: true,
+  followup_days: 14,
+  recall_days: 120,
+  assigned_to: 'Opiekun pacjenta'
 })
 const [expandedContractorId, setExpandedContractorId] = useState<string | null>(null);
 // ==========================================
@@ -5826,10 +5845,9 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       title: 'Pierwszy kontakt',
       desc: 'Leady, rejestracja i follow-up',
       items: [
-        { tabId: 'rekrutacja' as TabModule, icon: Users, label: 'Leady pacjentów', count: pendingApps.length + patientPortalRequests.filter((item: any) => item.status === 'new').length, urgent: true },
         { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
         { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
-        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'SMS / e-mail / follow-up' },
+        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'Komunikacja z pacjentem' },
         { tabId: 'minutowka' as TabModule, icon: ClipboardList, label: 'Plan dnia kliniki' }
       ]
     },
@@ -12095,6 +12113,122 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     (journeyStages.filter(stage => stage.done).length / journeyStages.length) * 100
   )
 
+  const lastAppointmentDate = latestAppointment?.appointment_date
+    ? new Date(latestAppointment.appointment_date)
+    : null
+
+  const daysSinceLastAppointment = lastAppointmentDate
+    ? Math.floor((Date.now() - lastAppointmentDate.getTime()) / (1000 * 60 * 60 * 24))
+    : null
+
+  const retentionRisk = !selectedJourneyPatient
+    ? 'monitoring'
+    : patientPendingDocs.length > 0
+      ? 'documents'
+      : daysSinceLastAppointment !== null && daysSinceLastAppointment > 120
+        ? 'inactive'
+        : !patientTasks.some((task: any) => task.journey_action === 'followup')
+          ? 'no_followup'
+          : 'healthy'
+
+  const retentionRiskLabel = ({
+    monitoring: 'Wybierz pacjenta',
+    documents: 'Blokada dokumentów',
+    inactive: 'Ryzyko utraty',
+    no_followup: 'Brak follow-up',
+    healthy: 'Relacja aktywna'
+  } as Record<string, string>)[retentionRisk]
+
+  const aiJourneySuggestions = selectedJourneyPatient ? [
+    patientPendingDocs.length > 0 && {
+      title: 'Domknij dokumentację przed kolejną wizytą',
+      action: 'Wyślij brakujące zgody lub wywiad do Portalu Pacjenta.',
+      priority: 'high'
+    },
+    latestAppointment && !patientPortalMessages.length && {
+      title: 'Pacjent nie ma komunikatu po wizycie',
+      action: 'Przygotuj zalecenia, przypomnienie lub wiadomość kontrolną w Portalu Pacjenta.',
+      priority: 'normal'
+    },
+    latestAppointment && !patientTasks.some((task: any) => task.journey_action === 'followup') && {
+      title: 'Zaplanuj follow-up',
+      action: 'Utwórz kontrolę efektu lub kontakt po zabiegu w odpowiednim terminie.',
+      priority: 'normal'
+    },
+    latestTreatment && {
+      title: 'Potencjał dalszej opieki',
+      action: `Na podstawie ostatniego zabiegu (${latestTreatment.name}) można delikatnie omówić kolejny etap planu terapeutycznego bez obiecywania efektów.`,
+      priority: 'low'
+    },
+    daysSinceLastAppointment !== null && daysSinceLastAppointment > 120 && {
+      title: 'Pacjent dawno nie wrócił',
+      action: 'Przygotuj uprzejmy kontakt reaktywacyjny lub zaproszenie na konsultację kontrolną.',
+      priority: 'high'
+    }
+  ].filter(Boolean) : []
+
+  const openJourneyAiModal = (suggestion: any) => {
+    setJourneyAiModalData({
+      title: suggestion.title || '',
+      action: suggestion.action || '',
+      priority: suggestion.priority === 'high' ? 'high' : 'normal',
+      journey_action: suggestion.title?.toLowerCase().includes('dokument')
+        ? 'send_documents'
+        : suggestion.title?.toLowerCase().includes('follow')
+          ? 'followup'
+          : suggestion.title?.toLowerCase().includes('portal')
+            ? 'portal_message'
+            : 'next_treatment'
+    })
+    setIsJourneyAiModalOpen(true)
+  }
+
+  const saveJourneyAiAsTask = async () => {
+    setJourneyTaskForm({
+      ...journeyTaskForm,
+      title: journeyAiModalData.title,
+      notes: journeyAiModalData.action,
+      priority: journeyAiModalData.priority || 'normal',
+      journey_action: journeyAiModalData.journey_action || 'followup'
+    })
+
+    setIsJourneyAiModalOpen(false)
+  }
+
+  const sendJourneyAiToPortal = async () => {
+    if (!journeyPatientId) {
+      showNotification('Wybierz pacjenta.', 'error')
+      return
+    }
+
+    setUpdating(true)
+
+    try {
+      const { error } = await supabase.from('personal_announcements').insert([{
+        event_id: id,
+        patient_id: journeyPatientId,
+        treatment_id: latestTreatment?.id || null,
+        appointment_id: latestAppointment?.id || null,
+        title: journeyAiModalData.title || 'Informacja od kliniki',
+        description: journeyAiModalData.action || '',
+        category: journeyAiModalData.journey_action || 'followup',
+        priority: journeyAiModalData.priority || 'normal',
+        is_active: true,
+        starts_at: new Date().toISOString()
+      }])
+
+      if (error) throw error
+
+      await loadAnnouncements()
+      setIsJourneyAiModalOpen(false)
+      showNotification('Komunikat został dodany do Portalu Pacjenta.', 'success')
+    } catch (err: any) {
+      showNotification('Błąd dodania komunikatu do portalu: ' + err.message, 'error')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   const createJourneyTask = async () => {
     if (!journeyPatientId) {
       showNotification('Wybierz pacjenta do ścieżki.', 'error')
@@ -12186,16 +12320,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="max-w-4xl">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
-              <ClipboardList size={14} />
-              Patient Journey
+              <Sparkles size={14} />
+              AI Patient Journey Manager
             </span>
 
             <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-              Cyfrowe zarządzanie ścieżką pacjenta
+              Centrum utrzymania pacjenta w klinice
             </h2>
 
             <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-              Jeden widok prowadzący pacjenta przez konsultację, dokumenty, zabieg, zalecenia, kontrolę i kolejne rekomendowane procedury.
+              System pamięta historię pacjenta, pilnuje dokumentów, prowadzi przez konsultację, zabieg, zalecenia i kontrolę oraz podpowiada kolejne bezpieczne kroki dla recepcji i lekarza.
             </p>
           </div>
 
@@ -12207,7 +12341,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
       }`}>
         <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Wybierz pacjenta
+          Wybierz pacjenta do analizy ścieżki
         </label>
 
         <select
@@ -12233,7 +12367,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               { label: 'Postęp ścieżki', value: `${journeyProgress}%`, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
               { label: 'Wizyty', value: patientAppointments.length, icon: CalendarPlus, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-600' },
               { label: 'Dokumenty do podpisu', value: patientPendingDocs.length, icon: FileSignature, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
-              { label: 'Aktywne kroki', value: openTasks.length, icon: ClipboardList, color: isDarkMode ? 'text-fuchsia-400' : 'text-fuchsia-600' }
+              { label: 'Akcje retencyjne', value: openTasks.length, icon: ClipboardList, color: isDarkMode ? 'text-fuchsia-400' : 'text-fuchsia-600' }
             ].map((item: any) => (
               <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm min-h-[110px] ${
                 isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'
@@ -12267,14 +12401,42 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     </p>
                   </div>
 
-                  <div className={`rounded-2xl border px-4 py-3 ${
-                    patientPendingDocs.length > 0
-                      ? isDarkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'
-                      : isDarkMode ? 'bg-emerald-900/20 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                  }`}>
-                    <p className="text-[10px] font-black uppercase tracking-widest">
-                      {patientPendingDocs.length > 0 ? 'Wymaga dokumentów' : 'Dokumenty OK'}
-                    </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className={`rounded-2xl border px-4 py-3 ${
+                      retentionRisk === 'documents' || retentionRisk === 'inactive'
+                        ? isDarkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'
+                        : retentionRisk === 'no_followup'
+                          ? isDarkMode ? 'bg-amber-900/20 border-amber-800 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700'
+                          : isDarkMode ? 'bg-emerald-900/20 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    }`}>
+                      <p className="text-[10px] font-black uppercase tracking-widest">
+                        {retentionRiskLabel}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsJourneyAnalysisModalOpen(true)}
+                      className={`rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest border transition-all ${
+                        isDarkMode
+                          ? 'bg-cyan-300 text-[#0f172a] border-cyan-300 hover:bg-cyan-200'
+                          : 'bg-slate-900 text-cyan-300 border-slate-900 hover:bg-black'
+                      }`}
+                    >
+                      AI analiza pacjenta
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsJourneyWorkflowModalOpen(true)}
+                      className={`rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest border transition-all ${
+                        isDarkMode
+                          ? 'bg-fuchsia-300 text-[#0f172a] border-fuchsia-300 hover:bg-fuchsia-200'
+                          : 'bg-slate-900 text-fuchsia-300 border-slate-900 hover:bg-black'
+                      }`}
+                    >
+                      Automatyzacja ścieżki
+                    </button>
                   </div>
                 </div>
 
@@ -12287,7 +12449,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
               }`}>
                 <h4 className={`font-black text-lg mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Etapy ścieżki pacjenta
+                  Ścieżka pacjenta i punkty zatrzymania
                 </h4>
 
                 <div className="space-y-4">
@@ -12332,7 +12494,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
               }`}>
                 <h4 className={`font-black text-lg mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  Kroki i zadania opiekuna pacjenta
+                  Akcje recepcji, lekarza i opiekuna
                 </h4>
 
                 {patientTasks.length === 0 ? (
@@ -12465,8 +12627,37 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               }`}>
                 <h4 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   <Sparkles size={18} className={isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} />
-                  AI opiekun pacjenta
+                  AI Patient Journey Manager
                 </h4>
+
+                <div className="space-y-2 mb-5">
+                  {aiJourneySuggestions.length === 0 ? (
+                    <div className={`rounded-2xl border p-4 text-xs font-bold ${
+                      isDarkMode ? 'bg-slate-950/60 border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-600'
+                    }`}>
+                      Wybierz kontekst albo dodaj pierwszą wizytę, aby AI mogło zaproponować następny krok relacji.
+                    </div>
+                  ) : aiJourneySuggestions.map((suggestion: any) => (
+                    <button
+                      key={suggestion.title}
+                      type="button"
+                      onClick={() => openJourneyAiModal(suggestion)}
+                      className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                        isDarkMode ? 'bg-slate-950/60 border-slate-800 hover:border-cyan-800 text-slate-300' : 'bg-white border-slate-200 hover:border-cyan-200 text-slate-700'
+                      }`}
+                    >
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${
+                        suggestion.priority === 'high' ? 'text-red-400' : isDarkMode ? 'text-cyan-300' : 'text-cyan-700'
+                      }`}>
+                        Sugestia AI
+                      </p>
+                      <p className="mt-1 text-sm font-black">{suggestion.title}</p>
+                      <p className={`mt-1 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {suggestion.action}
+                      </p>
+                    </button>
+                  ))}
+                </div>
 
                 <div className="space-y-4">
                   <input
@@ -12571,6 +12762,765 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Wybierz pacjenta, aby zobaczyć jego cyfrową ścieżkę.
           </p>
+        </div>
+      )}
+
+      {isJourneyWorkflowModalOpen && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className={`w-full max-w-4xl rounded-[32px] border shadow-2xl overflow-hidden ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+          }`}>
+            <div className={`p-6 border-b flex items-start justify-between gap-4 ${
+              isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-50 bg-slate-50'
+            }`}>
+              <div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDarkMode ? 'text-fuchsia-300' : 'text-fuchsia-700'}`}>
+                  Workflow Automation
+                </p>
+
+                <h3 className={`mt-2 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Automatyzacja ścieżki pacjenta
+                </h3>
+
+                <p className={`mt-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Utwórz gotowy scenariusz opieki po zabiegu: zalecenia, kontrola, przypomnienie i delikatna rekomendacja kolejnego kroku.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsJourneyWorkflowModalOpen(false)}
+                className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className={`rounded-2xl border p-4 ${
+                isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Pacjent i ostatni kontekst
+                </p>
+
+                <p className={`mt-2 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {selectedJourneyPatient?.first_name} {selectedJourneyPatient?.last_name}
+                </p>
+
+                <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Ostatnia wizyta: {latestAppointment ? (latestAppointment.treatment_name || latestTreatment?.name || 'Wizyta') : 'brak danych'}
+                  {latestDoctor ? ` • ${latestDoctor.first_name} ${latestDoctor.last_name}` : ''}
+                </p>
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Scenariusz automatyzacji
+                </label>
+
+                <select
+                  value={journeyWorkflowForm.template || 'after_treatment'}
+                  onChange={e => setJourneyWorkflowForm({ ...journeyWorkflowForm, template: e.target.value })}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                >
+                  <option value="after_treatment">Po zabiegu - zalecenia + kontrola</option>
+                  <option value="series">Seria zabiegowa - kontrola serii</option>
+                  <option value="retention">Pacjent nie wrócił - reaktywacja</option>
+                  <option value="premium_plan">Plan premium - kolejny etap terapii</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  {
+                    key: 'create_aftercare',
+                    title: 'Komunikat pozabiegowy',
+                    desc: 'Dodaje informację do Portalu Pacjenta.'
+                  },
+                  {
+                    key: 'create_followup',
+                    title: 'Kontrola / follow-up',
+                    desc: 'Tworzy zadanie kontaktu kontrolnego.'
+                  },
+                  {
+                    key: 'create_recall',
+                    title: 'Przypomnienie o powrocie',
+                    desc: 'Tworzy przypomnienie po określonej liczbie dni.'
+                  },
+                  {
+                    key: 'create_next_treatment',
+                    title: 'Rekomendacja kolejnego kroku',
+                    desc: 'Dodaje subtelną rekomendację opiekuna pacjenta.'
+                  }
+                ].map((item: any) => {
+                  const checked = !!journeyWorkflowForm[item.key]
+
+                  return (
+                    <label
+                      key={item.key}
+                      className={`rounded-2xl border p-4 cursor-pointer transition-all ${
+                        checked
+                          ? isDarkMode ? 'bg-fuchsia-900/20 border-fuchsia-700 text-white' : 'bg-fuchsia-50 border-fuchsia-300 text-slate-900'
+                          : isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black">{item.title}</p>
+                          <p className={`mt-1 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                            {item.desc}
+                          </p>
+                        </div>
+
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={e => setJourneyWorkflowForm({ ...journeyWorkflowForm, [item.key]: e.target.checked })}
+                          className="mt-1"
+                        />
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Follow-up po dniach
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={journeyWorkflowForm.followup_days || 14}
+                    onChange={e => setJourneyWorkflowForm({ ...journeyWorkflowForm, followup_days: Number(e.target.value || 14) })}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Przypomnienie po dniach
+                  </label>
+                  <input
+                    type="number"
+                    min="7"
+                    value={journeyWorkflowForm.recall_days || 120}
+                    onChange={e => setJourneyWorkflowForm({ ...journeyWorkflowForm, recall_days: Number(e.target.value || 120) })}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Odpowiedzialny
+                  </label>
+                  <input
+                    value={journeyWorkflowForm.assigned_to || ''}
+                    onChange={e => setJourneyWorkflowForm({ ...journeyWorkflowForm, assigned_to: e.target.value })}
+                    placeholder="Opiekun pacjenta"
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`rounded-[24px] border p-5 ${
+                isDarkMode ? 'bg-gradient-to-br from-fuchsia-950/30 to-slate-950 border-fuchsia-900/40' : 'bg-gradient-to-br from-fuchsia-50 to-white border-fuchsia-100'
+              }`}>
+                <h4 className={`font-black text-lg mb-3 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <Sparkles size={18} className={isDarkMode ? 'text-fuchsia-300' : 'text-fuchsia-700'} />
+                  Co zostanie utworzone?
+                </h4>
+
+                <div className="space-y-2 text-xs font-bold">
+                  {journeyWorkflowForm.create_aftercare && (
+                    <p>Komunikat do Portalu Pacjenta z zaleceniami lub spokojnym przypomnieniem.</p>
+                  )}
+                  {journeyWorkflowForm.create_followup && (
+                    <p>Zadanie follow-up za {journeyWorkflowForm.followup_days || 14} dni.</p>
+                  )}
+                  {journeyWorkflowForm.create_recall && (
+                    <p>Zadanie przypomnienia o powrocie za {journeyWorkflowForm.recall_days || 120} dni.</p>
+                  )}
+                  {journeyWorkflowForm.create_next_treatment && (
+                    <p>Rekomendacja kolejnego kroku terapeutycznego / estetycznego dla opiekuna.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsJourneyWorkflowModalOpen(false)}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-400' : 'bg-white border-slate-300 text-slate-600'
+                  }`}
+                >
+                  Zamknij
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setJourneyWorkflowForm({
+                      template: 'after_treatment',
+                      create_aftercare: true,
+                      create_followup: true,
+                      create_recall: true,
+                      create_next_treatment: true,
+                      followup_days: 14,
+                      recall_days: 120,
+                      assigned_to: 'Opiekun pacjenta'
+                    })
+                  }}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                  }`}
+                >
+                  Reset
+                </button>
+
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={async () => {
+                    if (!journeyPatientId) {
+                      showNotification('Wybierz pacjenta.', 'error')
+                      return
+                    }
+
+                    setUpdating(true)
+
+                    try {
+                      let groupId = checklistGroups.find((g: any) => g.patient_id === journeyPatientId)?.id
+
+                      if (!groupId) {
+                        const { data: groupData, error: groupError } = await supabase
+                          .from('event_checklist_groups')
+                          .insert([{
+                            event_id: id,
+                            patient_id: journeyPatientId,
+                            journey_type: 'patient_path',
+                            stage_key: 'patient_journey',
+                            title: `Ścieżka pacjenta - ${selectedJourneyPatient?.first_name || ''} ${selectedJourneyPatient?.last_name || ''}`.trim(),
+                            description: 'Automatyczna ścieżka opieki pacjenta.',
+                            category: 'patient_path',
+                            color: '#d946ef',
+                            is_open: true,
+                            display_order: checklistGroups.length
+                          }])
+                          .select()
+                          .single()
+
+                        if (groupError) throw groupError
+                        groupId = groupData.id
+                      }
+
+                      const today = new Date()
+
+                      const addDays = (days: number) => {
+                        const date = new Date(today)
+                        date.setDate(date.getDate() + days)
+                        return date.toISOString().slice(0, 10)
+                      }
+
+                      const tasksToInsert: any[] = []
+
+                      if (journeyWorkflowForm.create_followup) {
+                        tasksToInsert.push({
+                          event_id: id,
+                          group_id: groupId,
+                          patient_id: journeyPatientId,
+                          appointment_id: latestAppointment?.id || null,
+                          treatment_id: latestAppointment?.treatment_id || latestTreatment?.id || null,
+                          doctor_id: latestAppointment?.doctor_id || null,
+                          journey_action: 'followup',
+                          title: 'Kontrola / follow-up po zabiegu',
+                          notes: `Skontaktować się z pacjentem po zabiegu: ${latestAppointment?.treatment_name || latestTreatment?.name || 'ostatnia wizyta'}. Ocenić samopoczucie, przypomnieć zalecenia i zaproponować kontrolę, jeśli jest zasadna.`,
+                          priority: 'normal',
+                          due_date: addDays(Number(journeyWorkflowForm.followup_days || 14)),
+                          assigned_to: journeyWorkflowForm.assigned_to || 'Opiekun pacjenta',
+                          is_done: false,
+                          status: 'todo',
+                          display_order: patientTasks.length + tasksToInsert.length
+                        })
+                      }
+
+                      if (journeyWorkflowForm.create_recall) {
+                        tasksToInsert.push({
+                          event_id: id,
+                          group_id: groupId,
+                          patient_id: journeyPatientId,
+                          appointment_id: latestAppointment?.id || null,
+                          treatment_id: latestAppointment?.treatment_id || latestTreatment?.id || null,
+                          doctor_id: latestAppointment?.doctor_id || null,
+                          journey_action: 'recall',
+                          title: 'Przypomnienie o powrocie pacjenta',
+                          notes: 'Przygotować spokojny kontakt przypominający o możliwości konsultacji kontrolnej lub kontynuacji planu terapii.',
+                          priority: 'normal',
+                          due_date: addDays(Number(journeyWorkflowForm.recall_days || 120)),
+                          assigned_to: journeyWorkflowForm.assigned_to || 'Opiekun pacjenta',
+                          is_done: false,
+                          status: 'todo',
+                          display_order: patientTasks.length + tasksToInsert.length
+                        })
+                      }
+
+                      if (journeyWorkflowForm.create_next_treatment) {
+                        tasksToInsert.push({
+                          event_id: id,
+                          group_id: groupId,
+                          patient_id: journeyPatientId,
+                          appointment_id: latestAppointment?.id || null,
+                          treatment_id: latestAppointment?.treatment_id || latestTreatment?.id || null,
+                          doctor_id: latestAppointment?.doctor_id || null,
+                          journey_action: 'next_treatment',
+                          title: 'Delikatna rekomendacja kolejnego etapu',
+                          notes: `Na podstawie ostatniego zabiegu (${latestAppointment?.treatment_name || latestTreatment?.name || 'brak danych'}) przygotować propozycję dalszej konsultacji bez nachalnej sprzedaży i bez obiecywania efektów.`,
+                          priority: 'low',
+                          due_date: addDays(Number(journeyWorkflowForm.followup_days || 14)),
+                          assigned_to: journeyWorkflowForm.assigned_to || 'Opiekun pacjenta',
+                          is_done: false,
+                          status: 'todo',
+                          display_order: patientTasks.length + tasksToInsert.length
+                        })
+                      }
+
+                      if (tasksToInsert.length > 0) {
+                        const { error: taskError } = await supabase
+                          .from('event_checklist_items')
+                          .insert(tasksToInsert)
+
+                        if (taskError) throw taskError
+                      }
+
+                      if (journeyWorkflowForm.create_aftercare) {
+                        const { error: portalError } = await supabase
+                          .from('personal_announcements')
+                          .insert([{
+                            event_id: id,
+                            patient_id: journeyPatientId,
+                            treatment_id: latestTreatment?.id || latestAppointment?.treatment_id || null,
+                            appointment_id: latestAppointment?.id || null,
+                            title: 'Informacja po wizycie',
+                            description: 'Dziękujemy za wizytę. W Portalu Pacjenta znajdziesz najważniejsze informacje oraz przypomnienia dotyczące dalszej opieki. W razie pytań skontaktuj się z kliniką.',
+                            category: 'aftercare',
+                            priority: 'normal',
+                            is_active: true,
+                            starts_at: new Date().toISOString()
+                          }])
+
+                        if (portalError) throw portalError
+                        await loadAnnouncements()
+                      }
+
+                      await loadEventData()
+                      setIsJourneyWorkflowModalOpen(false)
+                      showNotification('Automatyzacja ścieżki pacjenta została utworzona.', 'success')
+                    } catch (err: any) {
+                      showNotification('Błąd automatyzacji: ' + err.message, 'error')
+                    } finally {
+                      setUpdating(false)
+                    }
+                  }}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider disabled:opacity-50 ${
+                    isDarkMode ? 'bg-fuchsia-300 text-[#0f172a]' : 'bg-slate-900 text-fuchsia-300'
+                  }`}
+                >
+                  Uruchom workflow
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isJourneyAnalysisModalOpen && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className={`w-full max-w-4xl rounded-[32px] border shadow-2xl overflow-hidden ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+          }`}>
+            <div className={`p-6 border-b flex items-start justify-between gap-4 ${
+              isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-50 bg-slate-50'
+            }`}>
+              <div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                  AI Patient Intelligence
+                </p>
+                <h3 className={`mt-2 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Analiza relacji i ścieżki pacjenta
+                </h3>
+                <p className={`mt-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Podsumowanie aktywności, dokumentów, wizyt, portalu pacjenta i potencjalnych kolejnych kroków.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsJourneyAnalysisModalOpen(false)}
+                className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Pacjent
+                  </p>
+                  <p className={`mt-2 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    {selectedJourneyPatient?.first_name} {selectedJourneyPatient?.last_name}
+                  </p>
+                  <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {selectedJourneyPatient?.phone || 'brak telefonu'}
+                  </p>
+                </div>
+
+                <div className={`rounded-2xl border p-4 ${
+                  retentionRisk === 'healthy'
+                    ? isDarkMode ? 'bg-emerald-900/10 border-emerald-800/40' : 'bg-emerald-50 border-emerald-200'
+                    : retentionRisk === 'inactive' || retentionRisk === 'documents'
+                      ? isDarkMode ? 'bg-red-900/10 border-red-800/40' : 'bg-red-50 border-red-200'
+                      : isDarkMode ? 'bg-amber-900/10 border-amber-800/40' : 'bg-amber-50 border-amber-200'
+                }`}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                    Status relacji
+                  </p>
+                  <p className={`mt-2 text-lg font-black ${
+                    retentionRisk === 'healthy'
+                      ? isDarkMode ? 'text-emerald-300' : 'text-emerald-700'
+                      : retentionRisk === 'inactive' || retentionRisk === 'documents'
+                        ? isDarkMode ? 'text-red-300' : 'text-red-700'
+                        : isDarkMode ? 'text-amber-300' : 'text-amber-700'
+                  }`}>
+                    {retentionRiskLabel}
+                  </p>
+                </div>
+
+                <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Postęp ścieżki
+                  </p>
+                  <p className={`mt-2 text-lg font-black ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                    {journeyProgress}%
+                  </p>
+                  <div className={`mt-3 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                    <div className="h-full bg-cyan-400" style={{ width: `${journeyProgress}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className={`rounded-[24px] border p-5 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <h4 className={`font-black text-lg mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Co AI widzi w ścieżce pacjenta?
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[
+                    {
+                      title: 'Historia wizyt',
+                      value: `${patientAppointments.length} wizyt`,
+                      desc: latestAppointment
+                        ? `Ostatnia: ${latestAppointment.treatment_name || latestTreatment?.name || 'wizyta'}`
+                        : 'Brak wizyt w systemie.'
+                    },
+                    {
+                      title: 'Dokumenty',
+                      value: patientPendingDocs.length > 0 ? `${patientPendingDocs.length} do podpisu` : 'Dokumenty OK',
+                      desc: `${patientSignedDocs.length} potwierdzonych dokumentów.`
+                    },
+                    {
+                      title: 'Portal pacjenta',
+                      value: `${patientPortalMessages.length} komunikatów`,
+                      desc: patientPortalMessages.length > 0
+                        ? 'Pacjent ma aktywną komunikację portalową.'
+                        : 'Warto dodać komunikat po wizycie lub follow-up.'
+                    },
+                    {
+                      title: 'Follow-up',
+                      value: patientTasks.some((t: any) => t.journey_action === 'followup') ? 'Istnieje' : 'Brak',
+                      desc: patientTasks.some((t: any) => t.journey_action === 'followup')
+                        ? 'W ścieżce jest zaplanowany kontakt kontrolny.'
+                        : 'AI sugeruje utworzenie kontroli lub kontaktu opiekuna.'
+                    }
+                  ].map((card: any) => (
+                    <div key={card.title} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {card.title}
+                      </p>
+                      <p className={`mt-2 text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {card.value}
+                      </p>
+                      <p className={`mt-1 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {card.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`rounded-[24px] border p-5 ${
+                isDarkMode ? 'bg-gradient-to-br from-cyan-950/30 to-slate-950 border-cyan-900/40' : 'bg-gradient-to-br from-cyan-50 to-white border-cyan-100'
+              }`}>
+                <h4 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <Sparkles size={18} className={isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} />
+                  Rekomendacje concierge
+                </h4>
+
+                <div className="space-y-3">
+                  {aiJourneySuggestions.length === 0 ? (
+                    <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Brak pilnych rekomendacji. Relacja pacjenta wygląda stabilnie.
+                    </p>
+                  ) : aiJourneySuggestions.map((suggestion: any) => (
+                    <div key={suggestion.title} className={`rounded-2xl border p-4 ${
+                      suggestion.priority === 'high'
+                        ? isDarkMode ? 'bg-red-900/10 border-red-800/40' : 'bg-red-50 border-red-200'
+                        : isDarkMode ? 'bg-slate-950/70 border-slate-800' : 'bg-white border-slate-200'
+                    }`}>
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${
+                        suggestion.priority === 'high' ? 'text-red-400' : isDarkMode ? 'text-cyan-300' : 'text-cyan-700'
+                      }`}>
+                        Sugestia AI
+                      </p>
+                      <p className={`mt-1 text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {suggestion.title}
+                      </p>
+                      <p className={`mt-1 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {suggestion.action}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openJourneyAiModal(suggestion)
+                          setIsJourneyAnalysisModalOpen(false)
+                        }}
+                        className={`mt-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                          isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'
+                        }`}
+                      >
+                        Otwórz w AI Concierge
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setJourneyTaskForm({
+                      ...journeyTaskForm,
+                      title: 'Kontakt kontrolny z pacjentem',
+                      notes: 'Skontaktować się z pacjentem i zapytać o samopoczucie po ostatniej wizycie.',
+                      priority: 'normal',
+                      journey_action: 'followup'
+                    })
+                    setIsJourneyAnalysisModalOpen(false)
+                  }}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider ${
+                    isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'
+                  }`}
+                >
+                  Utwórz follow-up
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setJourneyTaskForm({
+                      ...journeyTaskForm,
+                      title: 'Przygotować komunikat do portalu pacjenta',
+                      notes: 'Przygotować spokojną wiadomość z zaleceniami, przypomnieniem lub zaproszeniem na kontrolę.',
+                      priority: 'normal',
+                      journey_action: 'portal_message'
+                    })
+                    setIsJourneyAnalysisModalOpen(false)
+                  }}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                  }`}
+                >
+                  Komunikat do portalu
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsJourneyAnalysisModalOpen(false)}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-400' : 'bg-white border-slate-300 text-slate-600'
+                  }`}
+                >
+                  Zamknij
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isJourneyAiModalOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in">
+          <div className={`w-full max-w-3xl rounded-[32px] border shadow-2xl overflow-hidden ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+          }`}>
+            <div className={`p-6 border-b flex items-start justify-between gap-4 ${
+              isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-100 bg-slate-50'
+            }`}>
+              <div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                  AI Concierge
+                </p>
+
+                <h3 className={`mt-2 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Propozycja kolejnego kroku pacjenta
+                </h3>
+
+                <p className={`mt-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  AI przygotowało rekomendację na podstawie wizyt, dokumentów, portalu pacjenta i statusu follow-up.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsJourneyAiModalOpen(false)}
+                className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className={`rounded-2xl border p-4 ${
+                isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Pacjent
+                </p>
+
+                <p className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {selectedJourneyPatient?.first_name} {selectedJourneyPatient?.last_name}
+                </p>
+
+                <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Ostatnia wizyta: {latestAppointment ? (latestAppointment.treatment_name || latestTreatment?.name || 'Wizyta') : 'brak danych'}
+                  {latestDoctor ? ` • ${latestDoctor.first_name} ${latestDoctor.last_name}` : ''}
+                </p>
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Tytuł rekomendacji
+                </label>
+
+                <input
+                  value={journeyAiModalData.title || ''}
+                  onChange={e => setJourneyAiModalData({ ...journeyAiModalData, title: e.target.value })}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Treść / instrukcja dla opiekuna pacjenta
+                </label>
+
+                <textarea
+                  rows={6}
+                  value={journeyAiModalData.action || ''}
+                  onChange={e => setJourneyAiModalData({ ...journeyAiModalData, action: e.target.value })}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <select
+                  value={journeyAiModalData.journey_action || 'followup'}
+                  onChange={e => setJourneyAiModalData({ ...journeyAiModalData, journey_action: e.target.value })}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                >
+                  <option value="send_documents">Wyślij dokumenty</option>
+                  <option value="send_aftercare">Wyślij zalecenia</option>
+                  <option value="portal_message">Komunikat do portalu</option>
+                  <option value="followup">Kontrola / follow-up</option>
+                  <option value="next_treatment">Rekomendacja kolejnego zabiegu</option>
+                </select>
+
+                <select
+                  value={journeyAiModalData.priority || 'normal'}
+                  onChange={e => setJourneyAiModalData({ ...journeyAiModalData, priority: e.target.value })}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                >
+                  <option value="low">Niski</option>
+                  <option value="normal">Normalny</option>
+                  <option value="high">Pilny</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={saveJourneyAiAsTask}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-700 text-white hover:bg-slate-800' : 'bg-white border-slate-300 text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  Wstaw do formularza
+                </button>
+
+                <button
+                  type="button"
+                  onClick={sendJourneyAiToPortal}
+                  disabled={updating}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider border disabled:opacity-50 ${
+                    isDarkMode ? 'bg-indigo-300 text-[#0f172a] border-indigo-300' : 'bg-slate-900 text-indigo-300 border-slate-900'
+                  }`}
+                >
+                  Wyślij do portalu
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setJourneyTaskForm({
+                      ...journeyTaskForm,
+                      title: journeyAiModalData.title,
+                      notes: journeyAiModalData.action,
+                      priority: journeyAiModalData.priority || 'normal',
+                      journey_action: journeyAiModalData.journey_action || 'followup'
+                    })
+                    setIsJourneyAiModalOpen(false)
+                  }}
+                  className={`py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider ${
+                    isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'
+                  }`}
+                >
+                  Utwórz krok
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -13957,145 +14907,22 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {activeTab === 'rekrutacja' && (
   <div className="space-y-6 animate-in fade-in duration-300">
     <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
-            Pierwszy kontakt z portalu pacjenta
-          </p>
-          <h2 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Pytania, prośby o wizytę i konsultacje kontrolne
-          </h2>
-          <p className={`mt-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Tu trafiają wiadomości wysłane przez pacjentów z Portalu Pacjenta.
-          </p>
-        </div>
-        <span className={`w-fit rounded-2xl px-4 py-2 text-xs font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
-          {patientPortalRequests.filter((item: any) => item.status === 'new').length} nowe
-        </span>
-      </div>
-
-      {patientPortalRequests.length === 0 ? (
-        <div className={`rounded-3xl border-2 border-dashed p-10 text-center ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-          <MessageSquare size={34} className="mx-auto mb-3 opacity-60" />
-          <p className="text-sm font-black">Brak zgłoszeń z portalu pacjenta.</p>
-          <p className="mt-2 text-xs font-medium">Nowe pytania i prośby o wizytę pojawią się tutaj automatycznie.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {patientPortalRequests.map((request: any) => {
-            const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim() || 'Pacjent'
-            const typeLabel = request.request_type === 'appointment_request'
-              ? 'Prośba o wizytę'
-              : request.request_type === 'followup_request'
-                ? 'Konsultacja kontrolna'
-                : 'Pytanie po zabiegu'
-            const isNew = request.status === 'new'
-            const requestMessages = patientPortalMessages.filter((message: any) => message.request_id === request.id)
-            const visibleMessages = requestMessages.length > 0 ? requestMessages : [{
-              id: `${request.id}-fallback`,
-              sender_type: 'patient',
-              sender_name: patientName,
-              body: request.message,
-              created_at: request.created_at,
-            }]
-
-            return (
-              <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
-                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isNew ? 'bg-red-500 text-white' : (isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white text-slate-600 border border-slate-200')}`}>
-                        {request.status || 'new'}
-                      </span>
-                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
-                        {typeLabel}
-                      </span>
-                    </div>
-                    <h3 className={`mt-3 text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      {request.subject || typeLabel}
-                    </h3>
-                    <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {patientName} · PESEL: {request.patients?.pesel || 'brak'} · {request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : ''}
-                    </p>
-                    <p className={`mt-4 text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      {request.message}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    <button
-                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'in_progress')}
-                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      W trakcie
-                    </button>
-                    <button
-                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'closed')}
-                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                    >
-                      Zamknij
-                    </button>
-                  </div>
-                </div>
-
-                <div className={`mt-5 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
-                  <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Historia rozmowy
-                  </p>
-                  <div className="space-y-3">
-                    {visibleMessages.map((message: any) => {
-                      const isStaff = message.sender_type === 'staff'
-                      return (
-                        <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'bg-blue-900/30 border-blue-800/60 text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-950') : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800')}`}>
-                            <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {isStaff ? (message.sender_name || 'Recepcja') : (message.sender_name || patientName)} · {message.created_at ? new Date(message.created_at).toLocaleString('pl-PL') : ''}
-                            </p>
-                            <p className="whitespace-pre-wrap">{message.body}</p>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
-                      Odpowiedź recepcji
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleGeneratePatientReplyDraft(request)}
-                      disabled={aiReplyLoadingId === request.id}
-                      className={`w-fit inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
-                    >
-                      <Sparkles size={13} className={aiReplyLoadingId === request.id ? 'animate-pulse' : ''} />
-                      {aiReplyLoadingId === request.id ? 'Piszę szkic...' : 'Szkic AI'}
-                    </button>
-                  </div>
-                  <textarea
-                    rows={4}
-                    value={patientReplyDrafts[request.id] || ''}
-                    onChange={(event) => setPatientReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
-                    placeholder="Napisz odpowiedź, którą pacjent zobaczy w swoim Portalu Pacjenta..."
-                    className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  />
-                  <div className="mt-3 flex flex-wrap justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSendPatientReply(request)}
-                      disabled={updating || !(patientReplyDrafts[request.id] || '').trim()}
-                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                    >
-                      <Send size={13} /> Wyślij odpowiedź
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
+        Pierwszy kontakt
+      </p>
+      <h2 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+        Leady pacjentów
+      </h2>
+      <p className={`mt-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+        Rozmowy z Portalu Pacjenta zostały przeniesione do sekcji Komunikacja z pacjentem.
+      </p>
+      <button
+        type="button"
+        onClick={() => setActiveTab('komunikacja' as TabModule)}
+        className={`mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+      >
+        <MessageSquare size={13} /> Otwórz komunikację
+      </button>
     </section>
   </div>
 )}
@@ -14628,6 +15455,148 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* SMS/MAIL*/}
 {activeTab === 'komunikacja' && (
   <div className="space-y-6 animate-in fade-in duration-300">
+
+    <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
+            Komunikacja z pacjentem
+          </p>
+          <h2 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            Portal pacjenta, SMS, e-mail i follow-up
+          </h2>
+          <p className={`mt-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Jedno miejsce dla rozmów z Portalu Pacjenta oraz planowanej komunikacji SMS/e-mail.
+          </p>
+        </div>
+        <span className={`w-fit rounded-2xl px-4 py-2 text-xs font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+          {patientPortalRequests.filter((item: any) => item.status === 'new').length} nowe
+        </span>
+      </div>
+
+      {patientPortalRequests.length === 0 ? (
+        <div className={`rounded-3xl border-2 border-dashed p-10 text-center ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+          <MessageSquare size={34} className="mx-auto mb-3 opacity-60" />
+          <p className="text-sm font-black">Brak zgłoszeń z portalu pacjenta.</p>
+          <p className="mt-2 text-xs font-medium">Nowe pytania, odpowiedzi i prośby o wizytę pojawią się tutaj automatycznie.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {patientPortalRequests.map((request: any) => {
+            const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim() || 'Pacjent'
+            const typeLabel = request.request_type === 'appointment_request'
+              ? 'Prośba o wizytę'
+              : request.request_type === 'followup_request'
+                ? 'Konsultacja kontrolna'
+                : 'Pytanie po zabiegu'
+            const isNew = request.status === 'new'
+            const requestMessages = patientPortalMessages.filter((message: any) => message.request_id === request.id)
+            const visibleMessages = requestMessages.length > 0 ? requestMessages : [{
+              id: `${request.id}-fallback`,
+              sender_type: 'patient',
+              sender_name: patientName,
+              body: request.message,
+              created_at: request.created_at,
+            }]
+
+            return (
+              <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isNew ? 'bg-red-500 text-white' : (isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white text-slate-600 border border-slate-200')}`}>
+                        {request.status || 'new'}
+                      </span>
+                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                        {typeLabel}
+                      </span>
+                    </div>
+                    <h3 className={`mt-3 text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {request.subject || typeLabel}
+                    </h3>
+                    <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {patientName} · PESEL: {request.patients?.pesel || 'brak'} · {request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : ''}
+                    </p>
+                    <p className={`mt-4 text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      {request.message}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button
+                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'in_progress')}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                    >
+                      W trakcie
+                    </button>
+                    <button
+                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'closed')}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                    >
+                      Zamknij
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`mt-5 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Historia rozmowy
+                  </p>
+                  <div className="space-y-3">
+                    {visibleMessages.map((message: any) => {
+                      const isStaff = message.sender_type === 'staff'
+                      return (
+                        <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'bg-blue-900/30 border-blue-800/60 text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-950') : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800')}`}>
+                            <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {isStaff ? (message.sender_name || 'Recepcja') : (message.sender_name || patientName)} · {message.created_at ? new Date(message.created_at).toLocaleString('pl-PL') : ''}
+                            </p>
+                            <p className="whitespace-pre-wrap">{message.body}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
+                      Odpowiedź recepcji
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleGeneratePatientReplyDraft(request)}
+                      disabled={aiReplyLoadingId === request.id}
+                      className={`w-fit inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
+                    >
+                      <Sparkles size={13} className={aiReplyLoadingId === request.id ? 'animate-pulse' : ''} />
+                      {aiReplyLoadingId === request.id ? 'Piszę szkic...' : 'Szkic AI'}
+                    </button>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={patientReplyDrafts[request.id] || ''}
+                    onChange={(event) => setPatientReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
+                    placeholder="Napisz odpowiedź, którą pacjent zobaczy w swoim Portalu Pacjenta..."
+                    className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  />
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSendPatientReply(request)}
+                      disabled={updating || !(patientReplyDrafts[request.id] || '').trim()}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+                    >
+                      <Send size={13} /> Wyślij odpowiedź
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
 
     {/* 1. STATUS KOMUNIKACJI - METRYKI */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
