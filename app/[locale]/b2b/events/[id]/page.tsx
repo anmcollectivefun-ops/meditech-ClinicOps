@@ -15,7 +15,7 @@ import {
   Clock, Calendar, CalendarDays, CalendarPlus, ClipboardCheck, Wallet, FileText, FileSignature, Download, Printer,
   Truck, Car, Bus, Smartphone, Share2, TrendingDown, TrendingUp, Phone,
   UtensilsCrossed, Wine, Coffee, Shirt, Award,
-  Send, MessageSquare, Mail, Video, Mic,
+  Send, MessageSquare, Mail, Video, Mic, Reply,
   Music4, Image as ImageIcon, Type, Palette,
   Zap, Activity, Bed, File as FileIcon, Users2, Stethoscope,
   Recycle, Ticket, Briefcase, Train,
@@ -526,6 +526,15 @@ export default function B2BEventDetail({ params }: { params: Promise<{ id: strin
   const [patientPortalMessages, setPatientPortalMessages] = useState<any[]>([])
   const [patientReplyDrafts, setPatientReplyDrafts] = useState<Record<string, string>>({})
   const [aiReplyLoadingId, setAiReplyLoadingId] = useState<string | null>(null)
+  const [communicationLogs, setCommunicationLogs] = useState<any[]>([])
+  const [communicationPatientId, setCommunicationPatientId] = useState('')
+  const [communicationForm, setCommunicationForm] = useState<any>({
+    channel: 'portal',
+    communication_goal: 'followup',
+    subject: '',
+    message: '',
+    status: 'draft'
+  })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabModule>('komunikacja')
   const [isNavCollapsed, setIsNavCollapsed] = useState(false)
@@ -3852,6 +3861,72 @@ const patientQrMetrics = useMemo(() => ({
     }
   }
 
+  const loadCommunicationLogs = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('patient_communication_logs')
+      .select('*')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+
+    if (!error) setCommunicationLogs(data || [])
+  }, [id, supabase])
+
+  const handleSaveCommunicationLog = async () => {
+    if (!communicationPatientId) {
+      showNotification('Wybierz pacjenta.', 'error')
+      return
+    }
+
+    if (!(communicationForm.message || '').trim()) {
+      showNotification('Wpisz treść komunikatu.', 'error')
+      return
+    }
+
+    setUpdating(true)
+
+    try {
+      const patientAppointments = appointmentsList.filter((appointment: any) => appointment.patient_id === communicationPatientId)
+      const latestAppointment = patientAppointments
+        .slice()
+        .sort((a: any, b: any) => new Date(b.appointment_date || 0).getTime() - new Date(a.appointment_date || 0).getTime())[0]
+
+      const { error } = await supabase
+        .from('patient_communication_logs')
+        .insert([{
+          event_id: id,
+          patient_id: communicationPatientId,
+          appointment_id: latestAppointment?.id || null,
+          treatment_id: latestAppointment?.treatment_id || null,
+          channel: communicationForm.channel || 'portal',
+          direction: 'outgoing',
+          subject: communicationForm.subject || null,
+          message: communicationForm.message,
+          status: communicationForm.status || 'draft',
+          communication_goal: communicationForm.communication_goal || 'followup',
+          ai_suggested: !!communicationForm.ai_suggested,
+          sent_at: communicationForm.status === 'sent' ? new Date().toISOString() : null
+        }])
+
+      if (error) throw error
+
+      await loadCommunicationLogs()
+
+      setCommunicationForm({
+        channel: 'portal',
+        communication_goal: 'followup',
+        subject: '',
+        message: '',
+        status: 'draft'
+      })
+
+      showNotification('Komunikacja została zapisana w historii pacjenta.', 'success')
+    } catch (err: any) {
+      showNotification('Błąd zapisu komunikacji: ' + err.message, 'error')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   // --- FUNKCJA: ZAPIS JAKO SZABLON ---
   const handleSaveAsTemplate = async () => {
     const templateName = prompt('Podaj nazwę dla szablonu:', `${event?.title} - Szablon`);
@@ -4435,6 +4510,7 @@ const loadEventData = useCallback(async () => {
     await loadAppointments()
     await loadPatientClinicalNotes()
     await loadClinicDayTasks()
+    await loadCommunicationLogs()
 
     setMenuItems(generateMockMenu())
     calculateEcoMetrics(apps || [])
@@ -4454,7 +4530,8 @@ const loadEventData = useCallback(async () => {
   loadPatientConsents,
   loadConsentTemplates,
   loadPatientClinicalNotes,
-  loadClinicDayTasks
+  loadClinicDayTasks,
+  loadCommunicationLogs
 ])
 
 useEffect(() => {
@@ -15452,264 +15529,349 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     )}
   </div>
 )}
-{/* SMS/MAIL*/}
-{activeTab === 'komunikacja' && (
-  <div className="space-y-6 animate-in fade-in duration-300">
+{/* KOMUNIKACJA Z PACJENTEM */}
+{activeTab === 'komunikacja' && (() => {
+  const selectedCommunicationPatient = patients.find((patient: any) => patient.id === communicationPatientId)
+  const selectedPatientLogs = communicationPatientId
+    ? communicationLogs.filter((log: any) => log.patient_id === communicationPatientId)
+    : communicationLogs
+  const sentLogs = communicationLogs.filter((log: any) => log.status === 'sent')
+  const repliedLogs = communicationLogs.filter((log: any) => log.replied_at)
+  const convertedLogs = communicationLogs.filter((log: any) => log.converted_to_appointment)
+  const selectedPatientAppointments = communicationPatientId
+    ? appointmentsList.filter((appointment: any) => appointment.patient_id === communicationPatientId)
+    : []
+  const latestCommunicationAppointment = selectedPatientAppointments
+    .slice()
+    .sort((a: any, b: any) => new Date(b.appointment_date || 0).getTime() - new Date(a.appointment_date || 0).getTime())[0]
+  const latestCommunicationTreatment = latestCommunicationAppointment
+    ? treatments.find((treatment: any) => treatment.id === latestCommunicationAppointment.treatment_id)
+    : null
+  const communicationInsights = [
+    communicationLogs.length === 0 && 'Brak historii komunikacji - system zacznie analizować skuteczność po zapisaniu pierwszych kontaktów.',
+    selectedPatientLogs.length > 0 && `Pacjent ma ${selectedPatientLogs.length} zapisanych kontaktów w historii.`,
+    selectedPatientLogs.some((log: any) => log.communication_goal === 'followup') && 'Pacjent był objęty komunikacją follow-up.',
+    selectedPatientLogs.some((log: any) => log.converted_to_appointment) && 'W historii istnieje komunikat, który zakończył się powrotem pacjenta na wizytę.',
+    latestCommunicationAppointment && `Ostatni kontekst pacjenta: ${latestCommunicationAppointment.treatment_name || latestCommunicationTreatment?.name || 'wizyta'}.`
+  ].filter(Boolean)
+  const visiblePortalRequests = communicationPatientId
+    ? patientPortalRequests.filter((request: any) => request.patient_id === communicationPatientId)
+    : patientPortalRequests
 
-    <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
-            Komunikacja z pacjentem
-          </p>
-          <h2 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Portal pacjenta, SMS, e-mail i follow-up
+  return (
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
+      <section className="relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-6 md:p-8 bg-gradient-to-br from-slate-900 to-[#1e293b] border-slate-800">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-4xl">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
+            <Mail size={14} />
+            Patient Communication Intelligence
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+            Centrum komunikacji i doświadczenia pacjenta
           </h2>
-          <p className={`mt-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Jedno miejsce dla rozmów z Portalu Pacjenta oraz planowanej komunikacji SMS/e-mail.
+          <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
+            Historia kontaktu, follow-up, portal pacjenta, e-mail, SMS oraz AI jako pomocnik do analizy skuteczności komunikacji - bez zastępowania decyzji użytkownika.
           </p>
         </div>
-        <span className={`w-fit rounded-2xl px-4 py-2 text-xs font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
-          {patientPortalRequests.filter((item: any) => item.status === 'new').length} nowe
-        </span>
+      </section>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {[
+          { label: 'Kontakty w historii', value: communicationLogs.length, icon: MessageSquare, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-600' },
+          { label: 'Wysłane', value: sentLogs.length, icon: Send, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
+          { label: 'Odpowiedzi', value: repliedLogs.length, icon: Reply, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
+          { label: 'Powroty po kontakcie', value: convertedLogs.length, icon: CheckCircle2, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' }
+        ].map((item: any) => (
+          <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                {item.label}
+              </p>
+              <item.icon size={14} className={item.color} />
+            </div>
+            <p className={`mt-3 text-2xl font-black tabular-nums ${item.color}`}>{item.value}</p>
+          </div>
+        ))}
       </div>
 
-      {patientPortalRequests.length === 0 ? (
-        <div className={`rounded-3xl border-2 border-dashed p-10 text-center ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-          <MessageSquare size={34} className="mx-auto mb-3 opacity-60" />
-          <p className="text-sm font-black">Brak zgłoszeń z portalu pacjenta.</p>
-          <p className="mt-2 text-xs font-medium">Nowe pytania, odpowiedzi i prośby o wizytę pojawią się tutaj automatycznie.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {patientPortalRequests.map((request: any) => {
-            const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim() || 'Pacjent'
-            const typeLabel = request.request_type === 'appointment_request'
-              ? 'Prośba o wizytę'
-              : request.request_type === 'followup_request'
-                ? 'Konsultacja kontrolna'
-                : 'Pytanie po zabiegu'
-            const isNew = request.status === 'new'
-            const requestMessages = patientPortalMessages.filter((message: any) => message.request_id === request.id)
-            const visibleMessages = requestMessages.length > 0 ? requestMessages : [{
-              id: `${request.id}-fallback`,
-              sender_type: 'patient',
-              sender_name: patientName,
-              body: request.message,
-              created_at: request.created_at,
-            }]
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-1 space-y-6">
+          <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+            <h3 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <User size={18} /> Pacjent i kontekst
+            </h3>
+            <select
+              value={communicationPatientId}
+              onChange={event => setCommunicationPatientId(event.target.value)}
+              className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+            >
+              <option value="">Wszyscy pacjenci / widok globalny</option>
+              {patients.map((patient: any) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.first_name} {patient.last_name} {patient.pesel ? `(${patient.pesel})` : ''}
+                </option>
+              ))}
+            </select>
+            {selectedCommunicationPatient && (
+              <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Wybrany pacjent</p>
+                <p className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {selectedCommunicationPatient.first_name} {selectedCommunicationPatient.last_name}
+                </p>
+                <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Tel: {selectedCommunicationPatient.phone || 'brak'} | E-mail: {selectedCommunicationPatient.email || 'brak'}
+                </p>
+              </div>
+            )}
+          </div>
 
-            return (
-              <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
-                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isNew ? 'bg-red-500 text-white' : (isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white text-slate-600 border border-slate-200')}`}>
-                        {request.status || 'new'}
-                      </span>
-                      <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
-                        {typeLabel}
-                      </span>
-                    </div>
-                    <h3 className={`mt-3 text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      {request.subject || typeLabel}
-                    </h3>
-                    <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {patientName} · PESEL: {request.patients?.pesel || 'brak'} · {request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : ''}
-                    </p>
-                    <p className={`mt-4 text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                      {request.message}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    <button
-                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'in_progress')}
-                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      W trakcie
-                    </button>
-                    <button
-                      onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'closed')}
-                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                    >
-                      Zamknij
-                    </button>
-                  </div>
+          <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-gradient-to-br from-cyan-950/30 to-[#0f172a] border-cyan-900/40' : 'bg-gradient-to-br from-cyan-50 to-white border-cyan-100'}`}>
+            <h3 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <Sparkles size={18} className={isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} />
+              AI jako sugestia
+            </h3>
+            <div className="space-y-3">
+              {communicationInsights.length === 0 ? (
+                <div className={`rounded-2xl border p-3 text-xs font-bold leading-relaxed ${isDarkMode ? 'bg-slate-950/60 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
+                  Wybierz pacjenta albo zapisz pierwszy kontakt, aby AI mogło analizować kontekst rozmowy.
                 </div>
+              ) : communicationInsights.map((insight: any, index: number) => (
+                <div key={index} className={`rounded-2xl border p-3 text-xs font-bold leading-relaxed ${isDarkMode ? 'bg-slate-950/60 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
+                  {insight}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                <div className={`mt-5 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
-                  <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Historia rozmowy
-                  </p>
-                  <div className="space-y-3">
-                    {visibleMessages.map((message: any) => {
-                      const isStaff = message.sender_type === 'staff'
-                      return (
-                        <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'bg-blue-900/30 border-blue-800/60 text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-950') : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800')}`}>
-                            <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {isStaff ? (message.sender_name || 'Recepcja') : (message.sender_name || patientName)} · {message.created_at ? new Date(message.created_at).toLocaleString('pl-PL') : ''}
-                            </p>
-                            <p className="whitespace-pre-wrap">{message.body}</p>
-                          </div>
+        <div className="xl:col-span-2 space-y-6">
+          <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+            <h3 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <Edit3 size={18} /> Nowy kontakt / notatka komunikacji
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <select value={communicationForm.channel} onChange={event => setCommunicationForm({ ...communicationForm, channel: event.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                <option value="portal">Portal pacjenta</option>
+                <option value="email">E-mail</option>
+                <option value="sms">SMS</option>
+                <option value="manual_note">Notatka ręczna</option>
+              </select>
+              <select value={communicationForm.communication_goal} onChange={event => setCommunicationForm({ ...communicationForm, communication_goal: event.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                <option value="followup">Follow-up</option>
+                <option value="aftercare">Zalecenia po zabiegu</option>
+                <option value="documents">Dokumenty / zgody</option>
+                <option value="recall">Przypomnienie o powrocie</option>
+                <option value="education">Edukacja pacjenta</option>
+                <option value="retention">Utrzymanie relacji</option>
+              </select>
+              <select value={communicationForm.status} onChange={event => setCommunicationForm({ ...communicationForm, status: event.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                <option value="draft">Szkic / notatka</option>
+                <option value="sent">Oznacz jako wysłane</option>
+              </select>
+            </div>
+            <input
+              value={communicationForm.subject || ''}
+              onChange={event => setCommunicationForm({ ...communicationForm, subject: event.target.value })}
+              placeholder="Temat, np. Follow-up po zabiegu"
+              className={`mt-4 w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`}
+            />
+            <textarea
+              rows={6}
+              value={communicationForm.message || ''}
+              onChange={event => setCommunicationForm({ ...communicationForm, message: event.target.value })}
+              placeholder="Treść wiadomości albo notatka z kontaktu..."
+              className={`mt-4 w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`}
+            />
+            <AiTextAssistButton
+              eventId={id}
+              sectionKey="patient_communication"
+              fieldKey="message"
+              currentValue={communicationForm.message || ''}
+              relatedEntityId={communicationPatientId || latestCommunicationTreatment?.id || null}
+              relatedEntityTitle={selectedCommunicationPatient ? `Komunikacja z pacjentem: ${selectedCommunicationPatient.first_name} ${selectedCommunicationPatient.last_name}` : 'Komunikacja z pacjentem'}
+              additionalInstruction={`Przygotuj propozycję wiadomości dla pacjenta. AI ma być tylko pomocnikiem: treść powinna być neutralna, profesjonalna, empatyczna i możliwa do ręcznej edycji przez użytkownika. Kontekst: ${latestCommunicationAppointment?.treatment_name || latestCommunicationTreatment?.name || 'brak ostatniego zabiegu'}. Nie obiecuj efektów medycznych.`}
+              mode="medical_document"
+              documentType="patient_communication"
+              label="AI zaproponuj treść"
+              onApply={(text) => setCommunicationForm({ ...communicationForm, message: text, ai_suggested: true })}
+            />
+            <button
+              type="button"
+              onClick={handleSaveCommunicationLog}
+              disabled={updating}
+              className={`mt-4 w-full py-4 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] ${isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'}`}
+            >
+              {updating ? 'Zapisywanie...' : 'Zapisz w historii komunikacji'}
+            </button>
+          </div>
+
+          <div className={`rounded-[28px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'}`}>
+              <h3 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <MessageSquare size={18} /> Historia komunikacji
+              </h3>
+            </div>
+            <div className="p-5 md:p-6 space-y-3 max-h-[560px] overflow-y-auto custom-scrollbar">
+              {selectedPatientLogs.length === 0 ? (
+                <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                  Brak zapisanej historii komunikacji.
+                </div>
+              ) : selectedPatientLogs.map((log: any) => {
+                const patient = patients.find((item: any) => item.id === log.patient_id)
+                return (
+                  <div key={log.id} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {log.channel}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${log.status === 'sent' ? (isDarkMode ? 'bg-emerald-900/20 text-emerald-300 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-amber-900/20 text-amber-300 border-amber-800' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
+                            {log.status === 'sent' ? 'wysłane' : 'szkic'}
+                          </span>
+                          {log.ai_suggested && (
+                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-cyan-900/20 text-cyan-300 border-cyan-800' : 'bg-cyan-50 text-cyan-700 border-cyan-200'}`}>
+                              AI sugestia
+                            </span>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
-                      Odpowiedź recepcji
+                        <h4 className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          {log.subject || 'Kontakt z pacjentem'}
+                        </h4>
+                        <p className={`mt-1 text-[10px] font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {patient ? `${patient.first_name} ${patient.last_name}` : 'Pacjent'} | {log.created_at ? new Date(log.created_at).toLocaleString('pl-PL') : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <p className={`mt-3 text-xs leading-relaxed whitespace-pre-line ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      {log.message}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => handleGeneratePatientReplyDraft(request)}
-                      disabled={aiReplyLoadingId === request.id}
-                      className={`w-fit inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
-                    >
-                      <Sparkles size={13} className={aiReplyLoadingId === request.id ? 'animate-pulse' : ''} />
-                      {aiReplyLoadingId === request.id ? 'Piszę szkic...' : 'Szkic AI'}
-                    </button>
                   </div>
-                  <textarea
-                    rows={4}
-                    value={patientReplyDrafts[request.id] || ''}
-                    onChange={(event) => setPatientReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
-                    placeholder="Napisz odpowiedź, którą pacjent zobaczy w swoim Portalu Pacjenta..."
-                    className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  />
-                  <div className="mt-3 flex flex-wrap justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSendPatientReply(request)}
-                      disabled={updating || !(patientReplyDrafts[request.id] || '').trim()}
-                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
-                    >
-                      <Send size={13} /> Wyślij odpowiedź
-                    </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
+              Portal pacjenta
+            </p>
+            <h3 className={`mt-1 text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Zgłoszenia i rozmowy z recepcją
+            </h3>
+          </div>
+          <span className={`w-fit rounded-2xl px-4 py-2 text-xs font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>
+            {visiblePortalRequests.filter((item: any) => item.status === 'new').length} nowe
+          </span>
+        </div>
+        {visiblePortalRequests.length === 0 ? (
+          <div className={`rounded-3xl border-2 border-dashed p-10 text-center ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+            <MessageSquare size={34} className="mx-auto mb-3 opacity-60" />
+            <p className="text-sm font-black">Brak zgłoszeń z portalu pacjenta.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {visiblePortalRequests.map((request: any) => {
+              const patientName = `${request.patients?.first_name || ''} ${request.patients?.last_name || ''}`.trim() || 'Pacjent'
+              const typeLabel = request.request_type === 'appointment_request'
+                ? 'Prośba o wizytę'
+                : request.request_type === 'followup_request'
+                  ? 'Konsultacja kontrolna'
+                  : 'Pytanie po zabiegu'
+              const isNew = request.status === 'new'
+              const requestMessages = patientPortalMessages.filter((message: any) => message.request_id === request.id)
+              const visibleMessages = requestMessages.length > 0 ? requestMessages : [{
+                id: `${request.id}-fallback`,
+                sender_type: 'patient',
+                sender_name: patientName,
+                body: request.message,
+                created_at: request.created_at,
+              }]
+
+              return (
+                <div key={request.id} className={`rounded-3xl border p-5 ${isNew ? (isDarkMode ? 'bg-red-950/20 border-red-900/50' : 'bg-red-50 border-red-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
+                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isNew ? 'bg-red-500 text-white' : (isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-white text-slate-600 border border-slate-200')}`}>
+                          {request.status || 'new'}
+                        </span>
+                        <span className={`rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                          {typeLabel}
+                        </span>
+                      </div>
+                      <h3 className={`mt-3 text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {request.subject || typeLabel}
+                      </h3>
+                      <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {patientName} | PESEL: {request.patients?.pesel || 'brak'} | {request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : ''}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      <button onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'in_progress')} className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-slate-800 text-slate-300 hover:text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
+                        W trakcie
+                      </button>
+                      <button onClick={() => handleUpdatePatientPortalRequestStatus(request.id, 'closed')} className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+                        Zamknij
+                      </button>
+                    </div>
+                  </div>
+                  <div className={`mt-5 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Historia rozmowy</p>
+                    <div className="space-y-3">
+                      {visibleMessages.map((message: any) => {
+                        const isStaff = message.sender_type === 'staff'
+                        return (
+                          <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'bg-blue-900/30 border-blue-800/60 text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-950') : (isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800')}`}>
+                              <p className={`mb-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                {isStaff ? (message.sender_name || 'Recepcja') : (message.sender_name || patientName)} | {message.created_at ? new Date(message.created_at).toLocaleString('pl-PL') : ''}
+                              </p>
+                              <p className="whitespace-pre-wrap">{message.body}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-600'}`}>
+                        Odpowiedź recepcji
+                      </p>
+                      <button type="button" onClick={() => handleGeneratePatientReplyDraft(request)} disabled={aiReplyLoadingId === request.id} className={`w-fit inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}>
+                        <Sparkles size={13} className={aiReplyLoadingId === request.id ? 'animate-pulse' : ''} />
+                        {aiReplyLoadingId === request.id ? 'Piszę szkic...' : 'Szkic AI'}
+                      </button>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={patientReplyDrafts[request.id] || ''}
+                      onChange={(event) => setPatientReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
+                      placeholder="Napisz odpowiedź, którą pacjent zobaczy w swoim Portalu Pacjenta..."
+                      className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                    />
+                    <div className="mt-3 flex flex-wrap justify-end gap-2">
+                      <button type="button" onClick={() => handleSendPatientReply(request)} disabled={updating || !(patientReplyDrafts[request.id] || '').trim()} className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+                        <Send size={13} /> Wyślij odpowiedź
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
-
-    {/* 1. STATUS KOMUNIKACJI - METRYKI */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dostarczalność</p>
-        <p className="text-xl font-black text-emerald-600 uppercase">99.8%</p>
-        <div className="w-full bg-slate-100 h-1 mt-2 rounded-full overflow-hidden">
-          <div className="bg-emerald-500 h-full w-[99%]"></div>
-        </div>
-      </div>
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Brak follow-upu</p>
-        <p className="text-xl font-black text-amber-600">{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} os.</p>
-        <p className="text-[10px] text-slate-400 font-bold">Wymaga pilnego kontaktu</p>
-      </div>
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Wysłane powiadomienia</p>
-        <p className="text-xl font-black text-slate-900">{approvedApps.length * 2} <span className="text-xs text-slate-400 font-bold">Logi systemowe</span></p>
-      </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </div>
-
-    <div className="rounded-[28px] border border-[#e8ce7a]/50 bg-gradient-to-br from-[#253a2a] to-[#132033] p-5 text-white shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#e8ce7a]">AI-ready</p>
-          <h3 className="mt-1 font-black text-lg flex items-center gap-2">
-            <Sparkles size={18} /> AI asystent wiadomości
-          </h3>
-          <p className="mt-2 text-xs text-white/70 font-medium">
-            W przyszłym kroku wygeneruje treści SMS, e-maili, zaleceń i follow-upów na podstawie statusów pacjentów, wizyt i segmentów opieki.
-          </p>
-        </div>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-[9px] font-black uppercase text-[#e8ce7a]">
-          lokalny hint
-        </span>
-      </div>
-    </div>
-
-    {/* 2. CENTRUM WYSYŁKI */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-      {/* KANAŁ: EMAIL MASOWY */}
-      <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-5 bg-slate-900 text-white flex items-center gap-3">
-          <div className="p-2 bg-white/10 rounded-lg"><Mail size={18} className="text-[#e8ce7a]"/></div>
-          <div>
-            <h3 className="font-black text-sm uppercase">Global Broadcast</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">Wysyłka do wszystkich zatwierdzonych ({approvedApps.length})</p>
-          </div>
-        </div>
-        <div className="p-6 space-y-4 bg-slate-50 flex-1">
-          <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Temat wiadomości</label>
-            <input className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#253a2a]" placeholder="np. Ważne informacje organizacyjne - Event ANM" />
-          </div>
-          <div>
-            <label className="text-[10px] font-black uppercase text-slate-600 block mb-1">Treść (Markdown/HTML)</label>
-            <textarea className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none focus:border-[#253a2a]" rows={6} placeholder="Szanowni Państwo..." />
-          </div>
-          <button className="w-full py-4 bg-[#253a2a] hover:bg-black text-white rounded-xl font-black text-xs uppercase shadow-lg transition-all flex items-center justify-center gap-2">
-            <Send size={14} className="text-[#e8ce7a]"/> Wyślij komunikat zbiorczy
-          </button>
-        </div>
-      </div>
-
-      {/* KANAŁ: AUTOMATYKA FOLLOW-UP */}
-      <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-5 bg-slate-50 border-b border-slate-200 flex items-center gap-3 text-slate-900">
-          <div className="p-2 bg-amber-100 rounded-lg text-amber-700"><Zap size={18}/></div>
-          <div>
-            <h3 className="font-black text-sm uppercase">Smart Reminders</h3>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Automatyczne dogonienie brakujących danych</p>
-          </div>
-        </div>
-        <div className="p-6 flex flex-col justify-between flex-1">
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
-            <h4 className="text-xs font-black text-amber-900 mb-2 uppercase flex items-center gap-2">
-              <AlertTriangle size={14}/> Segmentacja: brak follow-upu
-            </h4>
-            <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-              System wykrył <strong>{applications.filter(a => a.status === 'approved' && (!a.rsvp_status || a.rsvp_status === 'oczekuje')).length} pacjentów</strong>, którzy wymagają potwierdzenia danych, przypomnienia lub komunikacji kontrolnej.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white hover:border-slate-400 transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <Smartphone size={16} className="text-slate-400 group-hover:text-[#253a2a]"/>
-                <span className="text-[11px] font-black text-slate-700 uppercase">Przypomnienie SMS</span>
-              </div>
-              <span className="text-[9px] bg-slate-100 px-2 py-1 rounded font-bold">PREMIUM</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 border border-[#253a2a] rounded-xl bg-[#253a2a]/5 group">
-              <div className="flex items-center gap-3">
-                <Mail size={16} className="text-[#253a2a]"/>
-                <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">Email follow-up z linkiem pacjenta</span>
-              </div>
-              <button className="text-[10px] font-black text-white bg-[#253a2a] px-3 py-1 rounded-lg uppercase shadow-sm hover:scale-105 transition-all">
-                Wyślij teraz
-              </button>
-            </div>
-          </div>
-
-          <p className="text-[9px] text-slate-400 text-center mt-6 font-bold uppercase tracking-widest">
-            Logi wysyłki: Ostatni reminder 2h temu
-          </p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-)}
+  )
+})()}
 {/* STATYSTYKI */}
     {!['rekrutacja', 'logistyka', 'harmonogram', 'komunikacja', 'eko', 'checklista', 'finanse', 'dostawcy', 'minutowka', 'bilety', 'prelegenci', 'materialy', 'eventpass', 'strona_uczestnika'].includes(activeTab) && (
   <PlaceholderView icon={FileText} title="Moduł w przygotowaniu" desc="Pracujemy nad wdrożeniem tej funkcjonalności." />
