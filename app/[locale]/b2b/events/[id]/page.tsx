@@ -3762,6 +3762,13 @@ const handleSavePreparation = async (e: React.FormEvent) => {
       sponsor_name: preparationForm.sponsor_name,
       sponsor_category: preparationForm.sponsor_category,
       bio: preparationForm.bio,
+      unit_price: preparationForm.unit_price === '' || preparationForm.unit_price === undefined ? null : Number(preparationForm.unit_price || 0),
+      currency: preparationForm.currency || 'PLN',
+      stock_quantity: Number(preparationForm.stock_quantity || 0),
+      low_stock_threshold: Number(preparationForm.low_stock_threshold || 0),
+      storage_location: preparationForm.storage_location || null,
+      supplier_name: preparationForm.supplier_name || null,
+      expiry_date: preparationForm.expiry_date || null,
       logo_url: imageUrl,
       photo_url: imageUrl,
     };
@@ -8052,16 +8059,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <Plus size={14} /> Personel
           </button>
 
-          <button
-            onClick={() => {
-              setPreparationForm({ type: 'preparation', is_visible: true })
-              setIsEditingPreparation(false)
-              setIsPreparationModalOpen(true)
-            }}
-            className={`px-4 py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 border border-slate-700 text-white hover:bg-slate-700' : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'}`}
-          >
-            <Plus size={14} /> Preparat
-          </button>
         </div>
       </div>
     </div>
@@ -8109,42 +8106,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               }}
               onDelete={handleDeletePartner}
               onScheduleChange={handleUpdateStaffSchedule}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* LISTA PREPARATÓW */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Preparaty ({preparationProfiles.length})
-        </h4>
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          ID i zdjęcie preparatu
-        </span>
-      </div>
-
-      {preparationProfiles.length === 0 ? (
-        <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          <ImageIcon size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className="text-base mb-1">Brak preparatów</p>
-          <p className="text-xs font-medium">Dodaj preparat, zdjęcie i kategorię, aby później przypisywać go do zabiegów.</p>
-        </div>
-      ) : (
-        <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-          {preparationProfiles.map((item) => (
-            <PreparationItem
-              key={item.id}
-              item={item}
-              isDarkMode={isDarkMode}
-              onEdit={(preparation) => {
-                setPreparationForm(preparation)
-                setIsEditingPreparation(true)
-                setIsPreparationModalOpen(true)
-              }}
-              onDelete={handleDeletePartner}
             />
           ))}
         </div>
@@ -9552,10 +9513,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="min-w-0">
         <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           <Briefcase size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'}/>
-          Baza Podwykonawców
+          Partnerzy medyczni i magazyn
         </h3>
         <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Zarządzaj firmami, umowami, przypisuj ich do modułów (transport, prelegenci) i wliczaj do budżetu.
+          Umowy, zobowiązania, najem sprzętu i lokalu oraz preparaty ze stanem magazynowym dla zabiegów i analityki AI.
         </p>
       </div>
 
@@ -9569,7 +9530,17 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           }}
           className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
         >
-          <Plus size={14} /> Dodaj wykonawcę
+          <Plus size={14} /> Dodaj partnera
+        </button>
+        <button
+          onClick={() => {
+            setPreparationForm({ type: 'preparation', is_visible: true, currency: 'PLN', stock_quantity: 0, low_stock_threshold: 1 })
+            setIsEditingPreparation(false)
+            setIsPreparationModalOpen(true)
+          }}
+          className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-slate-800 border border-slate-700 text-white hover:bg-slate-700' : 'bg-white border border-slate-200 text-slate-900 hover:bg-slate-50'}`}
+        >
+          <Plus size={14} /> Dodaj preparat
         </button>
       </div>
     </div>
@@ -9582,11 +9553,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         .filter(c => c.payment_status === 'paid')
         .reduce((sum, c) => sum + Number(c.gross_amount || c.amount || 0), 0)
       const unpaid = totalGross - paid
+      const lowStock = preparationProfiles.filter((p: any) => Number(p.stock_quantity || 0) <= Number(p.low_stock_threshold || 0)).length
+      const stockValue = preparationProfiles.reduce((sum: number, p: any) => sum + Number(p.stock_quantity || 0) * Number(p.unit_price || 0), 0)
 
       return (
         <div className="planner-metric-grid">
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Baza firm</p><Briefcase size={16} className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}/></div>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Partnerzy i umowy</p><Briefcase size={16} className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}/></div>
             <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{contractors.length}</p>
           </div>
           <div className="planner-metric-card">
@@ -9598,12 +9571,75 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{paid.toLocaleString('pl-PL')} zł</p>
           </div>
           <div className="planner-metric-card">
-            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Pozostało do spłaty</p><Clock size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
-            <p className={`planner-metric-value mt-2 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{unpaid.toLocaleString('pl-PL')} zł</p>
+            <div className="flex items-start justify-between gap-3"><p className="planner-metric-label">Alerty magazynu</p><AlertTriangle size={16} className={isDarkMode ? 'text-amber-400' : 'text-amber-600'}/></div>
+            <p className={`planner-metric-value mt-2 ${lowStock > 0 ? (isDarkMode ? 'text-amber-400' : 'text-amber-600') : (isDarkMode ? 'text-emerald-400' : 'text-emerald-600')}`}>{lowStock}</p>
+            <p className={`text-[10px] font-bold mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Wartość magazynu: {stockValue.toLocaleString('pl-PL')} zł</p>
           </div>
         </div>
       )
     })()}
+
+    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <div>
+          <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Preparaty i stan magazynowy ({preparationProfiles.length})</h4>
+          <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena, ilość w klinice, próg alertu i lokalizacja preparatu.</p>
+        </div>
+      </div>
+      {preparationProfiles.length === 0 ? (
+        <div className={`p-12 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          <ImageIcon size={36} className="mx-auto mb-3 opacity-50" />
+          Brak preparatów w magazynie.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-5 md:p-6">
+          {preparationProfiles.map((item: any) => {
+            const stock = Number(item.stock_quantity || 0)
+            const threshold = Number(item.low_stock_threshold || 0)
+            const low = stock <= threshold
+            const imageUrl = item.logo_url || item.photo_url
+            return (
+              <div key={item.id} className={`rounded-2xl border p-4 ${low ? (isDarkMode ? 'bg-amber-900/10 border-amber-900/40' : 'bg-amber-50 border-amber-200') : (isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200')}`}>
+                <div className="flex items-start gap-4">
+                  <div className={`w-14 h-14 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center ${isDarkMode ? 'bg-slate-800' : 'bg-white border border-slate-200'}`}>
+                    {imageUrl ? <img src={imageUrl} alt={item.sponsor_name || 'Preparat'} className="w-full h-full object-cover" /> : <ImageIcon size={22} className={isDarkMode ? 'text-slate-600' : 'text-slate-400'} />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h5 className={`font-black text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.sponsor_name || 'Preparat bez nazwy'}</h5>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase ${low ? 'bg-amber-500/15 text-amber-500' : 'bg-emerald-500/15 text-emerald-500'}`}>{low ? 'Niski stan' : 'OK'}</span>
+                    </div>
+                    <p className={`text-[10px] font-bold mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.sponsor_category || 'Bez kategorii'}</p>
+                  </div>
+                </div>
+                <div className={`mt-4 grid grid-cols-2 gap-2 text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <p className="uppercase tracking-widest opacity-60">Stan</p>
+                    <p className={`mt-1 text-base font-black tabular-nums ${low ? 'text-amber-500' : (isDarkMode ? 'text-white' : 'text-slate-900')}`}>{stock} szt.</p>
+                  </div>
+                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <p className="uppercase tracking-widest opacity-60">Cena</p>
+                    <p className={`mt-1 text-base font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{Number(item.unit_price || 0).toLocaleString('pl-PL')} {item.currency || 'PLN'}</p>
+                  </div>
+                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <p className="uppercase tracking-widest opacity-60">Alert</p>
+                    <p className={`mt-1 text-base font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{threshold} szt.</p>
+                  </div>
+                  <div className={`rounded-xl border p-3 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <p className="uppercase tracking-widest opacity-60">Miejsce</p>
+                    <p className={`mt-1 text-xs font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.storage_location || '-'}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button onClick={() => { setPreparationForm(item); setIsEditingPreparation(true); setIsPreparationModalOpen(true) }} className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase ${isDarkMode ? 'bg-slate-800 text-blue-400' : 'bg-white border border-slate-200 text-blue-700'}`}><Edit3 size={13} className="inline mr-1" /> Edytuj</button>
+                  <button onClick={() => handleDeletePartner(item.id)} className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase ${isDarkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-600'}`}><Trash2 size={13} className="inline mr-1" /> Usuń</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
 
     {/* LISTA Z WYSZUKIWANIEM I DETALAMI */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
@@ -9841,6 +9877,69 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </table>
       </div>
     </div>
+
+    {isPreparationModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+        <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+            <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <ImageIcon size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+              {isEditingPreparation ? 'Edytuj preparat' : 'Dodaj preparat do magazynu'}
+            </h3>
+            <button onClick={() => setIsPreparationModalOpen(false)} className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSavePreparation} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Nazwa preparatu *</label>
+                <input required value={preparationForm.sponsor_name || ''} onChange={e => setPreparationForm({ ...preparationForm, sponsor_name: e.target.value })} className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. kwas hialuronowy" />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Kategoria</label>
+                <input value={preparationForm.sponsor_category || ''} onChange={e => setPreparationForm({ ...preparationForm, sponsor_category: e.target.value })} className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`} placeholder="np. wypełniacz, toksyna" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cena</label>
+                <input type="number" step="0.01" value={preparationForm.unit_price || ''} onChange={e => setPreparationForm({ ...preparationForm, unit_price: Number(e.target.value || 0) })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Waluta</label>
+                <select value={preparationForm.currency || 'PLN'} onChange={e => setPreparationForm({ ...preparationForm, currency: e.target.value })} className={`w-full border rounded-xl px-3 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                  <option value="PLN">PLN</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Ilość</label>
+                <input type="number" value={preparationForm.stock_quantity ?? 0} onChange={e => setPreparationForm({ ...preparationForm, stock_quantity: Number(e.target.value || 0) })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+              </div>
+              <div>
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alert od</label>
+                <input type="number" value={preparationForm.low_stock_threshold ?? 1} onChange={e => setPreparationForm({ ...preparationForm, low_stock_threshold: Number(e.target.value || 0) })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input value={preparationForm.storage_location || ''} onChange={e => setPreparationForm({ ...preparationForm, storage_location: e.target.value })} placeholder="Miejsce w klinice" className={`border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`} />
+              <input value={preparationForm.supplier_name || ''} onChange={e => setPreparationForm({ ...preparationForm, supplier_name: e.target.value })} placeholder="Dostawca" className={`border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`} />
+              <input type="date" value={preparationForm.expiry_date || ''} onChange={e => setPreparationForm({ ...preparationForm, expiry_date: e.target.value })} className={`border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+            </div>
+
+            <textarea rows={3} value={preparationForm.bio || ''} onChange={e => setPreparationForm({ ...preparationForm, bio: e.target.value })} placeholder="Opis, uwagi, zastosowanie..." className={`w-full border rounded-2xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'}`} />
+
+            <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+              {updating ? 'Zapisywanie...' : 'Zapisz preparat'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
 
     {/* MODAL EDYCJI / DODAWANIA - PEŁNY DARK MODE */}
     {isContractorModalOpen && (
