@@ -784,7 +784,7 @@ function InfoCard({ isDarkMode, icon: Icon, title, text, accent }: any) {
     emerald: isDarkMode ? 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-100' : 'border-emerald-200 bg-emerald-50 text-emerald-800',
   }
   return (
-    <div className={`rounded-[28px] border p-5 ${colors[accent]}`}>
+    <div className={`rounded-[28px] border p-5 ${colors[accent as keyof typeof colors] || colors.cyan}`}>
       <Icon size={22} />
       <h3 className="mt-4 font-black">{title}</h3>
       <p className={`mt-2 text-sm leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{text}</p>

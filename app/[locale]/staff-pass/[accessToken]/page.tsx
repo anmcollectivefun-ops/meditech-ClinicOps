@@ -821,10 +821,10 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   }, [staffAccess, patients.length, appointments.length, staffStats])
 
   const TabButton = ({ tabId, icon: Icon, label, count, urgent }: any) => {
-    const isActive = activeTab === tabId;
+    const isActive = activeStaffModule === tabId;
     return (
       <button
-        onClick={() => setActiveTab(tabId)}
+        onClick={() => setActiveStaffModule(tabId)}
         className={`w-full min-w-0 ${isNavCollapsed ? 'px-2 py-2 justify-center' : 'px-3 py-3'} rounded-2xl text-left text-[11px] font-black transition-all flex items-center gap-3 border ${
           isActive
             ? (isDarkMode ? 'bg-cyan-200 text-[#071016] border-cyan-200 shadow-md scale-[1.02]' : 'bg-cyan-600 text-white border-cyan-600 shadow-md scale-[1.02]')
@@ -909,7 +909,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
 
           <div className="flex items-center gap-2 md:gap-3 shrink-0">
             <button
-              onClick={toggleDarkMode}
+              onClick={toggleTheme}
               className={`hidden sm:flex px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider items-center gap-1.5 border transition-all hover:scale-105 shadow-sm ${
                 isDarkMode ? 'bg-white/5 border-white/10 text-slate-400 hover:text-white' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
               }`}
@@ -977,7 +977,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
 
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
             
-            {activeTab === 'overview' && (
+            {activeStaffModule === 'overview' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h3 className="font-black flex items-center gap-3 text-lg md:text-xl">
@@ -1046,7 +1046,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
-            {activeTab === 'patients' && (
+            {activeStaffModule === 'patients' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h4 className={`font-black flex items-center gap-2 text-lg mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -1072,7 +1072,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
-            {activeTab === 'appointments' && (
+            {activeStaffModule === 'appointments' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h4 className={`font-black flex items-center gap-2 text-lg mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -1106,7 +1106,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
-            {activeTab === 'documents' && (
+            {activeStaffModule === 'documents' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h4 className={`font-black flex items-center gap-2 text-lg mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -1141,7 +1141,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
-            {activeTab === 'messages' && (
+            {activeStaffModule === 'messages' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h4 className={`font-black flex items-center gap-2 text-lg mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -1166,7 +1166,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
               </div>
             )}
 
-            {activeTab === 'qr' && (
+            {activeStaffModule === 'qr' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <section className={`rounded-[32px] border p-5 md:p-6 shadow-sm transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <h4 className={`font-black flex items-center gap-2 text-lg mb-5 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -1456,7 +1456,7 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
             )}
 
             {/* WIDOK: ANALITYKA AI */}
-            {activeTab === 'analytics' && (
+            {activeStaffModule === 'analytics' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className={`rounded-[32px] border p-8 shadow-sm text-center transition-colors ${isDarkMode ? 'bg-[#101a22]/75 border-white/10' : 'bg-white border-slate-200'}`}>
                   <Stethoscope size={48} className={`mx-auto mb-4 transition-colors ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`} />
