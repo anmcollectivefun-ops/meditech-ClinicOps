@@ -4127,6 +4127,212 @@ const transportAnalytics = useMemo(() => {
     }
   }, [appointmentsList, activeBudgetItems, patients, treatments, doctorsList])
 
+  const clinicAiDashboard = useMemo(() => {
+    const visits = appointmentsList || []
+    const docs = patientConsents || []
+    const requests = patientPortalRequests || []
+    const now = new Date()
+    const dayMs = 24 * 60 * 60 * 1000
+    const last30 = new Date(now.getTime() - 30 * dayMs)
+    const last90 = new Date(now.getTime() - 90 * dayMs)
+
+    const paidVisits = visits.filter((app: any) => {
+      const price = Number(app.price_amount || 0)
+      const paid = Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+      return price > 0 && paid >= price
+    }).length
+    const collectionRate = visits.length ? Math.round((paidVisits / visits.length) * 100) : 0
+
+    const signedDocs = docs.filter((doc: any) => String(doc.status || '').toLowerCase() === 'signed').length
+    const pendingDocs = docs.filter((doc: any) => String(doc.status || '').toLowerCase() !== 'signed').length
+    const docCompletionRate = docs.length ? Math.round((signedDocs / docs.length) * 100) : 0
+
+    const answeredRequests = requests.filter((request: any) => ['answered', 'closed'].includes(String(request.status || '').toLowerCase())).length
+    const openRequests = requests.filter((request: any) => ['new', 'in_progress'].includes(String(request.status || '').toLowerCase())).length
+    const responseRate = requests.length ? Math.round((answeredRequests / requests.length) * 100) : 0
+
+    const appointmentCountsByPatient = visits.reduce((acc: Record<string, number>, app: any) => {
+      if (app.patient_id) acc[app.patient_id] = (acc[app.patient_id] || 0) + 1
+      return acc
+    }, {})
+    const activePatientIds = new Set(visits.map((app: any) => app.patient_id).filter(Boolean))
+    const returningPatientIds = new Set([
+      ...patients.filter((p: any) => Number(p.total_visits || 0) > 1).map((p: any) => p.id),
+      ...Object.entries(appointmentCountsByPatient).filter(([, count]) => Number(count) > 1).map(([patientId]) => patientId)
+    ])
+    const activeReturnRate = activePatientIds.size ? Math.round((returningPatientIds.size / activePatientIds.size) * 100) : clinicAnalytics.returnRate
+    const newPatients7d = patients.filter((p: any) => p.created_at && new Date(p.created_at) >= new Date(now.getTime() - 7 * dayMs)).length
+    const visits30d = visits.filter((app: any) => app.appointment_date && new Date(app.appointment_date) >= last30).length
+    const visitValue30d = visits
+      .filter((app: any) => app.appointment_date && new Date(app.appointment_date) >= last30)
+      .reduce((sum: number, app: any) => sum + Number(app.price_amount || 0), 0)
+    const revenue90d = visits
+      .filter((app: any) => app.appointment_date && new Date(app.appointment_date) >= last90)
+      .reduce((sum: number, app: any) => {
+        const price = Number(app.price_amount || 0)
+        return sum + Number(app.paid_amount ?? (app.payment_status === 'paid' ? price : 0))
+      }, 0)
+
+    const months = Array.from({ length: 6 }).map((_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      return {
+        key,
+        label: date.toLocaleDateString('pl-PL', { month: 'short' }),
+        patients: 0,
+        visits: 0,
+        revenue: 0,
+      }
+    })
+    const monthByKey = new Map(months.map(month => [month.key, month]))
+    patients.forEach((patient: any) => {
+      if (!patient.created_at) return
+      const date = new Date(patient.created_at)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const row = monthByKey.get(key)
+      if (row) row.patients += 1
+    })
+    visits.forEach((visit: any) => {
+      if (!visit.appointment_date) return
+      const date = new Date(visit.appointment_date)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const row = monthByKey.get(key)
+      if (!row) return
+      const price = Number(visit.price_amount || 0)
+      row.visits += 1
+      row.revenue += Number(visit.paid_amount ?? (visit.payment_status === 'paid' ? price : 0))
+    })
+
+    const requestTypeRows = Object.values(requests.reduce((acc: Record<string, any>, request: any) => {
+      const key = request.request_type || 'other'
+      if (!acc[key]) {
+        acc[key] = {
+          key,
+          label: key === 'appointment_request' ? 'Prośby o wizytę' : key === 'followup_request' ? 'Kontrole' : key === 'post_treatment_question' ? 'Pytania po zabiegu' : 'Inne',
+          count: 0,
+        }
+      }
+      acc[key].count += 1
+      return acc
+    }, {})).sort((a: any, b: any) => b.count - a.count)
+
+    const funnelRows = [
+      { label: 'Zapytania i leady', value: applications.length + requests.length, source: 'b2b_applications + patient_portal_requests' },
+      { label: 'Pacjenci w bazie', value: patients.length, source: 'patients' },
+      { label: 'Umówione wizyty', value: visits.length, source: 'appointments' },
+      { label: 'Wizyty opłacone', value: paidVisits, source: 'appointments.payment_status' },
+    ]
+    const maxFunnelValue = Math.max(...funnelRows.map(row => row.value), 1)
+
+    const rawKpis = [
+      { label: 'Pacjenci w bazie', value: patients.length, sub: `${newPatients7d} nowych w 7 dni`, source: 'patients', icon: Users, color: 'text-cyan-400' },
+      { label: 'Nowi pacjenci 30 dni', value: clinicAnalytics.newPatients30d, sub: 'tempo wzrostu bazy', source: 'patients.created_at', icon: UserRoundPlus, color: 'text-blue-400' },
+      { label: 'Powracalność aktywnych', value: `${activeReturnRate}%`, sub: `${returningPatientIds.size} pacjentów wraca`, source: 'patients + appointments', icon: RefreshCw, color: 'text-emerald-400' },
+      { label: 'Umówione wizyty', value: visits.length, sub: `${visits30d} w ostatnich 30 dniach`, source: 'appointments', icon: CalendarPlus, color: 'text-violet-400' },
+      { label: 'Wartość wizyt', value: formatMoney(clinicAnalytics.totalVisitValue), sub: `${formatMoney(visitValue30d)} w 30 dni`, source: 'appointments.price_amount', icon: BadgeDollarSign, color: 'text-cyan-400' },
+      { label: 'Średnia wartość wizyty', value: formatMoney(clinicAnalytics.avgVisitValue), sub: 'średni koszyk procedury', source: 'appointments', icon: Calculator, color: 'text-indigo-400' },
+      { label: 'Ściągalność płatności', value: `${collectionRate}%`, sub: `${formatMoney(clinicAnalytics.unpaidVisitValue)} do pobrania`, source: 'appointments.payment_status', icon: CreditCard, color: 'text-amber-400' },
+      { label: 'Kompletność dokumentów', value: `${docCompletionRate}%`, sub: `${pendingDocs} dokumentów do podpisu`, source: 'patient_consents', icon: FileSignature, color: 'text-rose-400' },
+      { label: 'Obsługa zapytań', value: `${responseRate}%`, sub: `${openRequests} otwartych spraw`, source: 'patient_portal_requests', icon: MessageSquare, color: 'text-emerald-400' },
+      { label: 'Wynik operacyjny', value: formatMoney(clinicAnalytics.operatingResult), sub: `koszty: ${formatMoney(clinicAnalytics.totalClinicCosts)}`, source: 'wizyty + koszty kliniki', icon: Receipt, color: clinicAnalytics.operatingResult >= 0 ? 'text-emerald-400' : 'text-red-400' },
+      { label: 'Aktywne zabiegi', value: treatments.filter((t: any) => t.is_active !== false).length, sub: `${clinicAnalytics.treatmentRows.length} z ruchem w wizytach`, source: 'treatments', icon: Activity, color: 'text-blue-400' },
+      { label: 'Lekarze w grafiku', value: doctorsList.length, sub: `${clinicAnalytics.doctorRows.length} z przypisanymi wizytami`, source: 'lekarze', icon: Stethoscope, color: 'text-cyan-400' },
+    ]
+
+    const bestTreatment = clinicAnalytics.treatmentRows[0]
+    const bestDoctor = clinicAnalytics.doctorRows[0]
+    const improvementRows = [
+      {
+        area: 'Płatności',
+        action: 'Automatyczne przypomnienie po wizycie i oznaczanie statusu płatności',
+        current: formatMoney(clinicAnalytics.paidVisitValue),
+        after: formatMoney(clinicAnalytics.paidVisitValue + clinicAnalytics.unpaidVisitValue * 0.6),
+        impact: `+${formatMoney(clinicAnalytics.unpaidVisitValue * 0.6)}`,
+        confidence: collectionRate < 85 ? 'wysoki' : 'średni',
+      },
+      {
+        area: 'Powroty pacjentów',
+        action: 'Follow-up 14/30 dni po zabiegu i propozycja kolejnej procedury',
+        current: `${activeReturnRate}%`,
+        after: `${Math.min(100, activeReturnRate + 12)}%`,
+        impact: `ok. +${formatMoney(Math.max(patients.length * 0.12 * Math.max(clinicAnalytics.avgVisitValue, 300), 0))} potencjału`,
+        confidence: activeReturnRate < 45 ? 'wysoki' : 'średni',
+      },
+      {
+        area: 'Dokumentacja',
+        action: 'Wysyłka zgód automatycznie przy zapisie na zabieg',
+        current: `${docCompletionRate}%`,
+        after: `${Math.min(100, docCompletionRate + 25)}%`,
+        impact: `${Math.max(Math.round(pendingDocs * 0.7), 0)} mniej braków`,
+        confidence: pendingDocs > 0 ? 'wysoki' : 'monitoring',
+      },
+      {
+        area: 'Pierwszy kontakt',
+        action: 'Priorytetyzacja nowych pytań i gotowe szkice odpowiedzi AI',
+        current: `${responseRate}% odpowiedzi`,
+        after: `${Math.min(100, responseRate + 20)}% odpowiedzi`,
+        impact: `${Math.max(Math.round(openRequests * 0.5), 0)} spraw szybciej domkniętych`,
+        confidence: openRequests > 0 ? 'wysoki' : 'monitoring',
+      },
+      {
+        area: 'Popularność procedur',
+        action: bestTreatment ? `Wzmocnić pakiety i follow-up dla: ${bestTreatment.name}` : 'Zebrać więcej danych o zabiegach',
+        current: bestTreatment ? `${bestTreatment.count} wizyt` : 'brak danych',
+        after: bestTreatment ? `${Math.ceil((bestTreatment.count || 0) * 1.18)} wizyt` : 'po pierwszych wizytach',
+        impact: bestTreatment ? `+${formatMoney((bestTreatment.value || 0) * 0.18)}` : 'brak wyceny',
+        confidence: bestTreatment ? 'średni' : 'niski',
+      },
+      {
+        area: 'Zespół medyczny',
+        action: bestDoctor ? `Analiza obłożenia i rezerwacji dla: ${bestDoctor.name}` : 'Przypisać lekarzy do wizyt',
+        current: bestDoctor ? formatMoney(bestDoctor.value) : 'brak danych',
+        after: bestDoctor ? formatMoney((bestDoctor.value || 0) * 1.15) : 'po przypisaniu',
+        impact: bestDoctor ? `+${formatMoney((bestDoctor.value || 0) * 0.15)}` : 'lepsza mierzalność',
+        confidence: bestDoctor ? 'średni' : 'wysoki',
+      },
+    ]
+
+    const aiScore = Math.min(100, Math.round(
+      (patients.length > 0 ? 14 : 0) +
+      (visits.length > 0 ? 16 : 0) +
+      (clinicAnalytics.totalVisitValue > 0 ? 16 : 0) +
+      (collectionRate * 0.16) +
+      (docCompletionRate * 0.14) +
+      (responseRate * 0.12) +
+      (activeReturnRate * 0.12)
+    ))
+
+    const projectedRevenue = clinicAnalytics.paidVisitValue +
+      (clinicAnalytics.unpaidVisitValue * 0.6) +
+      Math.max(patients.length * 0.12 * Math.max(clinicAnalytics.avgVisitValue, 300), 0)
+    const projectedReturnRate = Math.min(100, activeReturnRate + 12)
+    const projectedDocRate = Math.min(100, docCompletionRate + 25)
+    const projectedResponseRate = Math.min(100, responseRate + 20)
+
+    return {
+      rawKpis,
+      months,
+      requestTypeRows,
+      funnelRows,
+      maxFunnelValue,
+      improvementRows,
+      aiScore,
+      collectionRate,
+      docCompletionRate,
+      responseRate,
+      activeReturnRate,
+      pendingDocs,
+      openRequests,
+      revenue90d,
+      projectedRevenue,
+      projectedReturnRate,
+      projectedDocRate,
+      projectedResponseRate,
+      bestTreatment,
+      bestDoctor,
+    }
+  }, [appointmentsList, patientConsents, patientPortalRequests, patients, applications, treatments, doctorsList, clinicAnalytics, formatMoney])
+
   const categorySummaries = useMemo(() => budgetCategories.map((category: any) => {
     const items = activeBudgetItems.filter((item: any) => item.category === category.slug && item.type === 'expense')
     const plannedBudget = Number(category.planned_budget || 0)
@@ -8049,6 +8255,288 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
     )}
+  </div>
+)}
+
+{/* ============================================================================ */}
+{/* AI ANALITYKA KLINIKI */}
+{/* ============================================================================ */}
+{activeTab === 'eko' && (
+  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
+
+    <section className="relative overflow-hidden rounded-[24px] md:rounded-[32px] border border-cyan-400/20 bg-[#061216] p-5 md:p-7 shadow-2xl">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+      <div className="relative z-10 grid grid-cols-1 xl:grid-cols-[1.5fr_0.8fr] gap-6 items-stretch">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
+            <Sparkles size={13} /> AI Business Intelligence
+          </span>
+          <h2 className="mt-4 text-2xl md:text-4xl font-black tracking-tight text-white leading-tight">
+            Centrum decyzyjne kliniki
+          </h2>
+          <p className="mt-3 max-w-4xl text-sm md:text-base font-medium leading-relaxed text-slate-300">
+            Bieżący wgląd w pacjentów, wizyty, dokumentację, płatności, popularność zabiegów i pracę zespołu medycznego. Dane liczą się automatycznie z modułów aplikacji, a AI pokazuje, gdzie klinika może szybciej odzyskać przychód, poprawić obsługę i zwiększyć powracalność.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { label: 'Przychód 90 dni', value: formatMoney(clinicAiDashboard.revenue90d), icon: BadgeDollarSign },
+              { label: 'Powracalność', value: `${clinicAiDashboard.activeReturnRate}%`, icon: RefreshCw },
+              { label: 'Dokumenty OK', value: `${clinicAiDashboard.docCompletionRate}%`, icon: FileSignature },
+              { label: 'Obsługa pytań', value: `${clinicAiDashboard.responseRate}%`, icon: MessageSquare },
+            ].map((item: any) => (
+              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
+                  <item.icon size={15} className="text-cyan-200" />
+                </div>
+                <p className="mt-3 text-xl font-black tabular-nums text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-cyan-300/20 bg-cyan-300/10 p-5 flex flex-col justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Wynik gotowości BI</p>
+            <div className="mt-5 flex items-end gap-3">
+              <p className="text-6xl md:text-7xl font-black tabular-nums text-white">{clinicAiDashboard.aiScore}</p>
+              <p className="pb-3 text-xl font-black text-cyan-200">/100</p>
+            </div>
+            <div className="mt-5 h-2.5 rounded-full bg-slate-950/70 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-[#e8ce7a]" style={{ width: `${clinicAiDashboard.aiScore}%` }} />
+            </div>
+            <p className="mt-4 text-xs font-medium leading-relaxed text-slate-300">
+              Im wyższy wynik, tym więcej decyzji można podejmować z danych zamiast ręcznie. Największy wpływ mają: płatności, kompletność dokumentów, powroty pacjentów i czas odpowiedzi recepcji.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={loadEventData}
+            disabled={loading}
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#e8ce7a] px-5 py-3 text-[11px] font-black uppercase tracking-wider text-[#061216] shadow-lg transition-all hover:bg-[#d8bd65] active:scale-95 disabled:opacity-60"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            Odśwież wyliczenia
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {clinicAiDashboard.rawKpis.map((item: any) => (
+        <div key={item.label} className={`rounded-[22px] border p-4 shadow-sm transition-colors ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.label}</p>
+              <p className={`mt-2 text-2xl font-black tabular-nums truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.value}</p>
+            </div>
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'} ${item.color}`}>
+              <item.icon size={18} />
+            </div>
+          </div>
+          <p className={`mt-3 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.sub}</p>
+          <p className={`mt-2 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Źródło: {item.source}</p>
+        </div>
+      ))}
+    </section>
+
+    <section className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+      <div className={`xl:col-span-7 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
+          <div>
+            <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>Trend kliniki</p>
+            <h3 className={`mt-1 text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Pacjenci, wizyty i przychód</h3>
+          </div>
+          <span className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider border ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+            Ostatnie 6 miesięcy
+          </span>
+        </div>
+        <div className="h-[320px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={clinicAiDashboard.months}>
+              <XAxis dataKey="label" stroke={isDarkMode ? '#94a3b8' : '#64748b'} fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke={isDarkMode ? '#94a3b8' : '#64748b'} fontSize={11} tickLine={false} axisLine={false} />
+              <Tooltip
+                contentStyle={{
+                  background: isDarkMode ? '#0f172a' : '#ffffff',
+                  border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                  borderRadius: 14,
+                  color: isDarkMode ? '#ffffff' : '#0f172a'
+                }}
+              />
+              <Line type="monotone" dataKey="patients" name="Nowi pacjenci" stroke="#67e8f9" strokeWidth={3} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="visits" name="Wizyty" stroke="#34d399" strokeWidth={3} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="revenue" name="Przychód" stroke="#e8ce7a" strokeWidth={3} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className={`xl:col-span-5 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>Lejek pacjenta</p>
+        <h3 className={`mt-1 text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Od kontaktu do płatności</h3>
+        <div className="mt-6 space-y-4">
+          {clinicAiDashboard.funnelRows.map((row: any) => {
+            const width = Math.max(5, Math.round((row.value / clinicAiDashboard.maxFunnelValue) * 100))
+            return (
+              <div key={row.label}>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <p className={`text-xs font-black ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{row.label}</p>
+                  <p className={`text-sm font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.value}</p>
+                </div>
+                <div className={`h-3 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                  <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" style={{ width: `${width}%` }} />
+                </div>
+                <p className={`mt-1 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>{row.source}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+
+    <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className={`xl:col-span-2 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <div>
+            <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-amber-700'}`}>Popularność procedur</p>
+            <h3 className={`mt-1 text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Najmocniejsze zabiegi według wartości wizyt</h3>
+          </div>
+        </div>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={clinicAnalytics.treatmentRows.slice(0, 7)}>
+              <XAxis dataKey="name" stroke={isDarkMode ? '#94a3b8' : '#64748b'} fontSize={10} tickLine={false} axisLine={false} interval={0} />
+              <YAxis stroke={isDarkMode ? '#94a3b8' : '#64748b'} fontSize={11} tickLine={false} axisLine={false} />
+              <Tooltip
+                contentStyle={{
+                  background: isDarkMode ? '#0f172a' : '#ffffff',
+                  border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                  borderRadius: 14,
+                  color: isDarkMode ? '#ffffff' : '#0f172a'
+                }}
+                formatter={(value: any) => formatMoney(Number(value || 0))}
+              />
+              <Bar dataKey="value" name="Wartość wizyt" radius={[10, 10, 0, 0]}>
+                {clinicAnalytics.treatmentRows.slice(0, 7).map((_: any, index: number) => (
+                  <Cell key={index} fill={['#67e8f9', '#34d399', '#e8ce7a', '#818cf8', '#fb7185', '#38bdf8', '#a78bfa'][index % 7]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        {clinicAnalytics.treatmentRows.length === 0 && (
+          <p className={`mt-4 text-sm font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Po zapisaniu pacjentów na zabiegi pojawi się ranking procedur i wartości wizyt.</p>
+        )}
+      </div>
+
+      <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>Efektywność zespołu</p>
+        <h3 className={`mt-1 text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Lekarze i wartość wizyt</h3>
+        <div className="mt-5 space-y-3">
+          {clinicAnalytics.doctorRows.slice(0, 6).map((row: any) => (
+            <div key={row.id} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className={`text-sm font-black truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.name}</p>
+                <p className="text-sm font-black tabular-nums text-emerald-500">{formatMoney(row.value)}</p>
+              </div>
+              <p className={`mt-1 text-[10px] font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{row.count} wizyt | średnio {formatMoney(row.avgValue)}</p>
+            </div>
+          ))}
+          {clinicAnalytics.doctorRows.length === 0 && (
+            <p className={`text-sm font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Przypisz lekarzy do wizyt, aby zobaczyć efektywność zespołu.</p>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className={`xl:col-span-2 rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#061216] border-cyan-300/20' : 'bg-white border-cyan-100'}`}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div>
+            <span className={`inline-flex items-center gap-2 rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-cyan-300/10 text-cyan-200 border-cyan-300/20' : 'bg-cyan-50 text-cyan-800 border-cyan-100'}`}>
+              <Sparkles size={12} /> Symulacja AI
+            </span>
+            <h3 className={`mt-3 text-lg md:text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Co może się zmienić po wdrożeniu rekomendacji?</h3>
+          </div>
+          <div className={`rounded-2xl border px-4 py-3 ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Prognozowany przychód po działaniach</p>
+            <p className={`mt-1 text-xl font-black tabular-nums ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>{formatMoney(clinicAiDashboard.projectedRevenue)}</p>
+          </div>
+        </div>
+
+        <div className={`overflow-hidden rounded-2xl border ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className={`hidden md:grid grid-cols-[1fr_1.6fr_0.7fr_0.7fr_0.8fr_0.6fr] gap-3 px-4 py-3 text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'bg-slate-950 text-slate-500' : 'bg-slate-50 text-slate-500'}`}>
+            <span>Obszar</span><span>Rekomendacja AI</span><span>Teraz</span><span>Po wdrożeniu</span><span>Wpływ</span><span>Pewność</span>
+          </div>
+          <div className={`divide-y ${isDarkMode ? 'divide-slate-800' : 'divide-slate-100'}`}>
+            {clinicAiDashboard.improvementRows.map((row: any) => (
+              <div key={row.area} className={`grid grid-cols-1 md:grid-cols-[1fr_1.6fr_0.7fr_0.7fr_0.8fr_0.6fr] gap-2 md:gap-3 px-4 py-4 text-xs ${isDarkMode ? 'bg-[#0f172a]' : 'bg-white'}`}>
+                <p className={`font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.area}</p>
+                <p className={`font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{row.action}</p>
+                <p className={`font-black tabular-nums ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{row.current}</p>
+                <p className="font-black tabular-nums text-emerald-500">{row.after}</p>
+                <p className="font-black tabular-nums text-[#e8ce7a]">{row.impact}</p>
+                <p className={`font-black uppercase ${row.confidence === 'wysoki' ? 'text-emerald-500' : row.confidence === 'średni' ? 'text-amber-500' : 'text-slate-400'}`}>{row.confidence}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>Efekt po optymalizacji</p>
+        <div className="mt-5 space-y-4">
+          {[
+            { label: 'Powracalność pacjentów', value: `${clinicAiDashboard.projectedReturnRate}%`, icon: RefreshCw },
+            { label: 'Kompletność dokumentów', value: `${clinicAiDashboard.projectedDocRate}%`, icon: ShieldCheck },
+            { label: 'Odpowiedzi recepcji', value: `${clinicAiDashboard.projectedResponseRate}%`, icon: MessageSquare },
+            { label: 'Dokumenty do domknięcia', value: clinicAiDashboard.pendingDocs, icon: FileSignature },
+          ].map((item: any) => (
+            <div key={item.label} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className={`text-xs font-black ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{item.label}</p>
+                <item.icon size={16} className="text-cyan-400" />
+              </div>
+              <p className={`mt-2 text-2xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section className={`rounded-[24px] md:rounded-[32px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className="flex items-center gap-3 mb-5">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isDarkMode ? 'bg-slate-900 text-cyan-300' : 'bg-slate-100 text-cyan-700'}`}>
+          <BarChart3 size={18} />
+        </div>
+        <div>
+          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Z czego liczy panel?</p>
+          <h3 className={`text-lg md:text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Podział na moduły danych kliniki</h3>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        {[
+          { name: 'Pacjenci', count: patients.length, desc: 'nowi pacjenci, powracalność, baza kontaktów' },
+          { name: 'Wizyty', count: appointmentsList.length, desc: 'wartość wizyt, płatności, lekarze, terminy' },
+          { name: 'Zabiegi', count: treatments.length, desc: 'popularność procedur i średnia wartość koszyka' },
+          { name: 'Dokumentacja', count: patientConsents.length, desc: 'zgody, wywiady, RODO, braki do podpisu' },
+          { name: 'Pytania pacjentów', count: patientPortalRequests.length, desc: 'kontakt po zabiegu, prośby o wizytę, czas obsługi' },
+          { name: 'Lekarze', count: doctorsList.length, desc: 'obłożenie, przypisane wizyty i wartość pracy zespołu' },
+          { name: 'Koszty kliniki', count: activeBudgetItems.length, desc: 'koszty operacyjne, marża i wynik zarządczy' },
+          { name: 'Leady i pierwszy kontakt', count: applications.length, desc: 'wejście do lejka i konwersja do pacjenta' },
+        ].map((row: any) => (
+          <div key={row.name} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="flex items-center justify-between gap-3">
+              <p className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{row.name}</p>
+              <span className={`rounded-lg px-2 py-1 text-[10px] font-black tabular-nums ${isDarkMode ? 'bg-slate-800 text-cyan-300' : 'bg-white text-cyan-700 border border-slate-200'}`}>{row.count}</span>
+            </div>
+            <p className={`mt-2 text-[11px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{row.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   </div>
 )}
 
