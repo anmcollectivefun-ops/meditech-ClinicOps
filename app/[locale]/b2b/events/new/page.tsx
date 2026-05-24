@@ -5,7 +5,7 @@ import { createClient } from '../../../../lib/supabase'
 import { GOOGLE_FONT_OPTIONS, buildGoogleFontStack, getFontFamilyName } from '../../../../lib/googleFonts'
 import { useRouter } from 'next/navigation'
 import ClinicThemeToggle from '../../../../components/ClinicThemeToggle'
-import { ArrowRight, Briefcase, Globe, Palette, Type, UploadCloud } from 'lucide-react'
+import { ArrowRight, Briefcase, Globe, Palette, Type, UploadCloud, XCircle } from 'lucide-react'
 
 export default function NewB2BEventPage() {
   const [loading, setLoading] = useState(false)
@@ -16,7 +16,7 @@ export default function NewB2BEventPage() {
     title: '',
     description: '',
     event_date: '',
-    location: '',
+    location: '', // Będzie służyć jako dokładny adres
     slug: '',
     selection_rule: 'manual',
     limit_attendees: 100,
@@ -56,11 +56,11 @@ export default function NewB2BEventPage() {
     setLoading(true)
 
     try {
-      setUploadStatus('Autoryzacja przestrzeni kliniki...')
+      setUploadStatus('Autoryzacja przestrzeni głównej...')
       const { data: profile } = await supabase.from('business_profiles').select('id').limit(1).single()
-      if (!profile?.id) throw new Error('Brak przypisanego profilu placówki.')
+      if (!profile?.id) throw new Error('Brak przypisanego profilu głównego firmy.')
 
-      setUploadStatus('Przetwarzanie materiałów placówki...')
+      setUploadStatus('Przetwarzanie materiałów oddziału...')
       const [coverUrl, logoUrl, img1Url, img2Url, img3Url] = await Promise.all([
         uploadFile(formData.cover_image, profile.id, 'cover'),
         uploadFile(formData.logo, profile.id, 'logo'),
@@ -69,7 +69,7 @@ export default function NewB2BEventPage() {
         uploadFile(formData.image_3, profile.id, 'gallery3')
       ])
 
-      setUploadStatus('Zapis konfiguracji ClinicOps...')
+      setUploadStatus('Zapis konfiguracji oddziału ClinicOps...')
       const safeSlug = formData.slug
         .toLowerCase()
         .normalize('NFD')
@@ -79,10 +79,10 @@ export default function NewB2BEventPage() {
 
       const { data, error } = await supabase.from('b2b_events').insert([{
         business_id: profile.id,
-        title: formData.title,
+        title: formData.title, // Nazwa oddziału
         description: formData.description,
         event_date: formData.event_date,
-        location: formData.location,
+        location: formData.location, // Dokładny adres
         slug: safeSlug,
         selection_rule: formData.selection_rule,
         expected_attendees: formData.limit_attendees,
@@ -112,7 +112,7 @@ export default function NewB2BEventPage() {
   }
 
   const inputClass = 'w-full rounded-2xl border border-[var(--clinic-border)] bg-[var(--clinic-panel-strong)] px-5 py-4 font-bold text-[var(--clinic-text)] outline-none focus:border-cyan-300'
-  const labelClass = 'clinic-muted ml-2 block text-[10px] font-black uppercase tracking-widest'
+  const labelClass = 'clinic-muted ml-2 mb-1.5 block text-[10px] font-black uppercase tracking-widest'
 
   return (
     <div className="clinic-shell min-h-screen px-4 py-12 pb-32 font-sans">
@@ -121,32 +121,55 @@ export default function NewB2BEventPage() {
       </div>
 
       <div className="mx-auto max-w-5xl">
-        <div className="mb-10">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Nowa przestrzeń</p>
-          <h1 className="text-3xl font-black tracking-tight">Kreator ClinicOps</h1>
-          <p className="clinic-muted mt-2 font-medium">
-            Skonfiguruj profil placówki, publiczny formularz pacjenta i podstawową ścieżkę pierwszego kontaktu.
-          </p>
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Dodawanie nowej lokalizacji</p>
+            <h1 className="text-3xl font-black tracking-tight">Kreator Oddziału</h1>
+            <p className="clinic-muted mt-2 font-medium">
+              Skonfiguruj profil nowego oddziału, adres, publiczny formularz pacjenta i podstawową ścieżkę wizyt.
+            </p>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 rounded-2xl border border-[var(--clinic-border)] bg-[var(--clinic-panel-strong)] px-5 py-3 text-xs font-black uppercase tracking-wider text-[var(--clinic-text)] transition-colors hover:bg-[var(--clinic-border)] shrink-0"
+          >
+            <XCircle size={16} /> Anuluj tworzenie
+          </button>
         </div>
 
         <form onSubmit={handleCreate} className="space-y-8">
           <section className="clinic-surface rounded-[32px] p-8">
             <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
-              <Briefcase size={20} className="text-cyan-300" /> Podstawy placówki
+              <Briefcase size={20} className="text-cyan-300" /> Podstawy oddziału
             </h2>
             <div className="space-y-6">
-              <input required placeholder="Nazwa placówki lub projektu medycznego" className={`${inputClass} py-5 text-2xl font-black`} onChange={e => setFormData({...formData, title: e.target.value})} />
-              <textarea placeholder="Krótki opis specjalizacji, zespołu i zakresu obsługi pacjenta..." rows={2} className={`${inputClass} resize-none clinic-muted`} onChange={e => setFormData({...formData, description: e.target.value})} />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <input required type="date" className={inputClass} onChange={e => setFormData({...formData, event_date: e.target.value})} />
-                <input required placeholder="Lokalizacja placówki" className={inputClass} onChange={e => setFormData({...formData, location: e.target.value})} />
+              <div>
+                <label className={labelClass}>Nazwa oddziału *</label>
+                <input required placeholder="np. ClinicOps Warszawa Śródmieście" className={`${inputClass} py-5 text-2xl font-black`} onChange={e => setFormData({...formData, title: e.target.value})} />
+              </div>
+              
+              <div>
+                <label className={labelClass}>Krótki opis oddziału</label>
+                <textarea placeholder="Opis specjalizacji, zespołu i zakresu obsługi w tym oddziale..." rows={2} className={`${inputClass} resize-none clinic-muted`} onChange={e => setFormData({...formData, description: e.target.value})} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Dokładny adres oddziału *</label>
+                  <input required placeholder="ul. Złota 1, 00-001 Warszawa" className={inputClass} onChange={e => setFormData({...formData, location: e.target.value})} />
+                </div>
+                <div>
+                  <label className={labelClass}>Data otwarcia / inauguracji systemu *</label>
+                  <input required type="date" className={inputClass} onChange={e => setFormData({...formData, event_date: e.target.value})} />
+                </div>
               </div>
             </div>
           </section>
 
           <section className="clinic-surface rounded-[32px] p-8">
             <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
-              <Palette size={20} className="text-cyan-300" /> Brand placówki
+              <Palette size={20} className="text-cyan-300" /> Brand oddziału
             </h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
               {[
@@ -196,21 +219,21 @@ export default function NewB2BEventPage() {
 
           <section className="clinic-surface rounded-[32px] p-8">
             <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
-              <UploadCloud size={20} className="text-cyan-300" /> Pliki i multimedia placówki
+              <UploadCloud size={20} className="text-cyan-300" /> Pliki i multimedia oddziału
             </h2>
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-6">
-                <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-cyan-300">Zdjęcie placówki lub zespołu</label>
+                <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-cyan-300">Zdjęcie główne oddziału</label>
                 <input type="file" accept="image/*" className="text-xs file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-4 file:py-2 file:font-black file:text-[#071016]" onChange={e => e.target.files && setFormData({...formData, cover_image: e.target.files[0]})} />
               </div>
               <div className="clinic-surface-soft rounded-2xl border-dashed p-6">
-                <label className="clinic-muted mb-3 block text-[10px] font-black uppercase tracking-widest">Logo placówki</label>
+                <label className="clinic-muted mb-3 block text-[10px] font-black uppercase tracking-widest">Logo oddziału</label>
                 <input type="file" accept="image/*" className="text-xs file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-300/20 file:px-4 file:py-2 file:font-black file:text-cyan-300" onChange={e => e.target.files && setFormData({...formData, logo: e.target.files[0]})} />
               </div>
             </div>
 
             <div className="space-y-3">
-              <label className={labelClass}>Galeria placówki i specjalizacji</label>
+              <label className={labelClass}>Galeria wnętrz i specjalizacji</label>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {[1, 2, 3].map(num => (
                   <div key={num} className="clinic-surface-soft rounded-2xl p-4">
@@ -230,23 +253,23 @@ export default function NewB2BEventPage() {
             </h2>
             <div className="relative z-10 space-y-6">
               <div>
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Unikalny link formularza pacjenta</label>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Unikalny link formularza i rejestracji dla tego oddziału</label>
                 <div className="flex items-center rounded-2xl border border-white/10 bg-white/10 px-4 py-1">
                   <span className="font-mono text-sm text-slate-400">{currentDomain}/join/</span>
-                  <input required placeholder="nazwa-kliniki" className="flex-1 border-none bg-transparent py-3 font-bold text-cyan-300 outline-none" onChange={e => setFormData({...formData, slug: e.target.value})} />
+                  <input required placeholder="nazwa-oddzialu-warszawa" className="flex-1 border-none bg-transparent py-3 font-bold text-cyan-300 outline-none" onChange={e => setFormData({...formData, slug: e.target.value})} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Obsługa zgłoszeń pacjentów</label>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Obsługa nowych zgłoszeń pacjentów</label>
                   <select className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-4 font-bold text-white outline-none" onChange={e => setFormData({...formData, selection_rule: e.target.value})}>
-                    <option value="manual">Recepcja zatwierdza ręcznie</option>
-                    <option value="first_x">Automatyczna akceptacja</option>
+                    <option value="manual">Recepcja weryfikuje kontakt ręcznie</option>
+                    <option value="first_x">Automatyczna akceptacja kontaktu</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Limit aktywnych pacjentów</label>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Limit aktywnych pacjentów w bazie</label>
                   <input type="number" value={formData.limit_attendees} className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-4 font-bold outline-none" onChange={e => setFormData({...formData, limit_attendees: parseInt(e.target.value)})} />
                 </div>
               </div>
@@ -260,7 +283,7 @@ export default function NewB2BEventPage() {
               className="clinic-primary-button flex w-full flex-col items-center justify-center gap-1 rounded-[24px] border border-cyan-300/20 py-6 text-xl font-black shadow-2xl shadow-cyan-900/20 transition-all active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
-                {loading ? 'PRZETWARZANIE DANYCH...' : <>UTWÓRZ ŚRODOWISKO CLINICOPS <ArrowRight /></>}
+                {loading ? 'PRZETWARZANIE DANYCH ODDZIAŁU...' : <>UTWÓRZ ODDZIAŁ CLINICOPS <ArrowRight /></>}
               </div>
               {loading && <span className="text-[10px] font-bold uppercase tracking-widest text-[#071016]/70">{uploadStatus}</span>}
             </button>
