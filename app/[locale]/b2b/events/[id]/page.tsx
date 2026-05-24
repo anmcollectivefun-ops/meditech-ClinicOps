@@ -845,7 +845,100 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
       setUpdating(false);
     }
   };
- 
+ // --- STANY DLA NOWYCH FORMULARZY PORTALU PACJENTA ---
+  const [personalForm, setPersonalForm] = useState<any>({ category: 'zalecenia', font_family: 'Inter, sans-serif', patient_id: '' })
+  const [globalForm, setGlobalForm] = useState<any>({ category: 'standard', font_family: 'Inter, sans-serif' })
+  const [personalImgFile, setPersonalImgFile] = useState<File | null>(null)
+  const [globalImgFile, setGlobalImgFile] = useState<File | null>(null)
+  
+  const [personalAnnouncements, setPersonalAnnouncements] = useState<any[]>([])
+  const [globalAnnouncements, setGlobalAnnouncements] = useState<any[]>([])
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false)
+  const [isEditingGlobal, setIsEditingGlobal] = useState(false)
+
+  // POBIERANIE LIST (dodaj `loadAnnouncements()` do swojego `loadEventData`!)
+  const loadAnnouncements = useCallback(async () => {
+    const { data: pData } = await supabase.from('personal_announcements').select('*, patients(*)').eq('event_id', id).order('created_at', { ascending: false })
+    if (pData) setPersonalAnnouncements(pData)
+
+    const { data: gData } = await supabase.from('global_announcements').select('*').eq('event_id', id).order('created_at', { ascending: false })
+    if (gData) setGlobalAnnouncements(gData)
+  }, [id, supabase])
+
+  // FUNKCJA ZAPISU: KOMUNIKAT PERSONALNY
+  const handleSavePersonalAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!personalForm.patient_id || !personalForm.title) return showNotification('Wybierz pacjenta i podaj tytuł', 'error');
+    setUpdating(true);
+    try {
+      let imageUrl = personalForm.image_url || null;
+      if (personalImgFile) imageUrl = await uploadFile(personalImgFile, id, 'personal-ann');
+
+      const payload = {
+        event_id: id,
+        patient_id: personalForm.patient_id,
+        title: personalForm.title,
+        description: personalForm.description || '',
+        font_family: personalForm.font_family,
+        category: personalForm.category,
+        image_url: imageUrl
+      };
+
+      if (isEditingPersonal && personalForm.id) {
+        await supabase.from('personal_announcements').update(payload).eq('id', personalForm.id);
+      } else {
+        await supabase.from('personal_announcements').insert([payload]);
+      }
+
+      showNotification('Zapisano komunikat dla pacjenta!', 'success');
+      setPersonalForm({ category: 'zalecenia', font_family: 'Inter, sans-serif', patient_id: '' });
+      setPersonalImgFile(null);
+      setIsEditingPersonal(false);
+      await loadAnnouncements();
+    } catch (err: any) { showNotification('Błąd zapisu: ' + err.message, 'error'); } finally { setUpdating(false); }
+  };
+
+  // FUNKCJA ZAPISU: KOMUNIKAT GLOBALNY
+  const handleSaveGlobalAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!globalForm.title) return showNotification('Podaj tytuł ogłoszenia', 'error');
+    setUpdating(true);
+    try {
+      let imageUrl = globalForm.image_url || null;
+      if (globalImgFile) imageUrl = await uploadFile(globalImgFile, id, 'global-ann');
+
+      const payload = {
+        event_id: id,
+        title: globalForm.title,
+        description: globalForm.description || '',
+        font_family: globalForm.font_family,
+        category: globalForm.category,
+        image_url: imageUrl
+      };
+
+      if (isEditingGlobal && globalForm.id) {
+        await supabase.from('global_announcements').update(payload).eq('id', globalForm.id);
+      } else {
+        await supabase.from('global_announcements').insert([payload]);
+      }
+
+      showNotification('Zapisano ogłoszenie globalne!', 'success');
+      setGlobalForm({ category: 'standard', font_family: 'Inter, sans-serif' });
+      setGlobalImgFile(null);
+      setIsEditingGlobal(false);
+      await loadAnnouncements();
+    } catch (err: any) { showNotification('Błąd zapisu: ' + err.message, 'error'); } finally { setUpdating(false); }
+  };
+
+  const handleDeletePersonal = async (itemId: string) => {
+    if (!confirm('Usunąć ten wpis z konta pacjenta?')) return;
+    try { await supabase.from('personal_announcements').delete().eq('id', itemId); await loadAnnouncements(); showNotification('Usunięto', 'success'); } catch(e:any) { showNotification('Błąd', 'error'); }
+  }
+
+  const handleDeleteGlobal = async (itemId: string) => {
+    if (!confirm('Usunąć to ogłoszenie? Zniknie ono u wszystkich pacjentów.')) return;
+    try { await supabase.from('global_announcements').delete().eq('id', itemId); await loadAnnouncements(); showNotification('Usunięto', 'success'); } catch(e:any) { showNotification('Błąd', 'error'); }
+  }
 // ============================================================================
 // ----- 4.2. FUNKCJE POMOCNICZE (wywoływane z wnętrza) -----
 // ============================================================================
@@ -5727,33 +5820,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className={`${isNavCollapsed ? 'lg:col-span-11' : 'lg:col-span-9'} transition-all duration-300`}>
 
 {/* ============================================================================ */}
-{/* NOWE CENTRUM DOWODZENIA PORTALU PACJENTA (Zastępuje stare kafelki) */}
+{/* NOWE CENTRUM PORTALU PACJENTA (Dedykowane i Globalne Komunikaty) */}
 {/* ============================================================================ */}
 {activeTab === 'strona_uczestnika' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
     
-    {/* NAGŁÓWEK MODUŁU */}
+    {/* NAGŁÓWEK */}
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-        <Smartphone size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-        Centrum Dowodzenia Portalem Pacjenta
+        <Globe size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+        Konfiguracja Portalu Pacjenta
       </h3>
       <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-        Publikuj unikalne informacje dla konkretnych osób lub zarządzaj ogólną zawartością stron informacyjnych dla wszystkich pacjentów.
+        Zarządzaj tym, co pacjenci widzą po zalogowaniu. Wysyłaj indywidualne zalecenia lub publikuj globalne ogłoszenia.
       </p>
     </div>
 
-    {/* DWIE KOLUMNY Z FORMULARZAMI OBOK SIEBIE */}
+    {/* SEKCJA 1: FORMULARZE */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8">
       
-      {/* LEWA STRONA: FORMULARZ DLA KONKRETNEGO PACJENTA */}
-      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-6 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+      {/* FORMULARZ 1: PERSONALNY (Tylko dla 1 pacjenta) */}
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-8 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <form onSubmit={handleSavePersonalAnnouncement} className="space-y-5">
-          <div className="border-b dark:border-slate-800 pb-3 mb-2">
-            <h4 className={`font-black text-base flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
-              <User size={18} /> 1. Treści dedykowane (Dla wybranego Pacjenta)
-            </h4>
-            <p className="text-[10px] opacity-60 mt-0.5">Informacja trafi wyłącznie na konto wybranej osoby z bazy.</p>
+          <div className="border-b dark:border-slate-800 pb-4 mb-2 flex justify-between items-start">
+            <div>
+              <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
+                <User size={20} /> 1. Komunikat Personalny
+              </h4>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                {isEditingPersonal ? 'Edycja komunikatu' : 'Trafi wyłącznie na konto wybranej osoby'}
+              </p>
+            </div>
+            {isEditingPersonal && (
+              <button type="button" onClick={() => { setIsEditingPersonal(false); setPersonalForm({ category: 'zalecenia', font_family: 'Inter, sans-serif', patient_id: '' }) }} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"><X size={16}/></button>
+            )}
           </div>
 
           <div>
@@ -5784,7 +5884,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               </select>
             </div>
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybiór czcionki</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krój czcionki</label>
               <select
                 value={personalForm.font_family || 'Inter, sans-serif'}
                 onChange={e => setPersonalForm({ ...personalForm, font_family: e.target.value })}
@@ -5807,51 +5907,58 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <textarea rows={4} value={personalForm.description || ''} onChange={e => setPersonalForm({ ...personalForm, description: e.target.value })} placeholder="Wpisz pełną personalną treść dla tego pacjenta..." className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodaj zdjęcie do wpisu</label>
+          <div className={`p-4 md:p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Zdjęcie / Załącznik graficzny</label>
             <input type="file" accept="image/*" onChange={e => setPersonalImgFile(e.target.files ? e.target.files[0] : null)} className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300' : 'text-slate-700 file:bg-white'}`} />
           </div>
 
-          <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            {updating ? 'Przetwarzanie bazy...' : 'Zapisz i Wyślij Pacjentowi'}
+          <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+            {updating ? 'Przetwarzanie...' : (isEditingPersonal ? 'Zapisz Zmiany' : 'Wyślij do Karty Pacjenta')}
           </button>
         </form>
       </div>
 
-      {/* PRAWA STRONA: FORMULARZ GLOBALNY (WIDOCZNY DLA WSZYSTKICH) */}
-      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-6 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+      {/* FORMULARZ 2: GLOBALNY (Wszyscy pacjenci) */}
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-xl p-5 md:p-8 flex flex-col justify-between ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <form onSubmit={handleSaveGlobalAnnouncement} className="space-y-5">
-          <div className="border-b dark:border-slate-800 pb-3 mb-2">
-            <h4 className={`font-black text-base flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
-              <Users size={18} /> 2. Ogłoszenia stałe (Dla wszystkich stron pacjentów)
-            </h4>
-            <p className="text-[10px] opacity-60 mt-0.5">Treść wyświetli się każdemu pacjentowi w danej sekcji informacyjnej.</p>
+          <div className="border-b dark:border-slate-800 pb-4 mb-2 flex justify-between items-start">
+            <div>
+              <h4 className={`font-black text-lg flex items-center gap-2 ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900'}`}>
+                <Users size={20} /> 2. Ogłoszenie Globalne
+              </h4>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                {isEditingGlobal ? 'Edycja ogłoszenia' : 'Wszyscy pacjenci zobaczą to w Portalu'}
+              </p>
+            </div>
+            {isEditingGlobal && (
+              <button type="button" onClick={() => { setIsEditingGlobal(false); setGlobalForm({ category: 'standard', font_family: 'Inter, sans-serif' }) }} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"><X size={16}/></button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj ogłoszenia / sekcji *</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Rodzaj sekcji *</label>
               <select
                 value={globalForm.category || 'standard'}
                 onChange={e => setGlobalForm({ ...globalForm, category: e.target.value })}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
                 <option value="standard">Standard placówki</option>
-                <option value="lekarze">Lekarze / specjaliści</option>
+                <option value="lekarze">Lekarze / Specjaliści</option>
                 <option value="promocja">Strefa promocyjna</option>
-                <option value="faq">FAQ / ważne informacje</option>
-                <option value="regulamin">Regulamin / dokumenty</option>
+                <option value="faq">FAQ / Ważne informacje</option>
+                <option value="regulamin">Regulamin / Dokumenty</option>
               </select>
             </div>
             <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Wybiór czcionki</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Krój czcionki</label>
               <select
                 value={globalForm.font_family || 'Inter, sans-serif'}
                 onChange={e => setGlobalForm({ ...globalForm, font_family: e.target.value })}
                 className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
               >
-                <option value="Inter, sans-serif">Sans-Serif (Nowoczesna/Czysta)</option>
-                <option value="Playfair Display, serif">Serif (Elegancka/Premium)</option>
+                <option value="Inter, sans-serif">Standardowa (Czytelna)</option>
+                <option value="Playfair Display, serif">Elegancka (Serif)</option>
                 <option value="JetBrains Mono, monospace">Monospace (Techniczna)</option>
               </select>
             </div>
@@ -5859,29 +5966,88 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <div>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Tytuł ogłoszenia globalnego *</label>
-            <input required value={globalForm.title || ''} onChange={e => setGlobalForm({ ...globalForm, title: e.target.value })} placeholder="np. Nowoczesne lasery CO2 już dostępne w naszej klinice" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+            <input required value={globalForm.title || ''} onChange={e => setGlobalForm({ ...globalForm, title: e.target.value })} placeholder="np. Jesienna promocja na laseroterapię" className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
           <div>
-            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Pełny opis ogłoszenia</label>
-            <textarea rows={4} value={globalForm.description || ''} onChange={e => setGlobalForm({ ...globalForm, description: e.target.value })} placeholder="Wpisz treść widoczną dla wszystkich odwiedzających portal..." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Opis / Treść ogłoszenia</label>
+            <textarea rows={4} value={globalForm.description || ''} onChange={e => setGlobalForm({ ...globalForm, description: e.target.value })} placeholder="Wpisz treść komunikatu widoczną dla wszystkich..." className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
           </div>
 
-          <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+          <div className={`p-4 md:p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Dodaj zdjęcie / baner</label>
             <input type="file" accept="image/*" onChange={e => setGlobalImgFile(e.target.files ? e.target.files[0] : null)} className={`text-xs font-medium w-full ${isDarkMode ? 'text-slate-400 file:bg-slate-800 file:text-slate-300' : 'text-slate-700 file:bg-white'}`} />
           </div>
 
-          <button type="submit" disabled={updating} className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
-            {updating ? 'Publikowanie...' : 'Opublikuj dla Wszystkich'}
+          <button type="submit" disabled={updating} className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+            {updating ? 'Publikowanie...' : (isEditingGlobal ? 'Zapisz Zmiany' : 'Opublikuj Ogłoszenie')}
           </button>
         </form>
       </div>
 
     </div>
+
+    {/* SEKCJA 2: LISTY PUBLIKACJI */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8 mt-8">
+      
+      {/* WIDOK: Opublikowane Personalnie */}
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+          <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Treści Personalne ({personalAnnouncements.length})</h4>
+          <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zarządzaj tym co wysłano do pacjentów</p>
+        </div>
+        <div className="p-5 md:p-6 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+          {personalAnnouncements.length === 0 ? (
+            <p className="text-center text-xs font-bold opacity-50 py-8">Brak aktywnych wpisów.</p>
+          ) : personalAnnouncements.map((item) => (
+            <div key={item.id} className={`p-4 rounded-[20px] border transition-colors ${isDarkMode ? 'bg-slate-900/40 border-slate-800 hover:border-slate-700' : 'bg-slate-50/50 border-slate-200 hover:bg-white'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-white text-slate-600 border-slate-200'}`}>{item.category}</span>
+                <span className={`text-[10px] font-black ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>Dla: {item.patients?.first_name} {item.patients?.last_name}</span>
+              </div>
+              <h5 className={`font-black text-sm mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h5>
+              <p className={`text-[10px] leading-relaxed line-clamp-2 mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
+              
+              <div className={`pt-3 border-t flex justify-end gap-2 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+                <button onClick={() => { setPersonalForm(item); setIsEditingPersonal(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-blue-400 hover:bg-slate-700' : 'bg-white border text-blue-600 hover:bg-slate-100'}`}><Edit3 size={14} /></button>
+                <button onClick={() => handleDeletePersonal(item.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* WIDOK: Opublikowane Globalnie */}
+      <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={`p-5 md:p-6 border-b ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+          <h4 className={`font-black text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Treści Globalne ({globalAnnouncements.length})</h4>
+          <p className={`text-[10px] font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Zarządzaj tablicą informacyjną</p>
+        </div>
+        <div className="p-5 md:p-6 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+          {globalAnnouncements.length === 0 ? (
+            <p className="text-center text-xs font-bold opacity-50 py-8">Brak aktywnych wpisów.</p>
+          ) : globalAnnouncements.map((item) => (
+            <div key={item.id} className={`p-4 rounded-[20px] border transition-colors ${isDarkMode ? 'bg-slate-900/40 border-slate-800 hover:border-slate-700' : 'bg-slate-50/50 border-slate-200 hover:bg-white'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-white text-slate-600 border-slate-200'}`}>{item.category}</span>
+                <span className={`text-[10px] font-black uppercase ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>Wszyscy pacjenci</span>
+              </div>
+              <h5 className={`font-black text-sm mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h5>
+              <p className={`text-[10px] leading-relaxed line-clamp-2 mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
+              
+              <div className={`pt-3 border-t flex justify-end gap-2 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+                <button onClick={() => { setGlobalForm(item); setIsEditingGlobal(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 text-blue-400 hover:bg-slate-700' : 'bg-white border text-blue-600 hover:bg-slate-100'}`}><Edit3 size={14} /></button>
+                <button onClick={() => handleDeleteGlobal(item.id)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+
   </div>
 )}
-
 
 
 {/* ============================================================================ */}
