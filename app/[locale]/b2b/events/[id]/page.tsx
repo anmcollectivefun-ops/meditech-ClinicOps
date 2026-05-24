@@ -598,6 +598,9 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
   const [treatmentMappings, setTreatmentMappings] = useState<any[]>([])
   const [appointmentsList, setAppointmentsList] = useState<any[]>([])
   const [appointmentForm, setAppointmentForm] = useState({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' })
+  const [patientClinicalNotes, setPatientClinicalNotes] = useState<any[]>([])
+  const [selectedDoctorPatientId, setSelectedDoctorPatientId] = useState('')
+  const [doctorRecordForm, setDoctorRecordForm] = useState<any>({ record_type: 'visit_note' })
 
   // --- PRAWDZIWE STANY KATALOGU ZABIEGÓW ---
   const [isTreatmentModalOpen, setIsTreatmentModalOpen] = useState(false)
@@ -699,6 +702,77 @@ const [selectedPatientForPass, setSelectedPatientForPass] = useState<any>(null)
     }
 
     setAppointmentsList(data || [])
+  }
+
+  const loadPatientClinicalNotes = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('patient_clinical_notes')
+      .select('*')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.warn('Patient clinical notes load error:', error.message)
+      setPatientClinicalNotes([])
+      return
+    }
+
+    setPatientClinicalNotes(data || [])
+  }, [id, supabase])
+
+  const handleSaveDoctorRecord = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedDoctorPatientId) {
+      showNotification('Wybierz pacjenta', 'error')
+      return
+    }
+
+    const hasContent = [
+      doctorRecordForm.procedure_performed,
+      doctorRecordForm.recommendations,
+      doctorRecordForm.medications,
+      doctorRecordForm.preparations_used,
+      doctorRecordForm.doctor_notes,
+    ].some(value => String(value || '').trim())
+
+    if (!hasContent) {
+      showNotification('Dodaj wpis do karty pacjenta', 'error')
+      return
+    }
+
+    setUpdating(true)
+    try {
+      const selectedAppointment = appointmentsList.find((appointment: any) => appointment.id === doctorRecordForm.appointment_id)
+      const selectedTreatment = treatments.find((treatment: any) => treatment.id === selectedAppointment?.treatment_id)
+      const selectedDoctorId = doctorRecordForm.doctor_id || selectedAppointment?.doctor_id || selectedTreatment?.doctor_id || null
+      const payload = {
+        event_id: id,
+        patient_id: selectedDoctorPatientId,
+        appointment_id: doctorRecordForm.appointment_id || null,
+        doctor_id: selectedDoctorId,
+        treatment_id: selectedAppointment?.treatment_id || null,
+        record_type: doctorRecordForm.record_type || 'visit_note',
+        procedure_performed: doctorRecordForm.procedure_performed || null,
+        recommendations: doctorRecordForm.recommendations || null,
+        medications: doctorRecordForm.medications || null,
+        preparations_used: doctorRecordForm.preparations_used || null,
+        doctor_notes: doctorRecordForm.doctor_notes || null,
+        created_by: selectedDoctorId
+          ? `${doctorsList.find((doctor: any) => doctor.id === selectedDoctorId)?.first_name || ''} ${doctorsList.find((doctor: any) => doctor.id === selectedDoctorId)?.last_name || ''}`.trim()
+          : 'Lekarz',
+      }
+
+      const { error } = await supabase.from('patient_clinical_notes').insert([payload])
+      if (error) throw error
+
+      showNotification('Wpis dodany do historii pacjenta', 'success')
+      setDoctorRecordForm({ record_type: 'visit_note' })
+      await loadPatientClinicalNotes()
+    } catch (err: any) {
+      showNotification('Błąd zapisu wpisu lekarza: ' + err.message, 'error')
+    } finally {
+      setUpdating(false)
+    }
   }
 
   // GŁÓWNA FUNKCJA: TWORZY WIZYTĘ I GENERUJE ZGODY
@@ -3825,6 +3899,7 @@ const { data: checklistItemData } = await supabase
       await loadTreatmentsCatalog()
       await loadPartnersCatalog()
       await loadAppointments()
+      await loadPatientClinicalNotes()
 
       setMenuItems(generateMockMenu())
       calculateEcoMetrics(apps || [])
@@ -3834,7 +3909,7 @@ const { data: checklistItemData } = await supabase
     } finally {
       setLoading(false)
     }
-  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates])
+  }, [id, supabase, loadBudgetData, loadEventPassData, loadPatients, loadPatientPortalRequests, loadPatientPortalMessages, loadPatientConsents, loadConsentTemplates, loadPatientClinicalNotes])
 
   useEffect(() => {
     loadEventData()
@@ -4340,6 +4415,35 @@ const transportAnalytics = useMemo(() => {
       bestDoctor,
     }
   }, [appointmentsList, patientConsents, patientPortalRequests, patients, applications, treatments, doctorsList, clinicAnalytics, formatMoney])
+
+  const doctorPatientWorkspace = useMemo(() => {
+    const selectedPatient = patients.find((patient: any) => patient.id === selectedDoctorPatientId) || patients[0] || null
+    const patientId = selectedPatient?.id
+    const patientAppointments = patientId
+      ? appointmentsList.filter((appointment: any) => appointment.patient_id === patientId)
+      : []
+    const patientDocs = patientId
+      ? patientConsents.filter((consent: any) => consent.patient_id === patientId)
+      : []
+    const patientNotes = patientId
+      ? patientClinicalNotes.filter((note: any) => note.patient_id === patientId)
+      : []
+    const pendingDocs = patientDocs.filter((consent: any) => String(consent.status || '').toLowerCase() !== 'signed').length
+    const signedDocs = patientDocs.length - pendingDocs
+    const upcomingAppointments = patientAppointments.filter((appointment: any) => appointment.appointment_date && new Date(appointment.appointment_date) >= new Date())
+    const pastAppointments = patientAppointments.filter((appointment: any) => appointment.appointment_date && new Date(appointment.appointment_date) < new Date())
+
+    return {
+      selectedPatient,
+      patientAppointments,
+      patientDocs,
+      patientNotes,
+      pendingDocs,
+      signedDocs,
+      upcomingAppointments,
+      pastAppointments,
+    }
+  }, [appointmentsList, patientClinicalNotes, patientConsents, patients, selectedDoctorPatientId])
 
   const categorySummaries = useMemo(() => budgetCategories.map((category: any) => {
     const items = activeBudgetItems.filter((item: any) => item.category === category.slug && item.type === 'expense')
@@ -12002,245 +12106,217 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 {/* ============================================================================*/}
 
 {activeTab === 'logistyka' && (
-  <div className="space-y-6 animate-in fade-in duration-300">
-
-    {/* === 1. KARTY OPERACYJNE (KPI) === */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {[
-        {
-          label: 'Zaopatrzenie barowe',
-          value: `${approvedApps.filter(a => a.alcohol_preference && a.alcohol_preference !== 'none').length} osób`,
-          sub: 'Wymaga zakupu alkoholu',
-          icon: <Truck size={16} />,
-          color: 'from-purple-600 to-purple-800'
-        },
-        {
-          label: 'Diety specjalne',
-          value: `${approvedApps.filter(a => a.diet && a.diet !== 'Standard').length} osób`,
-          sub: 'Wymaga osobnych oznaczeń',
-          icon: <UtensilsCrossed size={16} />,
-          color: 'from-amber-500 to-amber-700'
-        },
-        {
-          label: 'Rooming list',
-          value: `${approvedApps.filter(a => a.accommodation && a.accommodation !== 'Brak').length} osób`,
-          sub: 'Rezerwacje potwierdzone',
-          icon: <Bed size={16} />,
-          color: 'from-blue-600 to-blue-800'
-        },
-        {
-          label: 'Zapotrzebowanie na shuttle',
-          value: `${approvedApps.filter(a => a.transport === 'Transfer').length} osób`,
-          sub: 'Flota do zamówienia',
-          icon: <Bus size={16} />,
-          color: 'from-emerald-600 to-emerald-800'
-        },
-      ].map((kpi, i) => (
-        <div key={i} className={`bg-gradient-to-br ${kpi.color} rounded-2xl p-4 min-h-[112px] text-white shadow-lg overflow-hidden`}>
-          <div className="flex justify-between items-start gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-wider opacity-80 leading-tight line-clamp-2">{kpi.label}</p>
-              <p className="text-2xl font-black mt-1 tabular-nums break-words">{kpi.value}</p>
-              <p className="text-[9px] font-bold opacity-90 mt-1 leading-tight line-clamp-2">{kpi.sub}</p>
-            </div>
-            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm shrink-0">
-              {kpi.icon}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {/* === 2. ANALITYKA ZASOBÓW === */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-      {/* Obłożenie noclegowe */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-2 mb-4">
-          <Bed size={18} className="text-[#253a2a]" />
-          <h3 className="font-black text-slate-800">Live - Obłożenie noclegowe</h3>
-        </div>
-        <div className="space-y-5">
-          {[
-            { label: 'Pokoje 1-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 1-os').length, total: 30 },
-            { label: 'Pokoje 2-osobowe', current: approvedApps.filter(a => a.accommodation === 'Pokój 2-os').length, total: 20 },
-          ].map((item, idx) => (
-            <div key={idx}>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-slate-600">{item.label}</span>
-                <span className={item.current > item.total ? 'text-red-600' : 'text-slate-800'}>
-                  {item.current} / {item.total}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    item.current > item.total ? 'bg-red-500' : 'bg-[#253a2a]'
-                  }`}
-                  style={{ width: `${Math.min((item.current / item.total) * 100, 100)}%` }}
-                />
-              </div>
-              {item.current > item.total && (
-                <p className="text-[10px] text-red-500 font-bold mt-1">Uwaga: Przekroczono limit</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-2 mb-4">
-          <Wine size={18} className="text-[#253a2a]" />
-          <h3 className="font-black text-slate-800">Preferencje alkoholowe</h3>
-        </div>
-        <div className="space-y-3">
-          {[
-            { label: 'Wino czerwone', key: 'wino_czerwone', color: 'bg-red-700' },
-            { label: 'Wino białe', key: 'wino_biale', color: 'bg-amber-300' },
-            { label: 'Piwo', key: 'piwo', color: 'bg-yellow-600' },
-            { label: 'Bezalkoholowe', key: 'none', color: 'bg-slate-400' },
-          ].map((item) => {
-            const count = approvedApps.filter(a => (a.alcohol_preference || 'none') === item.key).length;
-            const percent = approvedApps.length ? (count / approvedApps.length) * 100 : 0;
-            return (
-              <div key={item.key}>
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span>{item.label}</span>
-                  <span>{count} os. ({Math.round(percent)}%)</span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-
-
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
-      <div className="bg-[#1e293b] px-5 py-4 flex flex-wrap justify-between items-center gap-3">
+  <div className="space-y-6 animate-in fade-in duration-300 pb-20">
+    <section className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
         <div>
-          <h3 className="font-black text-white flex items-center gap-2">
-            <ClipboardList size={18} className="text-[#e8ce7a]" />
-            Registry Operations Control
-          </h3>
-          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
-            Zarządzanie detalami logistycznymi gości zaakceptowanych
+          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
+            Centrum dowodzenia lekarza
+          </p>
+          <h2 className={`mt-1 text-2xl md:text-3xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            Karta pacjenta i historia kliniczna
+          </h2>
+          <p className={`mt-2 max-w-4xl text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Lekarz wybiera pacjenta, widzi jego wizyty, podpisane zgody, dokumenty do uzupełnienia i pełną historię wpisów. Każda notatka, zalecenie, wykonany zabieg, lek lub preparat zapisuje się do historii pacjenta.
           </p>
         </div>
-        <div className="flex gap-2">
-          <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-black text-white transition">
-            FILTRUJ BRAKI
-          </button>
-          <button
-            onClick={exportToCSV}
-            className="px-4 py-1.5 bg-[#e8ce7a] text-slate-900 rounded-lg text-[10px] font-black hover:bg-yellow-400 transition"
+        <div className="w-full xl:max-w-md">
+          <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Wybierz pacjenta
+          </label>
+          <select
+            value={doctorPatientWorkspace.selectedPatient?.id || ''}
+            onChange={event => {
+              setSelectedDoctorPatientId(event.target.value)
+              setDoctorRecordForm({ record_type: 'visit_note' })
+            }}
+            className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-black outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
           >
-            EKSPORT XLSX
-          </button>
+            {patients.length === 0 ? (
+              <option value="">Brak pacjentów</option>
+            ) : patients.map((patient: any) => (
+              <option key={patient.id} value={patient.id}>
+                {patient.first_name} {patient.last_name} {patient.pesel ? `(${patient.pesel})` : ''}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+    </section>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500">
-              <th className="p-4">Gość / Firma</th>
-              <th className="p-4 text-center">RSVP</th>
-              <th className="p-4">Dieta / Alergie</th>
-              <th className="p-4">Bar & Nocleg</th>
-              <th className="p-4">Transport</th>
-              <th className="p-4 text-center">Admin</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {approvedApps.map((app) => {
-              const missingRSVP = !app.rsvp_status || app.rsvp_status === 'oczekuje';
-              return (
-                <tr
-                  key={app.id}
-                  className={`group transition-all hover:bg-slate-50 ${
-                    missingRSVP ? 'bg-red-50/40' : ''
-                  }`}
-                >
-                  <td className="p-4">
-                    <p className="text-sm font-black text-slate-900">{app.first_name} {app.last_name}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase">{app.company_name}</p>
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black border ${
-                      !missingRSVP
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                        : 'bg-red-100 text-red-800 border-red-200 animate-pulse'
-                    }`}>
-                      {!missingRSVP ? 'CONFIRMED' : 'MISSING'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-wrap gap-1 items-center">
-                      {app.diet && app.diet !== 'Standard' ? (
-                        <span className="text-[9px] bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-bold border">
-                          {app.diet}
-                        </span>
-                      ) : (
-                        <span className="text-[9px] text-slate-400 italic">Standard</span>
-                      )}
-                      {app.allergies && (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-red-600 font-bold">
-                          <AlertTriangle size={10} /> {app.allergies}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black text-slate-400 uppercase w-8">Bar:</span>
-                        <span className="text-xs font-bold text-slate-800">
-                          {app.alcohol_preference === 'wino_czerwone' ? ' Red' :
-                           app.alcohol_preference === 'wino_biale' ? ' White' :
-                           app.alcohol_preference === 'piwo' ? ' Beer' : ' None'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black text-slate-400 uppercase w-8">Room:</span>
-                        <span className="text-xs font-bold text-slate-800">{app.accommodation || '-'}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div>
-                      <span className={`text-[10px] font-bold ${app.transport === 'Transfer' ? 'text-blue-600' : 'text-slate-700'}`}>
-                        {app.transport || 'Nie wybrano'}
-                      </span>
-                      {app.transport_address && (
-                        <p className="text-[9px] text-slate-400 truncate max-w-[180px] mt-0.5">
-                           {app.transport_address}
-                        </p>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => setEditingGuest(app)}
-                      className="opacity-0 group-hover:opacity-100 transition-all p-2 bg-slate-800 hover:bg-[#253a2a] text-white rounded-lg shadow-md"
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    {!doctorPatientWorkspace.selectedPatient ? (
+      <div className={`rounded-[28px] border border-dashed p-12 text-center ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+        <Users size={36} className="mx-auto mb-3 opacity-50" />
+        <p className="text-sm font-black">Brak pacjentów w bazie.</p>
       </div>
-    </div>
+    ) : (
+      <>
+        <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Wizyty pacjenta', value: doctorPatientWorkspace.patientAppointments.length, icon: CalendarPlus, color: 'text-cyan-400' },
+            { label: 'Nadchodzące', value: doctorPatientWorkspace.upcomingAppointments.length, icon: Clock, color: 'text-blue-400' },
+            { label: 'Zgody podpisane', value: doctorPatientWorkspace.signedDocs, icon: CheckCircle2, color: 'text-emerald-400' },
+            { label: 'Do uzupełnienia', value: doctorPatientWorkspace.pendingDocs, icon: AlertTriangle, color: 'text-rose-400' },
+          ].map((item: any) => (
+            <div key={item.label} className={`rounded-[24px] border p-4 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.label}</p>
+                <item.icon size={17} className={item.color} />
+              </div>
+              <p className={`mt-3 text-3xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.value}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="xl:col-span-4 space-y-6">
+            <div className={`rounded-[28px] border p-5 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>Pacjent</p>
+              <h3 className={`mt-2 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                {doctorPatientWorkspace.selectedPatient.first_name} {doctorPatientWorkspace.selectedPatient.last_name}
+              </h3>
+              <div className={`mt-4 space-y-2 text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <p>PESEL: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{doctorPatientWorkspace.selectedPatient.pesel || '-'}</span></p>
+                <p>Telefon: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{doctorPatientWorkspace.selectedPatient.phone || '-'}</span></p>
+                <p>E-mail: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{doctorPatientWorkspace.selectedPatient.email || '-'}</span></p>
+                <p>Status: <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{doctorPatientWorkspace.selectedPatient.status || 'aktywny'}</span></p>
+              </div>
+            </div>
+
+            <div className={`rounded-[28px] border p-5 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+              <h3 className={`font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <FileSignature size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
+                Zgody i dokumenty
+              </h3>
+              <div className="mt-4 space-y-3">
+                {doctorPatientWorkspace.patientDocs.length === 0 ? (
+                  <p className={`text-sm font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Brak dokumentów pacjenta.</p>
+                ) : doctorPatientWorkspace.patientDocs.map((consent: any) => {
+                  const template = consentTemplates.find((template: any) => template.id === consent.template_id)
+                  const signed = String(consent.status || '').toLowerCase() === 'signed'
+                  return (
+                    <div key={consent.id} className={`rounded-2xl border p-3 ${signed ? (isDarkMode ? 'bg-emerald-900/10 border-emerald-900/40' : 'bg-emerald-50 border-emerald-200') : (isDarkMode ? 'bg-rose-900/10 border-rose-900/40' : 'bg-rose-50 border-rose-200')}`}>
+                      <p className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{template?.title || 'Dokument pacjenta'}</p>
+                      <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${signed ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {signed ? 'Podpisany' : 'Do potwierdzenia'}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="xl:col-span-8 space-y-6">
+            <form onSubmit={handleSaveDoctorRecord} className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                <div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>Nowy wpis lekarza</p>
+                  <h3 className={`mt-1 text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Wykonanie zabiegu, leki, preparaty i zalecenia</h3>
+                </div>
+                <select
+                  value={doctorRecordForm.appointment_id || ''}
+                  onChange={event => setDoctorRecordForm({ ...doctorRecordForm, appointment_id: event.target.value })}
+                  className={`border rounded-xl px-4 py-3 text-xs font-black outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+                >
+                  <option value="">Wpis ogólny bez wizyty</option>
+                  {doctorPatientWorkspace.patientAppointments.map((appointment: any) => (
+                    <option key={appointment.id} value={appointment.id}>
+                      {appointment.treatment_name || 'Wizyta'} - {appointment.appointment_date ? new Date(appointment.appointment_date).toLocaleString('pl-PL') : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Lekarz</label>
+                  <select value={doctorRecordForm.doctor_id || ''} onChange={event => setDoctorRecordForm({ ...doctorRecordForm, doctor_id: event.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                    <option value="">Automatycznie z wizyty</option>
+                    {doctorsList.map((doctor: any) => <option key={doctor.id} value={doctor.id}>{doctor.first_name} {doctor.last_name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Typ wpisu</label>
+                  <select value={doctorRecordForm.record_type || 'visit_note'} onChange={event => setDoctorRecordForm({ ...doctorRecordForm, record_type: event.target.value })} className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                    <option value="visit_note">Notatka z wizyty</option>
+                    <option value="procedure">Wykonanie zabiegu</option>
+                    <option value="recommendation">Zalecenia</option>
+                    <option value="prescription">Leki / recepta</option>
+                    <option value="followup">Kontrola / follow-up</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  ['procedure_performed', 'Wykonany zabieg', 'np. Natural Volume Lips, ilość, okolica, przebieg'],
+                  ['preparations_used', 'Preparaty', 'np. preparat, seria, ilość, miejsce podania'],
+                  ['medications', 'Leki / recepty', 'np. lek, dawkowanie, czas stosowania'],
+                  ['recommendations', 'Zalecenia dla pacjenta', 'np. pielęgnacja, ograniczenia, kontrola'],
+                ].map(([key, label, placeholder]) => (
+                  <div key={key}>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{label}</label>
+                    <textarea rows={4} value={doctorRecordForm[key] || ''} onChange={event => setDoctorRecordForm({ ...doctorRecordForm, [key]: event.target.value })} placeholder={placeholder} className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900'}`} />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Notatka lekarza</label>
+                <textarea rows={4} value={doctorRecordForm.doctor_notes || ''} onChange={event => setDoctorRecordForm({ ...doctorRecordForm, doctor_notes: event.target.value })} placeholder="Wewnętrzna notatka medyczna, obserwacje, decyzje i plan dalszego leczenia." className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900'}`} />
+              </div>
+
+              <button type="submit" disabled={updating} className={`mt-5 w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}>
+                {updating ? 'Zapisywanie...' : 'Zapisz wpis do historii pacjenta'}
+              </button>
+            </form>
+
+            <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+              <h3 className={`font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <Activity size={18} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-700'} />
+                Historia pacjenta
+              </h3>
+              <div className="mt-5 space-y-4">
+                {[...doctorPatientWorkspace.patientNotes, ...doctorPatientWorkspace.patientAppointments.map((appointment: any) => ({ ...appointment, history_kind: 'appointment' }))].length === 0 ? (
+                  <p className={`text-sm font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Historia pojawi się po pierwszej wizycie lub wpisie lekarza.</p>
+                ) : [...doctorPatientWorkspace.patientNotes, ...doctorPatientWorkspace.patientAppointments.map((appointment: any) => ({ ...appointment, history_kind: 'appointment' }))]
+                  .sort((a: any, b: any) => new Date(b.created_at || b.appointment_date || 0).getTime() - new Date(a.created_at || a.appointment_date || 0).getTime())
+                  .map((item: any) => {
+                    const isAppointment = item.history_kind === 'appointment'
+                    const doctor = doctorsList.find((doctor: any) => doctor.id === item.doctor_id)
+                    return (
+                      <div key={`${isAppointment ? 'appointment' : 'note'}-${item.id}`} className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                          <div>
+                            <p className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                              {isAppointment ? (item.treatment_name || 'Wizyta') : (item.procedure_performed || item.record_type || 'Wpis lekarza')}
+                            </p>
+                            <p className={`mt-1 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {new Date(item.created_at || item.appointment_date).toLocaleString('pl-PL')} {doctor ? `| ${doctor.first_name} ${doctor.last_name}` : ''}
+                            </p>
+                          </div>
+                          <span className={`w-fit rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${isAppointment ? 'bg-blue-500/10 text-blue-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                            {isAppointment ? 'Wizyta' : 'Wpis'}
+                          </span>
+                        </div>
+                        {!isAppointment && (
+                          <div className={`mt-3 space-y-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                            {item.preparations_used && <p><strong>Preparaty:</strong> {item.preparations_used}</p>}
+                            {item.medications && <p><strong>Leki:</strong> {item.medications}</p>}
+                            {item.recommendations && <p><strong>Zalecenia:</strong> {item.recommendations}</p>}
+                            {item.doctor_notes && <p><strong>Notatka:</strong> {item.doctor_notes}</p>}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    )}
   </div>
 )}
 {/* ============================================================================ */}
