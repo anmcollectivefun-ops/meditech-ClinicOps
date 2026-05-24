@@ -175,27 +175,61 @@ const getStaffRoleLabel = (role?: string | null) => ({
   other: 'Inny personel',
 } as Record<string, string>)[String(role || 'doctor')] || 'Personel'
 
-const getWorkSchedule = (value: any) => {
-  if (!value) return { days: [], start: '', end: '', note: '' }
-  if (typeof value === 'string') {
-    try {
-      return { days: [], start: '', end: '', note: '', ...JSON.parse(value) }
-    } catch {
-      return { days: [], start: '', end: '', note: value }
-    }
-  }
-  return { days: [], start: '', end: '', note: '', ...value }
+const workDayOptions = [
+  ['mon', 'Poniedziałek'],
+  ['tue', 'Wtorek'],
+  ['wed', 'Środa'],
+  ['thu', 'Czwartek'],
+  ['fri', 'Piątek'],
+  ['sat', 'Sobota'],
+  ['sun', 'Niedziela'],
+] as const
+
+const emptyDaySchedule = {
+  enabled: false,
+  start: '',
+  end: '',
+  status: 'off',
+  note: ''
 }
 
-const workDayOptions = [
-  ['mon', 'Pon'],
-  ['tue', 'Wt'],
-  ['wed', 'Śr'],
-  ['thu', 'Czw'],
-  ['fri', 'Pt'],
-  ['sat', 'Sob'],
-  ['sun', 'Nd'],
-]
+const getWorkSchedule = (value: any) => {
+  let parsed = value
+
+  if (!parsed) parsed = {}
+
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed)
+    } catch {
+      parsed = { note: parsed }
+    }
+  }
+
+  const legacyDays = Array.isArray(parsed.days) ? parsed.days : []
+
+  const week = workDayOptions.reduce((acc: any, [day]) => {
+    const oldEnabled = legacyDays.includes(day)
+    const existingDay = parsed.week?.[day] || {}
+
+    acc[day] = {
+      ...emptyDaySchedule,
+      ...existingDay,
+      enabled: existingDay.enabled ?? oldEnabled,
+      start: existingDay.start ?? (oldEnabled ? parsed.start || '' : ''),
+      end: existingDay.end ?? (oldEnabled ? parsed.end || '' : ''),
+      status: existingDay.status ?? (oldEnabled ? 'working' : 'off'),
+      note: existingDay.note ?? ''
+    }
+
+    return acc
+  }, {})
+
+  return {
+    week,
+    note: parsed.note || ''
+  }
+}
 
 const SortablePartnerItem = ({
   item,
@@ -282,74 +316,147 @@ const SortablePartnerItem = ({
           </button>
         </div>
       </div>
-      <details className={`mt-4 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        <summary className={`cursor-pointer select-none px-4 py-3 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
-          Grafik, dyżury i nieobecności
-        </summary>
-        <div className="px-4 pb-4 space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {workDayOptions.map(([day, label]) => {
-              const checked = Array.isArray(schedule.days) && schedule.days.includes(day)
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => {
-                    const nextDays = checked
-                      ? schedule.days.filter((item: string) => item !== day)
-                      : [...(schedule.days || []), day]
-                    onScheduleChange?.(item.id, { work_schedule: { ...schedule, days: nextDays } })
-                  }}
-                  className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${
-                    checked
-                      ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] border-[#e8ce7a]' : 'bg-slate-900 text-[#e8ce7a] border-slate-900')
-                      : (isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-600')
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input
-              type="time"
-              value={schedule.start || ''}
-              onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, start: event.target.value } })}
-              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-            />
-            <input
-              type="time"
-              value={schedule.end || ''}
-              onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, end: event.target.value } })}
-              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-            />
-            <select
-              value={absenceStatus}
-              onChange={event => onScheduleChange?.(item.id, { absence_status: event.target.value })}
-              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-            >
-              <option value="available">Pracuje</option>
-              <option value="duty">Dyżur</option>
-              <option value="vacation">Urlop</option>
-              <option value="sick_leave">L4</option>
-            </select>
-            <input
-              value={item.absence_note || ''}
-              onChange={event => onScheduleChange?.(item.id, { absence_note: event.target.value })}
-              placeholder="np. urlop 12-16.06"
-              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`}
-            />
-          </div>
-          <textarea
-            rows={2}
-            value={schedule.note || ''}
-            onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, note: event.target.value } })}
-            placeholder="Uwagi do grafiku, np. tylko konsultacje, brak zabiegów laserowych, dyżur telefoniczny."
-            className={`w-full border rounded-xl px-3 py-2.5 text-xs font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`}
+     <details
+  open
+  className={`mt-4 rounded-2xl border ${
+    isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+  }`}
+>
+  <summary className={`cursor-pointer select-none px-4 py-3 text-[10px] font-black uppercase tracking-widest ${
+    isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+  }`}>
+    Tygodniowy grafik pracy lekarza
+  </summary>
+
+  <div className="px-4 pb-4 space-y-3">
+    {workDayOptions.map(([day, label]) => {
+      const daySchedule = schedule.week?.[day] || emptyDaySchedule
+      const isWorking = daySchedule.enabled && ['working', 'duty'].includes(daySchedule.status)
+
+      const updateDay = (patch: any) => {
+        const nextWeek = {
+          ...schedule.week,
+          [day]: {
+            ...daySchedule,
+            ...patch
+          }
+        }
+
+        onScheduleChange?.(item.id, {
+          work_schedule: {
+            ...schedule,
+            week: nextWeek
+          }
+        })
+      }
+
+      return (
+        <div
+          key={day}
+          className={`grid grid-cols-1 lg:grid-cols-[180px_120px_120px_150px_1fr] gap-3 items-center rounded-2xl border p-3 ${
+            isWorking
+              ? isDarkMode
+                ? 'bg-emerald-900/10 border-emerald-800/40'
+                : 'bg-emerald-50 border-emerald-200'
+              : isDarkMode
+                ? 'bg-slate-900 border-slate-800'
+                : 'bg-white border-slate-200'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() =>
+              updateDay({
+                enabled: !daySchedule.enabled,
+                status: !daySchedule.enabled ? 'working' : 'off'
+              })
+            }
+            className={`rounded-xl px-3 py-2 text-xs font-black uppercase border transition-colors ${
+              isWorking
+                ? isDarkMode
+                  ? 'bg-emerald-500 text-slate-950 border-emerald-500'
+                  : 'bg-emerald-600 text-white border-emerald-600'
+                : isDarkMode
+                  ? 'bg-slate-950 text-slate-400 border-slate-700'
+                  : 'bg-slate-100 text-slate-500 border-slate-200'
+            }`}
+          >
+            {label}
+          </button>
+
+          <input
+            type="time"
+            disabled={!daySchedule.enabled}
+            value={daySchedule.start || ''}
+            onChange={event => updateDay({ start: event.target.value })}
+            className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none disabled:opacity-40 ${
+              isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+            }`}
+          />
+
+          <input
+            type="time"
+            disabled={!daySchedule.enabled}
+            value={daySchedule.end || ''}
+            onChange={event => updateDay({ end: event.target.value })}
+            className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none disabled:opacity-40 ${
+              isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+            }`}
+          />
+
+          <select
+            value={daySchedule.status || 'off'}
+            onChange={event =>
+              updateDay({
+                status: event.target.value,
+                enabled: ['working', 'duty'].includes(event.target.value)
+              })
+            }
+            className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${
+              isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+            }`}
+          >
+            <option value="working">Pracuje</option>
+            <option value="off">Wolne</option>
+            <option value="vacation">Urlop</option>
+            <option value="sick_leave">L4</option>
+            <option value="duty">Dyżur</option>
+          </select>
+
+          <input
+            value={daySchedule.note || ''}
+            onChange={event => updateDay({ note: event.target.value })}
+            placeholder="np. tylko konsultacje, zabiegi, urlop"
+            className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${
+              isDarkMode
+                ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600'
+                : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+            }`}
           />
         </div>
-      </details>
+      )
+    })}
+
+    <textarea
+      rows={2}
+      value={schedule.note || ''}
+      onChange={event =>
+        onScheduleChange?.(item.id, {
+          work_schedule: {
+            ...schedule,
+            note: event.target.value
+          }
+        })
+      }
+      placeholder="Ogólne uwagi do grafiku lekarza."
+      className={`w-full border rounded-xl px-3 py-2.5 text-xs font-medium outline-none resize-none ${
+        isDarkMode
+          ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-600'
+          : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+      }`}
+    />
+  </div>
+</details>
     </div>
   );
 };
@@ -3721,10 +3828,21 @@ const handleSavePartner = async (e: React.FormEvent) => {
 const handleUpdateStaffSchedule = async (partnerId: string, patch: any) => {
   const normalizedPatch = {
     ...patch,
-    work_schedule: patch.work_schedule ? getWorkSchedule(patch.work_schedule) : patch.work_schedule
+    work_schedule: patch.work_schedule ? getWorkSchedule(patch.work_schedule) : patch.work_schedule,
+    updated_at: new Date().toISOString()
   }
-  setPartners(prev => prev.map((partner: any) => partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner))
-  setDoctorsList(prev => prev.map((partner: any) => partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner))
+
+  setPartners(prev =>
+    prev.map((partner: any) =>
+      partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner
+    )
+  )
+
+  setDoctorsList(prev =>
+    prev.map((partner: any) =>
+      partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner
+    )
+  )
 
   const { error } = await supabase
     .from('event_partners')
@@ -3734,11 +3852,10 @@ const handleUpdateStaffSchedule = async (partnerId: string, patch: any) => {
   if (error) {
     showNotification('Nie udało się zapisać grafiku: ' + error.message, 'error')
     await loadPartners()
-    await loadPartnersCatalog()
     return
   }
 
-  showNotification('Grafik personelu zapisany', 'success')
+  showNotification('Grafik lekarza zapisany', 'success')
 }
 
 const handleSavePreparation = async (e: React.FormEvent) => {
