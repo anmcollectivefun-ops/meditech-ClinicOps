@@ -5807,12 +5807,11 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   const navGroups = [
     {
       title: 'Pacjent i opieka',
-      desc: 'Historia, wizyty, QR i dokumentacja',
+      desc: 'Historia, wizyty i dokumentacja',
       items: [
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja pacjenta', count: tiers.length },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
-        { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
         { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
     },
@@ -5832,6 +5831,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       desc: 'KPI, finanse i zarządzanie placówką',
       items: [
         { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
+        { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
         { tabId: 'prelegenci' as TabModule, icon: UsersRound, label: 'Personel', count: doctorProfiles.length },
         { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
         { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' }
