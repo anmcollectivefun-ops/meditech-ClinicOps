@@ -2100,6 +2100,14 @@ const insertEventPassScan = async (unit: any, scanType: string) => {
       can_transport_checkin: !!staffAccessForm.can_transport_checkin,
       can_wristband_issue: !!staffAccessForm.can_wristband_issue,
       can_wristband_return: !!staffAccessForm.can_wristband_return,
+      can_view_patients: staffAccessForm.can_view_patients !== false,
+      can_view_appointments: staffAccessForm.can_view_appointments !== false,
+      can_view_documents: staffAccessForm.can_view_documents !== false,
+      can_view_messages: staffAccessForm.can_view_messages !== false,
+      can_view_qr: staffAccessForm.can_view_qr !== false,
+      can_view_finance: !!staffAccessForm.can_view_finance || staffAccessForm.role === 'manager',
+      can_view_ai_analytics: !!staffAccessForm.can_view_ai_analytics || staffAccessForm.role === 'manager',
+      can_manage_settings: !!staffAccessForm.can_manage_settings || staffAccessForm.role === 'manager',
       is_active: staffAccessForm.is_active !== false,
     }
     const { error } = await supabase.from('event_staff_access').insert([data])
@@ -11759,6 +11767,44 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <option value="coordinator">Opiekun pacjenta</option>
                 <option value="manager">Manager</option>
               </select>
+            </div>
+
+            <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Widoczne moduły panelu personelu</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  ['can_view_patients', 'Pacjenci', true],
+                  ['can_view_appointments', 'Wizyty', true],
+                  ['can_view_documents', 'Dokumenty', true],
+                  ['can_view_messages', 'Wiadomości', true],
+                  ['can_view_qr', 'QR / identyfikacja', true],
+                  ['can_view_finance', 'Finanse', false],
+                  ['can_view_ai_analytics', 'AI analityka', false],
+                  ['can_manage_settings', 'Ustawienia', false],
+                ].map(([key, label, defaultValue]) => {
+                  const checked = staffAccessForm[key] ?? defaultValue
+                  return (
+                    <label key={key as string} className={`relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      checked
+                        ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-white shadow-sm')
+                        : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
+                    }`}>
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${checked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`}>
+                        {label as string}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={!!checked}
+                        onChange={e => setStaffAccessForm({ ...staffAccessForm, [key as string]: e.target.checked })}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${checked ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white') : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')}`}>
+                        {!!checked && <CheckCircle2 size={12} />}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
             </div>
 
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>

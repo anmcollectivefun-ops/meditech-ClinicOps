@@ -5,15 +5,22 @@ import type { ReactNode } from 'react'
 import { createClient } from '../../../lib/supabase'
 import {
   BadgeCheck,
+  BarChart3,
   Bus,
+  CalendarPlus,
   CheckCircle2,
   Clock,
+  FileSignature,
   Gift,
   KeyRound,
+  MessageSquare,
+  Shield,
   Search,
   ShieldCheck,
+  Stethoscope,
   Ticket,
   UtensilsCrossed,
+  Users,
   XCircle
 } from 'lucide-react'
 
@@ -59,6 +66,35 @@ const canViewMedicalHistory = (staffAccess: any) =>
 const canViewAppointments = (staffAccess: any) =>
   ['reception', 'doctor', 'coordinator', 'manager', 'entry'].includes(String(staffAccess?.role || ''))
 
+const roleModuleDefaults: Record<string, string[]> = {
+  manager: ['overview', 'patients', 'appointments', 'documents', 'messages', 'qr', 'analytics'],
+  reception: ['overview', 'patients', 'appointments', 'documents', 'messages', 'qr'],
+  doctor: ['overview', 'patients', 'appointments', 'documents', 'messages'],
+  coordinator: ['overview', 'patients', 'appointments', 'documents', 'messages', 'qr'],
+  entry: ['overview', 'appointments', 'qr'],
+}
+
+const modulePermissionMap: Record<string, string> = {
+  patients: 'can_view_patients',
+  appointments: 'can_view_appointments',
+  documents: 'can_view_documents',
+  messages: 'can_view_messages',
+  qr: 'can_view_qr',
+  analytics: 'can_view_ai_analytics',
+}
+
+const canViewStaffModule = (staffAccess: any, moduleId: string) => {
+  if (!staffAccess) return false
+  if (moduleId === 'overview') return true
+  if (staffAccess.role === 'manager') return true
+  const permission = modulePermissionMap[moduleId]
+  if (permission && typeof staffAccess[permission] === 'boolean') return staffAccess[permission]
+  return (roleModuleDefaults[String(staffAccess.role || '')] || ['overview']).includes(moduleId)
+}
+
+const formatMoney = (value?: number | string | null) =>
+  `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
+
 export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const { accessToken } = use(params)
   const supabase = createClient()
@@ -81,6 +117,13 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const [gadgets, setGadgets] = useState<any[]>([])
   const [sessions, setSessions] = useState<any[]>([])
   const [routes, setRoutes] = useState<any[]>([])
+  const [activeStaffModule, setActiveStaffModule] = useState('overview')
+  const [patients, setPatients] = useState<any[]>([])
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [patientConsents, setPatientConsents] = useState<any[]>([])
+  const [portalRequests, setPortalRequests] = useState<any[]>([])
+  const [portalMessages, setPortalMessages] = useState<any[]>([])
+  const [workspaceLoading, setWorkspaceLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
@@ -112,6 +155,28 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
   const gadgetById = useMemo(() => new Map(gadgets.map((gadget: any) => [gadget.id, gadget])), [gadgets])
   const sessionById = useMemo(() => new Map(sessions.map((session: any) => [session.id, session])), [sessions])
   const routeById = useMemo(() => new Map(routes.map((route: any) => [route.id, route])), [routes])
+  const patientById = useMemo(() => new Map(patients.map((patient: any) => [patient.id, patient])), [patients])
+  const staffModules = useMemo(() => ([
+    { id: 'overview', label: 'Pulpit', icon: BarChart3 },
+    { id: 'patients', label: 'Pacjenci', icon: Users, count: patients.length },
+    { id: 'appointments', label: 'Wizyty', icon: CalendarPlus, count: appointments.length },
+    { id: 'documents', label: 'Dokumenty', icon: FileSignature, count: patientConsents.length },
+    { id: 'messages', label: 'Wiadomości', icon: MessageSquare, count: portalRequests.filter((item: any) => ['new', 'in_progress'].includes(String(item.status || '').toLowerCase())).length },
+    { id: 'qr', label: 'QR', icon: ShieldCheck },
+    { id: 'analytics', label: 'AI analityka', icon: Stethoscope },
+  ]).filter(module => canViewStaffModule(staffAccess, module.id)), [appointments.length, patientConsents.length, patients.length, portalRequests, staffAccess])
+  const staffStats = useMemo(() => {
+    const unpaidValue = appointments.reduce((sum: number, appointment: any) => {
+      const price = Number(appointment.price_amount || 0)
+      const paid = Number(appointment.paid_amount || 0)
+      return sum + Math.max(price - paid, 0)
+    }, 0)
+    const pendingDocs = patientConsents.filter((consent: any) => String(consent.status || '').toLowerCase() !== 'signed').length
+    const openMessages = portalRequests.filter((item: any) => ['new', 'in_progress'].includes(String(item.status || '').toLowerCase())).length
+    const todayKey = new Date().toISOString().slice(0, 10)
+    const todayAppointments = appointments.filter((appointment: any) => String(appointment.appointment_date || '').slice(0, 10) === todayKey).length
+    return { unpaidValue, pendingDocs, openMessages, todayAppointments }
+  }, [appointments, patientConsents, portalRequests])
   const currentDiet = attendeeUnit?.diet || application?.diet || ''
   const currentAllergies = attendeeUnit?.allergies || application?.allergies || ''
   const isChildUnit = attendeeUnit?.unit_type === 'child' || attendeeUnit?.age_group === 'child'
@@ -165,6 +230,60 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
       qrInputRef.current?.focus()
     }
   }, [loading, staffAccess])
+
+  useEffect(() => {
+    if (!staffAccess) return
+    const firstModule = staffModules[0]?.id || 'overview'
+    if (!staffModules.some(module => module.id === activeStaffModule)) {
+      setActiveStaffModule(firstModule)
+    }
+  }, [activeStaffModule, staffAccess, staffModules])
+
+  useEffect(() => {
+    if (!staffAccess?.event_id) return
+
+    const loadStaffWorkspace = async () => {
+      setWorkspaceLoading(true)
+      const [
+        patientsRes,
+        appointmentsRes,
+        consentsRes,
+        requestsRes,
+        messagesRes
+      ] = await Promise.all([
+        canViewStaffModule(staffAccess, 'patients')
+          ? supabase.from('patients').select('*').order('created_at', { ascending: false }).limit(200)
+          : Promise.resolve({ data: [], error: null } as any),
+        canViewStaffModule(staffAccess, 'appointments')
+          ? supabase.from('appointments').select('*').eq('event_id', staffAccess.event_id).order('appointment_date', { ascending: true }).limit(200)
+          : Promise.resolve({ data: [], error: null } as any),
+        canViewStaffModule(staffAccess, 'documents')
+          ? supabase.from('patient_consents').select('*, medical_consent_templates(title, document_type)').eq('event_id', staffAccess.event_id).order('created_at', { ascending: false }).limit(200)
+          : Promise.resolve({ data: [], error: null } as any),
+        canViewStaffModule(staffAccess, 'messages')
+          ? supabase.from('patient_portal_requests').select('*').eq('event_id', staffAccess.event_id).order('created_at', { ascending: false }).limit(100)
+          : Promise.resolve({ data: [], error: null } as any),
+        canViewStaffModule(staffAccess, 'messages')
+          ? supabase.from('patient_portal_messages').select('*').order('created_at', { ascending: true }).limit(200)
+          : Promise.resolve({ data: [], error: null } as any),
+      ])
+
+      if (patientsRes.error) console.warn('Staff patients load error:', patientsRes.error.message)
+      if (appointmentsRes.error) console.warn('Staff appointments load error:', appointmentsRes.error.message)
+      if (consentsRes.error) console.warn('Staff consents load error:', consentsRes.error.message)
+      if (requestsRes.error) console.warn('Staff requests load error:', requestsRes.error.message)
+      if (messagesRes.error) console.warn('Staff messages load error:', messagesRes.error.message)
+
+      setPatients(patientsRes.data || [])
+      setAppointments(appointmentsRes.data || [])
+      setPatientConsents(consentsRes.data || [])
+      setPortalRequests(requestsRes.data || [])
+      setPortalMessages(messagesRes.data || [])
+      setWorkspaceLoading(false)
+    }
+
+    loadStaffWorkspace()
+  }, [staffAccess])
 
   const logActionError = (action: string, error: any, payload: any) => {
     console.error('Staff pass action error:', {
@@ -728,6 +847,160 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
           </div>
         </header>
 
+        <nav className="rounded-[28px] border border-white/10 bg-white/[0.06] p-2 shadow-xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
+            {staffModules.map((module: any) => (
+              <button
+                key={module.id}
+                type="button"
+                onClick={() => setActiveStaffModule(module.id)}
+                className={`flex items-center justify-between gap-2 rounded-2xl px-3 py-3 text-left transition-all ${
+                  activeStaffModule === module.id
+                    ? 'bg-[#e8ce7a] text-[#061216] shadow-lg'
+                    : 'bg-black/20 text-white hover:bg-white/10'
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <module.icon size={16} className="shrink-0" />
+                  <span className="truncate text-[10px] font-black uppercase tracking-wider">{module.label}</span>
+                </span>
+                {typeof module.count === 'number' && (
+                  <span className={`shrink-0 rounded-lg px-1.5 py-0.5 text-[9px] font-black ${activeStaffModule === module.id ? 'bg-[#061216]/10' : 'bg-white/10'}`}>
+                    {module.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {activeStaffModule !== 'qr' && (
+          <section className="space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { label: 'Dzisiejsze wizyty', value: staffStats.todayAppointments, icon: CalendarPlus },
+                { label: 'Dokumenty do podpisu', value: staffStats.pendingDocs, icon: FileSignature },
+                { label: 'Otwarte wiadomości', value: staffStats.openMessages, icon: MessageSquare },
+                { label: 'Do pobrania', value: formatMoney(staffStats.unpaidValue), icon: Shield },
+              ].map((item: any) => (
+                <div key={item.label} className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{item.label}</p>
+                    <item.icon size={16} className="text-[#e8ce7a]" />
+                  </div>
+                  <p className="mt-3 text-xl md:text-2xl font-black tabular-nums">{item.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {workspaceLoading && (
+              <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 text-sm font-bold text-white/55">
+                Ładowanie danych panelu personelu...
+              </div>
+            )}
+
+            {activeStaffModule === 'overview' && (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <StaffPanel title="Najbliższe wizyty" icon={<CalendarPlus size={18} />}>
+                  {appointments.slice(0, 6).length === 0 ? <EmptyState text="Brak zaplanowanych wizyt w widoku tej roli." /> : appointments.slice(0, 6).map((appointment: any) => {
+                    const patient = patientById.get(appointment.patient_id)
+                    return (
+                      <ItemRow
+                        key={appointment.id}
+                        title={appointment.treatment_name || appointment.title || 'Wizyta'}
+                        subtitle={`${patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : 'Pacjent'} | ${formatDateTime(appointment.appointment_date)}`}
+                        status={appointment.payment_status === 'paid' ? 'Opłacona' : 'Do rozliczenia'}
+                      />
+                    )
+                  })}
+                </StaffPanel>
+                <StaffPanel title="Sprawy od pacjentów" icon={<MessageSquare size={18} />}>
+                  {portalRequests.slice(0, 6).length === 0 ? <EmptyState text="Brak nowych wiadomości pacjentów." /> : portalRequests.slice(0, 6).map((request: any) => (
+                    <ItemRow
+                      key={request.id}
+                      title={request.subject || 'Wiadomość pacjenta'}
+                      subtitle={request.message || request.request_type || 'Brak treści'}
+                      status={request.status || 'new'}
+                    />
+                  ))}
+                </StaffPanel>
+              </div>
+            )}
+
+            {activeStaffModule === 'patients' && (
+              <StaffPanel title="Pacjenci" icon={<Users size={18} />}>
+                {patients.length === 0 ? <EmptyState text="Brak pacjentów dostępnych dla tej roli." /> : patients.slice(0, 30).map((patient: any) => (
+                  <ItemRow
+                    key={patient.id}
+                    title={`${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Pacjent'}
+                    subtitle={[patient.pesel && `PESEL: ${patient.pesel}`, patient.phone && `Tel: ${patient.phone}`, patient.email].filter(Boolean).join(' | ')}
+                    status={patient.status || 'aktywny'}
+                  />
+                ))}
+              </StaffPanel>
+            )}
+
+            {activeStaffModule === 'appointments' && (
+              <StaffPanel title="Wizyty i zabiegi" icon={<CalendarPlus size={18} />}>
+                {appointments.length === 0 ? <EmptyState text="Brak wizyt w widoku tej roli." /> : appointments.slice(0, 40).map((appointment: any) => {
+                  const patient = patientById.get(appointment.patient_id)
+                  return (
+                    <ItemRow
+                      key={appointment.id}
+                      title={appointment.treatment_name || appointment.title || 'Wizyta'}
+                      subtitle={`${patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : 'Pacjent'} | ${formatDateTime(appointment.appointment_date)} | ${formatMoney(appointment.price_amount)}`}
+                      status={appointment.status || appointment.payment_status || 'zaplanowana'}
+                    />
+                  )
+                })}
+              </StaffPanel>
+            )}
+
+            {activeStaffModule === 'documents' && (
+              <StaffPanel title="Dokumenty pacjentów" icon={<FileSignature size={18} />}>
+                {patientConsents.length === 0 ? <EmptyState text="Brak dokumentów w widoku tej roli." /> : patientConsents.slice(0, 40).map((consent: any) => {
+                  const patient = patientById.get(consent.patient_id)
+                  const template = consent.medical_consent_templates
+                  return (
+                    <ItemRow
+                      key={consent.id}
+                      title={template?.title || consent.title || 'Dokument pacjenta'}
+                      subtitle={`${patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : 'Pacjent'} | ${template?.document_type || 'dokument'}`}
+                      status={String(consent.status || '').toLowerCase() === 'signed' ? 'Podpisany' : 'Do podpisu'}
+                    />
+                  )
+                })}
+              </StaffPanel>
+            )}
+
+            {activeStaffModule === 'messages' && (
+              <StaffPanel title="Wiadomości z portalu pacjenta" icon={<MessageSquare size={18} />}>
+                {portalRequests.length === 0 ? <EmptyState text="Brak wiadomości pacjentów w tym widoku." /> : portalRequests.slice(0, 40).map((request: any) => {
+                  const patient = patientById.get(request.patient_id)
+                  const relatedMessages = portalMessages.filter((message: any) => message.request_id === request.id)
+                  return (
+                    <ItemRow
+                      key={request.id}
+                      title={request.subject || 'Wiadomość pacjenta'}
+                      subtitle={`${patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : 'Pacjent'} | ${request.message || 'Brak treści'} | ${relatedMessages.length} odp.`}
+                      status={request.status || 'new'}
+                    />
+                  )
+                })}
+              </StaffPanel>
+            )}
+
+            {activeStaffModule === 'analytics' && (
+              <StaffPanel title="Podgląd zarządczy" icon={<BarChart3 size={18} />}>
+                <ItemRow title="Pacjenci w bazie" subtitle="Widok dostępny tylko dla managera albo osoby z nadanym dostępem." status={`${patients.length}`} />
+                <ItemRow title="Wartość do pobrania" subtitle="Suma nierozliczonych wizyt widocznych w panelu." status={formatMoney(staffStats.unpaidValue)} />
+                <ItemRow title="Otwarte sprawy pacjentów" subtitle="Wiadomości i zgłoszenia wymagające reakcji." status={`${staffStats.openMessages}`} />
+              </StaffPanel>
+            )}
+          </section>
+        )}
+
+        {activeStaffModule === 'qr' && (
         <section className="rounded-[32px] border border-white/10 bg-white/[0.06] p-5 md:p-6">
           <div className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/20 p-2">
             {[
@@ -838,8 +1111,9 @@ export default function StaffPassPage({ params }: { params: StaffPassParams }) {
           {message && <p className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">{message}</p>}
           {copyMessage && <p className="mt-4 rounded-2xl border border-blue-400/30 bg-blue-500/10 p-3 text-sm text-blue-100">{copyMessage}</p>}
         </section>
+        )}
 
-        {attendeeUnit && (
+        {activeStaffModule === 'qr' && attendeeUnit && (
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 rounded-[32px] border border-white/10 bg-white/[0.06] p-5 md:p-6 space-y-4">
               <div className="flex items-start justify-between gap-3">
@@ -1010,6 +1284,21 @@ const InfoBox = ({ label, value }: { label: string; value: string }) => (
     <p className="text-[9px] font-black uppercase tracking-widest text-white/35">{label}</p>
     <p className="mt-1 text-sm font-black">{value}</p>
   </div>
+)
+
+const StaffPanel = ({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) => (
+  <section className="rounded-[32px] border border-white/10 bg-white/[0.06] p-5 md:p-6">
+    <div className="mb-5 flex items-center justify-between gap-4">
+      <h3 className="flex min-w-0 items-center gap-2 text-lg font-black text-white">
+        <span className="text-[#e8ce7a]">{icon}</span>
+        <span className="truncate">{title}</span>
+      </h3>
+      <span className="rounded-xl border border-white/10 bg-black/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">
+        ClinicOps
+      </span>
+    </div>
+    <div className="space-y-3">{children}</div>
+  </section>
 )
 
 const ActionButton = ({ label, icon, disabled, onClick }: { label: string; icon: ReactNode; disabled?: boolean; onClick: () => void }) => (
