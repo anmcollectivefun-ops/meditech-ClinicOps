@@ -699,7 +699,15 @@ const [isEditingContractor, setIsEditingContractor] = useState(false)
 const [contractorForm, setContractorForm] = useState<any>({})
 const [filterTag, setFilterTag] = useState<string | null>(null)
 const [searchContractor, setSearchContractor] = useState('')
-
+const [journeyPatientId, setJourneyPatientId] = useState('')
+const [journeyTaskForm, setJourneyTaskForm] = useState<any>({
+  title: '',
+  notes: '',
+  priority: 'normal',
+  due_date: '',
+  assigned_to: '',
+  journey_action: 'followup'
+})
 const [expandedContractorId, setExpandedContractorId] = useState<string | null>(null);
 // ==========================================
   // STANY DOTYCZĄCE TRANSPORTU
@@ -11628,639 +11636,566 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   </div>
 )}
 {/* PROWADZENIE */}
-{activeTab === 'checklista' && (
-  <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
+{activeTab === 'checklista' && (() => {
+  const selectedJourneyPatient = patients.find((p: any) => p.id === journeyPatientId)
 
-    {/* HEADER */}
-    <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
-      <div className="min-w-0">
-        <h3 className={`font-black flex items-center gap-3 text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <ClipboardList size={22} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-          Zadania recepcji i opiekuna pacjenta
-        </h3>
-        <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-          Twórz zadania dla recepcji, lekarza, managera i opiekuna pacjenta, z priorytetami oraz terminami.
-        </p>
-      </div>
+  const patientAppointments = journeyPatientId
+    ? appointmentsList.filter((a: any) => a.patient_id === journeyPatientId)
+    : []
 
-      <div className="flex gap-2 shrink-0">
-        <HelpButton sectionKey="operations" />
-        <button
-          onClick={() => {
-            setChecklistGroupForm({
-              title: '',
-              description: '',
-              category: 'general',
-              color: '#475569', // Default neutralny kolor
-              is_open: true,
-              display_order: checklistGroups.length
-            })
-            setIsEditingChecklistGroup(false)
-            setIsChecklistGroupModalOpen(true)
-          }}
-          className={`px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
+  const patientConsents = journeyPatientId
+    ? patientConsentsByPatientId[journeyPatientId] || []
+    : []
+
+  const patientPortalMessages = journeyPatientId
+    ? personalAnnouncements.filter((a: any) => a.patient_id === journeyPatientId)
+    : []
+
+  const patientTasks = journeyPatientId
+    ? checklistItems.filter((item: any) => item.patient_id === journeyPatientId)
+    : checklistItems.filter((item: any) => item.journey_action)
+
+  const patientSignedDocs = patientConsents.filter((c: any) => isConsentConfirmed(c))
+  const patientPendingDocs = patientConsents.filter((c: any) => !isConsentConfirmed(c))
+
+  const latestAppointment = patientAppointments
+    .slice()
+    .sort((a: any, b: any) => new Date(b.appointment_date || 0).getTime() - new Date(a.appointment_date || 0).getTime())[0]
+
+  const latestTreatment = latestAppointment
+    ? treatments.find((t: any) => t.id === latestAppointment.treatment_id)
+    : null
+
+  const latestDoctor = latestAppointment
+    ? doctorsList.find((d: any) => d.id === latestAppointment.doctor_id)
+    : null
+
+  const openTasks = patientTasks.filter((t: any) => !t.is_done)
+  const doneTasks = patientTasks.filter((t: any) => t.is_done)
+
+  const journeyStages = [
+    {
+      key: 'consultation',
+      label: 'Konsultacja',
+      desc: 'Rozpoznanie potrzeby pacjenta, kwalifikacja i plan.',
+      done: patientAppointments.length > 0,
+      icon: Stethoscope
+    },
+    {
+      key: 'documents',
+      label: 'Dokumenty',
+      desc: 'Wywiady, zgody, RODO i dokumentacja zabiegowa.',
+      done: patientConsents.length > 0 && patientPendingDocs.length === 0,
+      icon: FileSignature
+    },
+    {
+      key: 'treatment',
+      label: 'Zabieg',
+      desc: 'Wykonanie procedury i przypisanie lekarza.',
+      done: patientAppointments.some((a: any) => a.status === 'completed'),
+      icon: Activity
+    },
+    {
+      key: 'aftercare',
+      label: 'Zalecenia',
+      desc: 'Komunikat po zabiegu i instrukcje dla pacjenta.',
+      done: patientPortalMessages.length > 0,
+      icon: ShieldCheck
+    },
+    {
+      key: 'followup',
+      label: 'Follow-up',
+      desc: 'Kontrola efektu, kolejna wizyta albo seria.',
+      done: patientTasks.some((t: any) => t.journey_action === 'followup' && t.is_done),
+      icon: CheckCircle2
+    }
+  ]
+
+  const journeyProgress = Math.round(
+    (journeyStages.filter(stage => stage.done).length / journeyStages.length) * 100
+  )
+
+  const createJourneyTask = async () => {
+    if (!journeyPatientId) {
+      showNotification('Wybierz pacjenta do ścieżki.', 'error')
+      return
+    }
+
+    if (!journeyTaskForm.title) {
+      showNotification('Wpisz nazwę kroku / zadania.', 'error')
+      return
+    }
+
+    setUpdating(true)
+
+    try {
+      let groupId = checklistGroups.find((g: any) => g.patient_id === journeyPatientId)?.id
+
+      if (!groupId) {
+        const { data: groupData, error: groupError } = await supabase
+          .from('event_checklist_groups')
+          .insert([{
+            event_id: id,
+            patient_id: journeyPatientId,
+            journey_type: 'patient_path',
+            stage_key: 'patient_journey',
+            title: `Ścieżka pacjenta — ${selectedJourneyPatient?.first_name || ''} ${selectedJourneyPatient?.last_name || ''}`.trim(),
+            description: 'Cyfrowe prowadzenie pacjenta przez procedury, dokumenty, zabiegi i follow-up.',
+            category: 'patient_path',
+            color: '#06b6d4',
+            is_open: true,
+            display_order: checklistGroups.length
+          }])
+          .select()
+          .single()
+
+        if (groupError) throw groupError
+        groupId = groupData.id
+      }
+
+      const { error } = await supabase
+        .from('event_checklist_items')
+        .insert([{
+          event_id: id,
+          group_id: groupId,
+          patient_id: journeyPatientId,
+          appointment_id: latestAppointment?.id || null,
+          treatment_id: latestAppointment?.treatment_id || latestTreatment?.id || null,
+          doctor_id: latestAppointment?.doctor_id || null,
+          journey_action: journeyTaskForm.journey_action || 'followup',
+          title: journeyTaskForm.title,
+          notes: journeyTaskForm.notes || null,
+          priority: journeyTaskForm.priority || 'normal',
+          due_date: journeyTaskForm.due_date || null,
+          assigned_to: journeyTaskForm.assigned_to || null,
+          is_done: false,
+          status: 'todo',
+          display_order: patientTasks.length
+        }])
+
+      if (error) throw error
+
+      await loadEventData()
+
+      setJourneyTaskForm({
+        title: '',
+        notes: '',
+        priority: 'normal',
+        due_date: '',
+        assigned_to: '',
+        journey_action: 'followup'
+      })
+
+      showNotification('Krok ścieżki pacjenta zapisany.', 'success')
+    } catch (err: any) {
+      showNotification('Błąd zapisu ścieżki pacjenta: ' + err.message, 'error')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
+
+      <section className={`relative overflow-hidden rounded-[24px] md:rounded-[32px] border shadow-lg p-6 md:p-8 ${
+        isDarkMode ? 'bg-gradient-to-br from-slate-900 to-[#0f172a] border-slate-700' : 'bg-gradient-to-br from-slate-900 to-[#1e293b] border-slate-800'
+      }`}>
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-fuchsia-500/10 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="max-w-4xl">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
+              <ClipboardList size={14} />
+              Patient Journey
+            </span>
+
+            <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+              Cyfrowe zarządzanie ścieżką pacjenta
+            </h2>
+
+            <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
+              Jeden widok prowadzący pacjenta przez konsultację, dokumenty, zabieg, zalecenia, kontrolę i kolejne rekomendowane procedury.
+            </p>
+          </div>
+
+          <HelpButton sectionKey="patient_journey" />
+        </div>
+      </section>
+
+      <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+        isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <label className={`text-[10px] font-black uppercase tracking-widest mb-2 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+          Wybierz pacjenta
+        </label>
+
+        <select
+          value={journeyPatientId}
+          onChange={e => setJourneyPatientId(e.target.value)}
+          className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none ${
+            isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+          }`}
         >
-          <Plus size={14} /> Dodaj zadania
-        </button>
+          <option value="">-- wybierz pacjenta --</option>
+          {patients.map((p: any) => (
+            <option key={p.id} value={p.id}>
+              {p.first_name} {p.last_name} {p.pesel ? `(${p.pesel})` : ''}
+            </option>
+          ))}
+        </select>
       </div>
-    </div>
 
-    {/* SMART HINT (Zamiast "Atrapy") */}
-    <div className={`rounded-[24px] border p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-colors ${isDarkMode ? 'bg-gradient-to-r from-indigo-950/40 to-[#0f172a] border-indigo-900/50' : 'bg-gradient-to-r from-indigo-50 to-white border-indigo-100'}`}>
-      <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-2xl shrink-0 ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
-          <Sparkles size={20} />
-        </div>
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-            Asystent Organizacyjny
-          </p>
-          <h4 className={`text-sm md:text-base font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Stan zadań operacyjnych
-          </h4>
-          <p className={`text-xs mt-1.5 font-medium leading-relaxed max-w-3xl ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Obecnie masz <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{checklistItems.filter((item: any) => !item.is_done).length} zadań otwartych</strong>.
-            W tym <strong className={isDarkMode ? 'text-rose-400' : 'text-rose-600'}>{checklistItems.filter((item: any) => String(item.priority || '').toLowerCase() === 'high' && !item.is_done).length}</strong> oznaczonych jako pilne (priorytet wysoki).
-            System AI z czasem pomoże generować powtarzalne listy np. dla dostawców.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    {/* STATYSTYKI */}
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-      {(() => {
-        const total = checklistItems.length
-        const done = checklistItems.filter(i => i.is_done).length
-        const percent = total ? Math.round((done / total) * 100) : 0
-        const estimatedCost = checklistItems.reduce((sum, item) => sum + Number(item.estimated_cost || 0), 0)
-
-        return (
-          <>
-            <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Aktywne Listy</p>
-                <ClipboardList size={14} className={isDarkMode ? 'text-slate-400' : 'text-slate-500'} />
+      {selectedJourneyPatient ? (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {[
+              { label: 'Postęp ścieżki', value: `${journeyProgress}%`, icon: CheckCircle2, color: isDarkMode ? 'text-emerald-400' : 'text-emerald-600' },
+              { label: 'Wizyty', value: patientAppointments.length, icon: CalendarPlus, color: isDarkMode ? 'text-cyan-400' : 'text-cyan-600' },
+              { label: 'Dokumenty do podpisu', value: patientPendingDocs.length, icon: FileSignature, color: isDarkMode ? 'text-amber-400' : 'text-amber-600' },
+              { label: 'Aktywne kroki', value: openTasks.length, icon: ClipboardList, color: isDarkMode ? 'text-fuchsia-400' : 'text-fuchsia-600' }
+            ].map((item: any) => (
+              <div key={item.label} className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border p-4 shadow-sm min-h-[110px] ${
+                isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {item.label}
+                  </p>
+                  <item.icon size={14} className={item.color} />
+                </div>
+                <p className={`mt-3 text-2xl font-black tabular-nums ${item.color}`}>{item.value}</p>
               </div>
-              <p className={`mt-3 text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{checklistGroups.length}</p>
-            </div>
+            ))}
+          </div>
 
-            <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Wszystkie Zadania</p>
-                <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{total - done} Otwarte</div>
-              </div>
-              <p className={`mt-3 text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{total}</p>
-            </div>
-
-            <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Progres Zadań</p>
-                <CheckCircle2 size={14} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
-              </div>
-              <p className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{percent}%</p>
-              <div className={`w-full h-1.5 rounded-full mt-2 overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                <div className={`h-full transition-all duration-1000 ${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-500'}`} style={{ width: `${percent}%` }} />
-              </div>
-            </div>
-
-            <div className={`relative overflow-hidden rounded-[20px] border p-4 shadow-sm transition-colors duration-200 flex flex-col justify-between min-h-[110px] ${isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'}`}>
-              <div className="flex items-start justify-between">
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-tight ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Szacowany Koszt</p>
-                <Wallet size={14} className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'} />
-              </div>
-              <p className={`mt-3 text-xl md:text-2xl font-black tabular-nums tracking-tight ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                {estimatedCost.toLocaleString('pl-PL')} <span className="text-sm">zł</span>
-              </p>
-            </div>
-          </>
-        )
-      })()}
-    </div>
-
-    {/* LISTY / KAFELKI */}
-    {checklistGroups.length === 0 ? (
-      <div className={`rounded-[32px] border shadow-sm p-16 text-center ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
-        <ClipboardList size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-        <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Brak list operacyjnych</p>
-        <p className={`text-sm mt-2 font-medium ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Dodaj pierwszą listę, np. „Zakupy przed eventem” lub „Lista rzeczy do spakowania”.
-        </p>
-      </div>
-    ) : (
-      <div className="space-y-5">
-        {checklistGroups.map(group => {
-          const items = checklistItems.filter(item => item.group_id === group.id)
-          const done = items.filter(item => item.is_done).length
-          const percent = items.length ? Math.round((done / items.length) * 100) : 0
-
-          return (
-            <div
-              key={group.id}
-              className={`rounded-[24px] md:rounded-[28px] border shadow-sm overflow-hidden transition-all duration-300 ${isDarkMode ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-slate-300'}`}
-            >
-              {/* NAGŁÓWEK KAFELKA */}
-              <div
-                className={`p-5 cursor-pointer transition-colors ${isDarkMode ? 'hover:bg-slate-900/80 border-b border-slate-800' : 'hover:bg-slate-50 border-b border-slate-100'}`}
-                onClick={() => toggleChecklistGroupOpen(group)}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4 min-w-0 flex-1">
-                    <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-sm shrink-0"
-                      style={{ backgroundColor: group.color || '#475569' }}
-                    >
-                      <ClipboardList size={20} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className={`font-black text-base truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                          {group.title}
-                        </h4>
-
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          {items.length} zadań
-                        </span>
-
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${percent === 100 ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200') : (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200')}`}>
-                          {percent}%
-                        </span>
-                      </div>
-
-                      {group.description && (
-                        <p className={`text-xs font-medium mt-1 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {group.description}
-                        </p>
-                      )}
-
-                      <div className={`w-full max-w-sm h-1.5 rounded-full mt-3 overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                        <div
-                          className="h-full transition-all duration-1000"
-                          style={{
-                            width: `${percent}%`,
-                            backgroundColor: group.color || '#475569'
-                          }}
-                        />
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 space-y-6">
+              <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+                isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                      Pacjent
+                    </p>
+                    <h3 className={`mt-1 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {selectedJourneyPatient.first_name} {selectedJourneyPatient.last_name}
+                    </h3>
+                    <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      PESEL: {selectedJourneyPatient.pesel || 'brak'} • Tel: {selectedJourneyPatient.phone || 'brak'} • {selectedJourneyPatient.email || 'brak e-mail'}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setActiveChecklistGroupId(group.id)
-                        setChecklistItemForm({
-                          group_id: group.id,
-                          title: '',
-                          status: 'todo',
-                          priority: 'normal',
-                          is_done: false,
-                          estimated_cost: 0,
-                          display_order: items.length
-                        })
-                        setIsEditingChecklistItem(false)
-                        setIsChecklistItemModalOpen(true)
-                      }}
-                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors ${isDarkMode ? 'bg-[#e8ce7a] text-slate-900 hover:bg-[#d8bd65]' : 'bg-slate-900 text-[#e8ce7a] hover:bg-black'}`}
-                    >
-                      <Plus size={12} /> Zadanie
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setChecklistGroupForm(group)
-                        setIsEditingChecklistGroup(true)
-                        setIsChecklistGroupModalOpen(true)
-                      }}
-                      className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-slate-800 text-blue-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                    >
-                      <Edit3 size={16} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteChecklistGroup(group.id)
-                      }}
-                      className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-
-                    <div className={`ml-2 p-2 rounded-full transition-transform duration-300 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} ${group.is_open ? 'rotate-180' : ''}`}>
-                      <ChevronDown size={18} />
-                    </div>
+                  <div className={`rounded-2xl border px-4 py-3 ${
+                    patientPendingDocs.length > 0
+                      ? isDarkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'
+                      : isDarkMode ? 'bg-emerald-900/20 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  }`}>
+                    <p className="text-[10px] font-black uppercase tracking-widest">
+                      {patientPendingDocs.length > 0 ? 'Wymaga dokumentów' : 'Dokumenty OK'}
+                    </p>
                   </div>
+                </div>
+
+                <div className={`mt-6 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                  <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${journeyProgress}%` }} />
                 </div>
               </div>
 
-              {/* ROZWIJANA ZAWARTOŚĆ LISTY */}
-              {group.is_open && (
-                <div className={`p-4 md:p-5 ${isDarkMode ? 'bg-slate-900/40' : 'bg-slate-50/50'}`}>
-                  {items.length === 0 ? (
-                    <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                      Brak zadań w tej liście. Dodaj pierwszy podpunkt.
+              <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+                isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <h4 className={`font-black text-lg mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Etapy ścieżki pacjenta
+                </h4>
+
+                <div className="space-y-4">
+                  {journeyStages.map((stage, index) => (
+                    <div key={stage.key} className={`rounded-2xl border p-4 flex items-start gap-4 ${
+                      stage.done
+                        ? isDarkMode ? 'bg-emerald-900/10 border-emerald-900/40' : 'bg-emerald-50 border-emerald-200'
+                        : isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                        stage.done ? 'bg-emerald-500 text-white' : isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-500'
+                      }`}>
+                        <stage.icon size={18} />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                            Krok {index + 1}
+                          </span>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                            stage.done ? 'bg-emerald-500 text-white' : isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            {stage.done ? 'Zrobione' : 'Do wykonania'}
+                          </span>
+                        </div>
+
+                        <h5 className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          {stage.label}
+                        </h5>
+
+                        <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {stage.desc}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {items.map(item => (
-                        <div
-                          key={item.id}
-                          className={`border rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
-                            item.is_done
-                              ? (isDarkMode ? 'bg-slate-900/20 border-emerald-900/30 opacity-70' : 'bg-white border-emerald-100 opacity-70')
-                              : (isDarkMode ? 'bg-[#1e293b] border-slate-700 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm')
-                          }`}
-                        >
-                          <div className="flex items-start gap-4 min-w-0">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleChecklistItem(item)}
-                              className={`w-6 h-6 mt-0.5 rounded flex items-center justify-center shrink-0 border-2 transition-colors ${
-                                item.is_done
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                                  : (isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-slate-50 border-slate-300')
-                              }`}
-                            >
-                              {item.is_done && <CheckCircle2 size={16} />}
-                            </button>
+                  ))}
+                </div>
+              </div>
 
-                            <div className="min-w-0">
-                              <p
-                                className={`font-black text-sm transition-colors ${
-                                  item.is_done
-                                    ? (isDarkMode ? 'text-slate-500 line-through' : 'text-slate-400 line-through')
-                                    : (isDarkMode ? 'text-white' : 'text-slate-900')
-                                }`}
-                              >
-                                {item.title}
+              <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+                isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <h4 className={`font-black text-lg mb-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Kroki i zadania opiekuna pacjenta
+                </h4>
+
+                {patientTasks.length === 0 ? (
+                  <div className={`p-8 text-center text-xs font-bold border-2 border-dashed rounded-2xl ${
+                    isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400'
+                  }`}>
+                    Brak kroków ścieżki. Dodaj pierwszy follow-up lub rekomendację.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {patientTasks.map((item: any) => (
+                      <div key={item.id} className={`rounded-2xl border p-4 flex flex-col md:flex-row md:items-start justify-between gap-4 ${
+                        item.is_done
+                          ? isDarkMode ? 'bg-slate-900/30 border-emerald-900/30 opacity-70' : 'bg-slate-50 border-emerald-100 opacity-70'
+                          : isDarkMode ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200'
+                      }`}>
+                        <div className="flex items-start gap-4">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleChecklistItem(item)}
+                            className={`w-6 h-6 mt-0.5 rounded flex items-center justify-center shrink-0 border-2 ${
+                              item.is_done ? 'bg-emerald-500 border-emerald-500 text-white' : isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-slate-50 border-slate-300'
+                            }`}
+                          >
+                            {item.is_done && <CheckCircle2 size={16} />}
+                          </button>
+
+                          <div>
+                            <p className={`font-black text-sm ${item.is_done ? 'line-through opacity-60' : isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                              {item.title}
+                            </p>
+
+                            {item.notes && (
+                              <p className={`mt-1 text-xs leading-relaxed whitespace-pre-line ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                {item.notes}
                               </p>
+                            )}
 
-                              {item.notes && (
-                                <p className={`text-xs mt-1.5 whitespace-pre-line ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                  {item.notes}
-                                </p>
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {item.journey_action && (
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                  isDarkMode ? 'bg-cyan-900/20 text-cyan-300 border-cyan-800/50' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                                }`}>
+                                  {item.journey_action}
+                                </span>
                               )}
 
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                {item.priority && (
-                                  <span
-                                    className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                                      item.priority === 'high'
-                                        ? (isDarkMode ? 'bg-rose-900/20 text-rose-400 border-rose-800/50' : 'bg-rose-50 text-rose-700 border-rose-200')
-                                        : item.priority === 'low'
-                                        ? (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200')
-                                        : (isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200')
-                                    }`}
-                                  >
-                                    {item.priority === 'high'
-                                      ? 'Pilne'
-                                      : item.priority === 'low'
-                                      ? 'Niskie'
-                                      : 'Normalne'}
-                                  </span>
-                                )}
+                              {item.priority && (
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                  item.priority === 'high'
+                                    ? isDarkMode ? 'bg-rose-900/20 text-rose-400 border-rose-800/50' : 'bg-rose-50 text-rose-700 border-rose-200'
+                                    : isDarkMode ? 'bg-amber-900/20 text-amber-400 border-amber-800/50' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
+                                  {item.priority === 'high' ? 'Pilne' : 'Normalne'}
+                                </span>
+                              )}
 
-                                {item.due_date && (
-                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1 ${isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                                    <Clock size={10} /> {item.due_date}
-                                  </span>
-                                )}
-
-                                {item.assigned_to && (
-                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1 ${isDarkMode ? 'bg-purple-900/20 text-purple-400 border-purple-800/50' : 'bg-purple-50 text-purple-700 border-purple-200'}`}>
-                                    <Users size={10} /> {item.assigned_to}
-                                  </span>
-                                )}
-
-                                {Number(item.estimated_cost || 0) > 0 && (
-                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1 ${isDarkMode ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                    <Wallet size={10} /> {Number(item.estimated_cost).toLocaleString('pl-PL')} zł
-                                  </span>
-                                )}
-                              </div>
+                              {item.due_date && (
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                  isDarkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200'
+                                }`}>
+                                  {item.due_date}
+                                </span>
+                              )}
                             </div>
                           </div>
-
-                          <div className="flex items-center justify-end gap-1.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setChecklistItemForm(item)
-                                setActiveChecklistGroupId(group.id)
-                                setIsEditingChecklistItem(true)
-                                setIsChecklistItemModalOpen(true)
-                              }}
-                              className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-blue-400' : 'hover:bg-slate-100 text-blue-600'}`}
-                            >
-                              <Edit3 size={14} />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteChecklistItem(item.id)}
-                              className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-600'}`}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    )}
 
-    {/* MODAL DODAWANIA GRUPY (LISTY) */}
-    {isChecklistGroupModalOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-        <div className={`rounded-[32px] max-w-xl w-full p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-            <div>
-              <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                <ClipboardList size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
-                {isEditingChecklistGroup ? 'Edytuj listę' : 'Nowa lista'}
-              </h3>
-              <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Stwórz katalog, np. „Lista zakupów” albo „Do zdzwonienia”.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setIsChecklistGroupModalOpen(false)}
-              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSaveChecklistGroup} className="space-y-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Tytuł listy *
-              </label>
-              <input
-                required
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={checklistGroupForm.title || ''}
-                onChange={e => setChecklistGroupForm({ ...checklistGroupForm, title: e.target.value })}
-                placeholder="np. Oświetlenie sceny - braki"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Krótki opis
-              </label>
-              <textarea
-                rows={2}
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={checklistGroupForm.description || ''}
-                onChange={e => setChecklistGroupForm({ ...checklistGroupForm, description: e.target.value })}
-                placeholder="Cel tej listy..."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Kategoria
-                </label>
-                <select
-                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                  value={checklistGroupForm.category || 'general'}
-                  onChange={e => setChecklistGroupForm({ ...checklistGroupForm, category: e.target.value })}
-                >
-                  <option value="general">Ogólne</option>
-                  <option value="shopping">Zakupy</option>
-                  <option value="calls">Do zdzwonienia</option>
-                  <option value="suppliers">Dostawcy</option>
-                  <option value="decor">Wystrój / dekoracje</option>
-                  <option value="catering">Catering</option>
-                  <option value="transport">Transport</option>
-                  <option value="documents">Dokumenty</option>
-                  <option value="event_day">Dzień eventu</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Kolor ikony
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={checklistGroupForm.color || '#475569'}
-                    onChange={e => setChecklistGroupForm({ ...checklistGroupForm, color: e.target.value })}
-                    className="w-12 h-12 rounded-xl cursor-pointer border-0 bg-transparent p-0"
-                  />
-                  <input
-                    className={`flex-1 border rounded-xl px-4 py-3 text-sm font-mono font-bold uppercase outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-slate-300 focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-800 focus:border-slate-900'}`}
-                    value={checklistGroupForm.color || '#475569'}
-                    onChange={e => setChecklistGroupForm({ ...checklistGroupForm, color: e.target.value })}
-                  />
-                </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteChecklistItem(item.id)}
+                          className={`p-2 rounded-xl transition-colors ${
+                            isDarkMode ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-600'
+                          }`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={updating}
-              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
-            >
-              {updating ? 'Zapisywanie...' : 'Zapisz listę'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )}
-
-    {/* MODAL ZADANIA */}
-    {isChecklistItemModalOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-        <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-            <div>
-              <h3 className={`text-xl font-black flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                {isEditingChecklistItem ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
-                {isEditingChecklistItem ? 'Edytuj zadanie' : 'Nowe zadanie'}
-              </h3>
-              <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Podpunkt z możliwością przypisania osoby i oszacowania kosztu.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setIsChecklistItemModalOpen(false)}
-              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSaveChecklistItem} className="space-y-5">
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Zadanie *
-              </label>
-              <input
-                required
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={checklistItemForm.title || ''}
-                onChange={e => setChecklistItemForm({ ...checklistItemForm, title: e.target.value })}
-                placeholder="np. Potwierdzić dostawę sceny"
-              />
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szczegóły / Notatka
-              </label>
-              <textarea
-                rows={2}
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={checklistItemForm.notes || ''}
-                onChange={e => setChecklistItemForm({ ...checklistItemForm, notes: e.target.value })}
-                placeholder="Dodatkowe informacje..."
-              />
-              <AiTextAssistButton
-                eventId={id}
-                sectionKey="checklist"
-                fieldKey="task_note"
-                currentValue={checklistItemForm.notes || ''}
-                placeholder="Napisz instrukcję dla podwykonawcy..."
-                onApply={(text) => setChecklistItemForm({ ...checklistItemForm, notes: text })}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Katalog / Lista
-                </label>
-                <select
-                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                  value={checklistItemForm.group_id || activeChecklistGroupId || ''}
-                  onChange={e => setChecklistItemForm({ ...checklistItemForm, group_id: e.target.value })}
-                >
-                  <option value="">Wybierz listę</option>
-                  {checklistGroups.map(group => (
-                    <option key={group.id} value={group.id}>
-                      {group.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Priorytet
-                </label>
-                <select
-                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                  value={checklistItemForm.priority || 'normal'}
-                  onChange={e => setChecklistItemForm({ ...checklistItemForm, priority: e.target.value })}
-                >
-                  <option value="low">Niski</option>
-                  <option value="normal">Normalny</option>
-                  <option value="high">Pilny</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Deadline (Termin)
-                </label>
-                <input
-                  type="date"
-                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
-                  value={checklistItemForm.due_date || ''}
-                  onChange={e => setChecklistItemForm({ ...checklistItemForm, due_date: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Odpowiedzialny (Kto)
-                </label>
-                <input
-                  className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                  value={checklistItemForm.assigned_to || ''}
-                  onChange={e => setChecklistItemForm({ ...checklistItemForm, assigned_to: e.target.value })}
-                  placeholder="np. Ania, Marek"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Szacowany koszt (dla ułatwienia budżetu)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
-                value={checklistItemForm.estimated_cost || ''}
-                onChange={e => setChecklistItemForm({ ...checklistItemForm, estimated_cost: Number(e.target.value) })}
-                placeholder="0.00"
-              />
-            </div>
-
-            <label className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all mt-2 ${
-              checklistItemForm.is_done
-                ? (isDarkMode ? 'border-emerald-500 bg-emerald-900/10' : 'border-emerald-500 bg-emerald-50')
-                : (isDarkMode ? 'border-slate-800 bg-slate-950/50 hover:bg-slate-900' : 'border-slate-200 bg-slate-50 hover:bg-white')
-            }`}>
-              <div>
-                <p className={`font-black text-sm ${checklistItemForm.is_done ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-700') : (isDarkMode ? 'text-white' : 'text-slate-900')}`}>
-                  Zadanie Wykonane
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={checklistItemForm.is_done || false}
-                onChange={e =>
-                  setChecklistItemForm({
-                    ...checklistItemForm,
-                    is_done: e.target.checked,
-                    status: e.target.checked ? 'done' : 'todo'
-                  })
-                }
-                className="sr-only"
-              />
-              <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                checklistItemForm.is_done
-                  ? 'bg-emerald-500 text-white'
-                  : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
+            <div className="xl:col-span-1 space-y-6">
+              <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+                isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
               }`}>
-                {checklistItemForm.is_done && <CheckCircle2 size={14} />}
-              </div>
-            </label>
+                <h4 className={`font-black text-lg mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Kontekst pacjenta
+                </h4>
 
-            <button
-              type="submit"
-              disabled={updating}
-              className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a] disabled:opacity-70' : 'bg-slate-900 hover:bg-black text-[#e8ce7a] disabled:opacity-70'}`}
-            >
-              {updating ? 'Zapisywanie...' : 'Zapisz zadanie'}
-            </button>
-          </form>
+                <div className="space-y-3 text-xs font-medium">
+                  <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Ostatnia wizyta
+                    </p>
+                    <p className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {latestAppointment ? (latestAppointment.treatment_name || latestTreatment?.name || 'Wizyta') : 'Brak wizyt'}
+                    </p>
+                    {latestAppointment && (
+                      <p className={`mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {new Date(latestAppointment.appointment_date).toLocaleString('pl-PL')}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Lekarz prowadzący
+                    </p>
+                    <p className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {latestDoctor ? `${latestDoctor.first_name} ${latestDoctor.last_name}` : 'Nieprzypisany'}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-2xl border p-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Portal pacjenta
+                    </p>
+                    <p className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      {patientPortalMessages.length} komunikatów
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`rounded-[28px] border p-5 md:p-6 shadow-sm ${
+                isDarkMode ? 'bg-gradient-to-br from-cyan-950/30 to-[#0f172a] border-cyan-900/40' : 'bg-gradient-to-br from-cyan-50 to-white border-cyan-100'
+              }`}>
+                <h4 className={`font-black text-lg mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <Sparkles size={18} className={isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} />
+                  AI opiekun pacjenta
+                </h4>
+
+                <div className="space-y-4">
+                  <input
+                    value={journeyTaskForm.title}
+                    onChange={e => setJourneyTaskForm({ ...journeyTaskForm, title: e.target.value })}
+                    placeholder="np. Zaproponować kontrolę po zabiegu"
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+
+                  <select
+                    value={journeyTaskForm.journey_action}
+                    onChange={e => setJourneyTaskForm({ ...journeyTaskForm, journey_action: e.target.value })}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                    }`}
+                  >
+                    <option value="send_documents">Wyślij dokumenty</option>
+                    <option value="send_aftercare">Wyślij zalecenia</option>
+                    <option value="portal_message">Komunikat do portalu</option>
+                    <option value="followup">Kontrola / follow-up</option>
+                    <option value="next_treatment">Rekomendacja kolejnego zabiegu</option>
+                  </select>
+
+                  <textarea
+                    rows={5}
+                    value={journeyTaskForm.notes}
+                    onChange={e => setJourneyTaskForm({ ...journeyTaskForm, notes: e.target.value })}
+                    placeholder="Notatka dla opiekuna pacjenta..."
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-medium outline-none resize-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+
+                  <AiTextAssistButton
+                    eventId={id}
+                    sectionKey="patient_journey"
+                    fieldKey="journey_note"
+                    currentValue={journeyTaskForm.notes || ''}
+                    relatedEntityId={journeyPatientId || latestTreatment?.id || null}
+                    relatedEntityTitle={`Ścieżka pacjenta: ${selectedJourneyPatient.first_name} ${selectedJourneyPatient.last_name}`}
+                    additionalInstruction={`Przygotuj profesjonalną podpowiedź dla opiekuna pacjenta w klinice medycyny estetycznej. Ostatni zabieg/wizyta: ${latestAppointment?.treatment_name || latestTreatment?.name || 'brak danych'}. Zaproponuj kolejny sensowny krok, follow-up lub delikatną rekomendację uzupełniającego zabiegu bez nachalnej sprzedaży i bez obiecywania efektów medycznych.`}
+                    mode="medical_document"
+                    documentType="patient_journey"
+                    label="AI zaproponuj kolejny krok"
+                    onApply={(text) => setJourneyTaskForm({ ...journeyTaskForm, notes: text })}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="date"
+                      value={journeyTaskForm.due_date || ''}
+                      onChange={e => setJourneyTaskForm({ ...journeyTaskForm, due_date: e.target.value })}
+                      className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                        isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                      }`}
+                    />
+
+                    <select
+                      value={journeyTaskForm.priority || 'normal'}
+                      onChange={e => setJourneyTaskForm({ ...journeyTaskForm, priority: e.target.value })}
+                      className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                        isDarkMode ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                      }`}
+                    >
+                      <option value="low">Niski</option>
+                      <option value="normal">Normalny</option>
+                      <option value="high">Pilny</option>
+                    </select>
+                  </div>
+
+                  <input
+                    value={journeyTaskForm.assigned_to || ''}
+                    onChange={e => setJourneyTaskForm({ ...journeyTaskForm, assigned_to: e.target.value })}
+                    placeholder="Odpowiedzialny, np. opiekun pacjenta / recepcja"
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none ${
+                      isDarkMode ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={createJourneyTask}
+                    disabled={updating}
+                    className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                      isDarkMode ? 'bg-cyan-300 text-[#0f172a]' : 'bg-slate-900 text-cyan-300'
+                    }`}
+                  >
+                    {updating ? 'Zapisywanie...' : 'Zapisz krok ścieżki'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className={`rounded-[32px] border shadow-sm p-16 text-center ${
+          isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'
+        }`}>
+          <ClipboardList size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
+          <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            Wybierz pacjenta, aby zobaczyć jego cyfrową ścieżkę.
+          </p>
         </div>
-      </div>
-    )}
-  </div>
-)}
+      )}
+    </div>
+  )
+})()}
 {/* REJESTRACJA */}
 {activeTab === 'bilety' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
