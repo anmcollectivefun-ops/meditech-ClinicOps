@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertTriangle,
@@ -19,6 +19,11 @@ import {
   Megaphone,
   User,
   X,
+  Moon,
+  Sun,
+  Copy,
+  Printer,
+  ExternalLink
 } from 'lucide-react'
 import { createClient } from '../../../lib/supabase'
 
@@ -31,19 +36,22 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-// Pomocnicza funkcja do kolorowania etykiet ogłoszeń
 const getCategoryBadge = (category: string) => {
   const cat = String(category).toLowerCase();
-  if (cat.includes('promocja')) return { label: 'Promocja', color: 'bg-rose-500/10 text-rose-300 border-rose-500/20' };
-  if (cat.includes('zalecenia')) return { label: 'Ważne zalecenia', color: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' };
-  if (cat.includes('faq') || cat.includes('ważne') || cat.includes('alert')) return { label: 'Ważna informacja', color: 'bg-amber-500/10 text-amber-300 border-amber-500/20' };
-  if (cat.includes('lekarze')) return { label: 'Nasz Zespół', color: 'bg-purple-500/10 text-purple-300 border-purple-500/20' };
-  return { label: 'Aktualność', color: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20' };
+  if (cat.includes('promocja')) return { label: 'Promocja', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20 dark:text-rose-300' };
+  if (cat.includes('zalecenia')) return { label: 'Ważne zalecenia', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-300' };
+  if (cat.includes('faq') || cat.includes('ważne') || cat.includes('alert')) return { label: 'Ważna informacja', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-300' };
+  if (cat.includes('lekarze')) return { label: 'Nasz Zespół', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-300' };
+  return { label: 'Aktualność', color: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 dark:text-cyan-300' };
 }
 
 export default function PatientPortal() {
   const supabase = useMemo(() => createClient(), [])
 
+  // STAN: Motyw
+  const [isDarkMode, setIsDarkMode] = useState(true) // Domyślnie ciemny, jak w pierwowzorze
+
+  // STAN: Dane
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginPesel, setLoginPesel] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -51,7 +59,6 @@ export default function PatientPortal() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'start' | 'dokumenty' | 'wizyty' | 'kontakt'>('start')
   
-  // Stany Danych
   const [consents, setConsents] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [portalRequests, setPortalRequests] = useState<any[]>([])
@@ -86,19 +93,24 @@ export default function PatientPortal() {
   const getConsentContent = (consent: any) =>
     consent?.medical_consent_templates?.content_template || consent?.content_template || ''
 
-  const loadConsentsForPatient = async (patientId: string) => {
-    const joined = await supabase
-      .from('patient_consents')
-      .select('*, medical_consent_templates(*)')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false })
-    if (!joined.error) return joined.data || []
+  // EFEKTY I POBIERANIE DANYCH
+  useEffect(() => {
+    const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('anm-patient-theme') : null
+    if (storedTheme === 'light') setIsDarkMode(false)
+  }, [])
 
-    const plain = await supabase
-      .from('patient_consents')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false })
+  const toggleTheme = () => {
+    setIsDarkMode(prev => {
+      const next = !prev
+      if (typeof window !== 'undefined') localStorage.setItem('anm-patient-theme', next ? 'dark' : 'light')
+      return next
+    })
+  }
+
+  const loadConsentsForPatient = async (patientId: string) => {
+    const joined = await supabase.from('patient_consents').select('*, medical_consent_templates(*)').eq('patient_id', patientId).order('created_at', { ascending: false })
+    if (!joined.error) return joined.data || []
+    const plain = await supabase.from('patient_consents').select('*').eq('patient_id', patientId).order('created_at', { ascending: false })
     if (plain.error) throw plain.error
     return plain.data || []
   }
@@ -132,7 +144,6 @@ export default function PatientPortal() {
 
     if (!foundPatient) return null
 
-    // Pobieramy wszystko równolegle, w tym NOWE OGŁOSZENIA
     const [patientConsents, patientAppointments, patientRequests, patientMessages, personalAnns, globalAnns] = await Promise.all([
       loadConsentsForPatient(foundPatient.id),
       loadAppointmentsForPatient(foundPatient.id),
@@ -230,21 +241,11 @@ export default function PatientPortal() {
     }
 
     try {
-      const update = await supabase
-        .from('patient_consents')
-        .update(payload)
-        .eq('id', selectedConsentToSign.id)
-        .eq('patient_id', patient.id)
-
+      const update = await supabase.from('patient_consents').update(payload).eq('id', selectedConsentToSign.id).eq('patient_id', patient.id)
       if (update.error) {
-        const fallback = await supabase
-          .from('patient_consents')
-          .update({ status: 'signed', signed_at: payload.signed_at })
-          .eq('id', selectedConsentToSign.id)
-          .eq('patient_id', patient.id)
+        const fallback = await supabase.from('patient_consents').update({ status: 'signed', signed_at: payload.signed_at }).eq('id', selectedConsentToSign.id).eq('patient_id', patient.id)
         if (fallback.error) throw fallback.error
       }
-
       setSelectedConsentToSign(null)
       await refreshPortal()
     } catch (err: any) {
@@ -274,17 +275,13 @@ export default function PatientPortal() {
       return
     }
 
-    const messageInsert = await supabase.from('patient_portal_messages').insert([{
+    await supabase.from('patient_portal_messages').insert([{
       request_id: insert.data?.id,
       patient_id: patient.id,
       sender_type: 'patient',
       sender_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Pacjent',
       body: requestForm.message,
     }])
-
-    if (messageInsert.error) {
-      console.warn('Patient portal message insert error:', messageInsert.error.message)
-    }
 
     setRequestForm({ type: 'post_treatment_question', subject: '', message: '' })
     setRequestSuccess('Wiadomość trafiła do recepcji. Odpowiemy możliwie szybko.')
@@ -305,7 +302,7 @@ export default function PatientPortal() {
           <input
             key={index}
             type="checkbox"
-            className="mx-2 h-5 w-5 translate-y-1 rounded border-white/20 bg-white/5 accent-cyan-300"
+            className={`mx-2 h-5 w-5 translate-y-1 rounded border-slate-300 accent-cyan-500 ${isDarkMode ? 'border-white/20 bg-white/5 accent-cyan-300' : 'bg-slate-50'}`}
             checked={!!formAnswers[fieldId]}
             onChange={(event) => setFormAnswers(prev => ({ ...prev, [fieldId]: event.target.checked }))}
           />
@@ -319,7 +316,7 @@ export default function PatientPortal() {
             key={index}
             type="text"
             placeholder="wpisz..."
-            className="mx-2 min-w-[140px] border-b border-white/30 bg-transparent px-1 text-center text-cyan-100 outline-none focus:border-cyan-300"
+            className={`mx-2 min-w-[140px] border-b bg-transparent px-1 text-center outline-none ${isDarkMode ? 'border-white/30 text-cyan-100 focus:border-cyan-300' : 'border-slate-300 text-cyan-800 focus:border-cyan-600'}`}
             value={formAnswers[fieldId] || ''}
             onChange={(event) => setFormAnswers(prev => ({ ...prev, [fieldId]: event.target.value }))}
           />
@@ -330,25 +327,31 @@ export default function PatientPortal() {
     })
   }
 
+  // EKRAN LOGOWANIA
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#071016] text-white flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(16,185,129,0.14),transparent_32%)]" />
+      <div className={`min-h-screen flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-[#071016] text-white' : 'bg-slate-50 text-slate-900'}`}>
+        <div className={`absolute inset-0 ${isDarkMode ? 'bg-[radial-gradient(circle_at_16%_12%,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(16,185,129,0.14),transparent_32%)]' : 'bg-[radial-gradient(circle_at_16%_12%,rgba(34,211,238,0.08),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(16,185,129,0.06),transparent_32%)]'}`} />
+        
+        <button onClick={toggleTheme} className={`absolute top-6 right-6 z-20 p-3 rounded-full transition-colors ${isDarkMode ? 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10' : 'bg-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-300'}`}>
+          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
         <motion.form
           onSubmit={handleLogin}
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative w-full max-w-md rounded-[36px] border border-white/10 bg-[#101a22]/85 p-8 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className={`relative w-full max-w-md rounded-[36px] border p-8 backdrop-blur-xl transition-colors duration-500 ${isDarkMode ? 'border-white/10 bg-[#101a22]/85 shadow-[0_28px_80px_rgba(0,0,0,0.45)]' : 'border-slate-200 bg-white/90 shadow-2xl'}`}
         >
           <div className="text-center mb-8">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-200/20 bg-cyan-200/10">
-              <HeartPulse size={32} className="text-cyan-200" />
+            <div className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl border ${isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10' : 'border-cyan-200 bg-cyan-50'}`}>
+              <HeartPulse size={32} className={isDarkMode ? 'text-cyan-200' : 'text-cyan-600'} />
             </div>
             <h1 className="text-3xl font-black tracking-tight">Portal Pacjenta</h1>
-            <p className="mt-2 text-sm text-slate-400">Dokumenty, wizyty i kontakt z kliniką w jednym miejscu.</p>
+            <p className={`mt-2 text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Dokumenty, wizyty i kontakt z kliniką w jednym miejscu.</p>
           </div>
 
-          <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <label className={`mb-2 block text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Weryfikacja PESEL
           </label>
           <input
@@ -358,15 +361,15 @@ export default function PatientPortal() {
             placeholder="Wpisz PESEL pacjenta"
             value={loginPesel}
             onChange={event => setLoginPesel(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 font-bold text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/[0.07]"
+            className={`w-full rounded-2xl border px-5 py-4 font-bold outline-none transition ${isDarkMode ? 'border-white/10 bg-white/[0.04] text-white focus:border-cyan-300/60 focus:bg-white/[0.07]' : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-cyan-500 focus:bg-white'}`}
           />
 
-          {loginError && <p className="mt-4 text-center text-sm font-bold text-red-300">{loginError}</p>}
+          {loginError && <p className="mt-4 text-center text-sm font-bold text-red-500">{loginError}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full rounded-2xl bg-cyan-200 py-4 text-sm font-black uppercase tracking-widest text-[#071016] shadow-[0_16px_36px_rgba(103,232,249,0.18)] transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className={`mt-6 w-full rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 ${isDarkMode ? 'bg-cyan-200 text-[#071016] shadow-[0_16px_36px_rgba(103,232,249,0.18)]' : 'bg-cyan-600 text-white shadow-xl hover:bg-cyan-700'}`}
           >
             {loading ? 'Weryfikacja...' : 'Wejdź do portalu'}
           </button>
@@ -383,47 +386,50 @@ export default function PatientPortal() {
   ] as const
 
   return (
-    <div className="min-h-screen bg-[#071016] text-white">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.14),transparent_35%),radial-gradient(circle_at_84%_16%,rgba(16,185,129,0.12),transparent_28%)] pointer-events-none" />
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-[#071016] text-white' : 'bg-slate-50 text-slate-900'}`}>
+      <div className={`fixed inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.14),transparent_35%),radial-gradient(circle_at_84%_16%,rgba(16,185,129,0.12),transparent_28%)]' : 'bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.06),transparent_35%),radial-gradient(circle_at_84%_16%,rgba(16,185,129,0.05),transparent_28%)]'}`} />
 
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071016]/85 backdrop-blur-xl">
+      {/* HEADER Z TRYBEM CIEMNYM */}
+      <header className={`sticky top-0 z-30 border-b backdrop-blur-xl ${isDarkMode ? 'border-white/10 bg-[#071016]/85' : 'border-slate-200 bg-white/80 shadow-sm'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/10">
-              <HeartPulse size={24} className="text-cyan-200" />
+            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10' : 'border-cyan-200 bg-cyan-50'}`}>
+              <HeartPulse size={24} className={isDarkMode ? 'text-cyan-200' : 'text-cyan-600'} />
             </div>
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">Portal Pacjenta</p>
               <h2 className="text-lg font-black leading-none">{patient?.first_name} {patient?.last_name}</h2>
             </div>
           </div>
-          <button onClick={handleLogout} className="rounded-2xl border border-white/10 p-3 text-slate-400 transition hover:bg-white/5 hover:text-white">
-            <LogOut size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleTheme} className={`rounded-2xl border p-3 transition ${isDarkMode ? 'border-white/10 text-slate-400 hover:bg-white/5 hover:text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900'}`}>
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button onClick={handleLogout} className={`rounded-2xl border p-3 transition ${isDarkMode ? 'border-white/10 text-slate-400 hover:bg-white/5 hover:text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900'}`}>
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10">
 
-        {/* ============================================================================ */}
-        {/* NOWOŚĆ: SEKCJA OGŁOSZEŃ (PERSONALNE I GLOBALNE) */}
-        {/* ============================================================================ */}
+        {/* TABLICA OGŁOSZEŃ (WIDOCZNA TYLKO W ZAKŁADCE START) */}
         {(personalAnnouncements.length > 0 || globalAnnouncements.length > 0) && activeTab === 'start' && (
           <section className="mb-8 space-y-6">
             
-            {/* OGŁOSZENIA PERSONALNE (Tylko dla tego pacjenta) */}
             {personalAnnouncements.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-cyan-200 flex items-center gap-2">
+                <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
                   <User size={16} /> Ważne informacje dla Ciebie
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {personalAnnouncements.map((ann: any) => {
                     const badge = getCategoryBadge(ann.category);
                     return (
-                      <div key={ann.id} className="relative overflow-hidden rounded-[24px] border border-cyan-500/30 bg-[#101a22]/90 shadow-[0_8px_30px_rgba(34,211,238,0.1)] flex flex-col">
+                      <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-cyan-500/30 bg-[#101a22]/90 shadow-[0_8px_30px_rgba(34,211,238,0.1)]' : 'border-cyan-200 bg-white shadow-lg'}`}>
                         {ann.image_url && (
-                          <div className="h-32 w-full shrink-0 border-b border-white/10">
+                          <div className={`h-32 w-full shrink-0 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
                             <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -433,11 +439,11 @@ export default function PatientPortal() {
                               {badge.label}
                             </span>
                           </div>
-                          <h4 className="text-base font-black text-white mb-2" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                          <h4 className={`text-base font-black mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
                             {ann.title}
                           </h4>
                           {ann.description && (
-                            <p className="text-xs text-slate-300 font-medium leading-relaxed flex-1 whitespace-pre-wrap" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                            <p className={`text-xs font-medium leading-relaxed flex-1 whitespace-pre-wrap ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
                               {ann.description}
                             </p>
                           )}
@@ -449,19 +455,18 @@ export default function PatientPortal() {
               </div>
             )}
 
-            {/* OGŁOSZENIA GLOBALNE (Dla wszystkich) */}
             {globalAnnouncements.length > 0 && (
               <div className="space-y-4 pt-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                   <Megaphone size={16} /> Aktualności z naszej kliniki
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {globalAnnouncements.map((ann: any) => {
                     const badge = getCategoryBadge(ann.category);
                     return (
-                      <div key={ann.id} className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[#101a22]/60 flex flex-col">
+                      <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-white/10 bg-[#101a22]/60' : 'border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow'}`}>
                         {ann.image_url && (
-                          <div className="h-32 w-full shrink-0 border-b border-white/10">
+                          <div className={`h-32 w-full shrink-0 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
                             <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -471,11 +476,11 @@ export default function PatientPortal() {
                               {badge.label}
                             </span>
                           </div>
-                          <h4 className="text-sm font-black text-white mb-1.5" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                          <h4 className={`text-sm font-black mb-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
                             {ann.title}
                           </h4>
                           {ann.description && (
-                            <p className="text-[11px] text-slate-400 font-medium leading-relaxed flex-1 line-clamp-3" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                            <p className={`text-[11px] font-medium leading-relaxed flex-1 line-clamp-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
                               {ann.description}
                             </p>
                           )}
@@ -486,16 +491,14 @@ export default function PatientPortal() {
                 </div>
               </div>
             )}
-
           </section>
         )}
-        {/* ============================================================================ */}
 
         <section className="mb-7 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2 rounded-[34px] border border-white/10 bg-[#101a22]/75 p-6 md:p-8 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Twoja ścieżka opieki</p>
-            <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">Dzień dobry, {patient?.first_name || 'Pacjencie'}.</h1>
-            <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-300">
+          <div className={`lg:col-span-2 rounded-[34px] border p-6 md:p-8 ${isDarkMode ? 'border-white/10 bg-[#101a22]/75 shadow-[0_24px_70px_rgba(0,0,0,0.22)]' : 'border-slate-200 bg-white shadow-xl'}`}>
+            <p className={`text-[10px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>Twoja ścieżka opieki</p>
+            <h1 className={`mt-3 text-3xl font-black tracking-tight md:text-5xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Dzień dobry, {patient?.first_name || 'Pacjencie'}.</h1>
+            <p className={`mt-4 max-w-2xl text-sm font-medium leading-7 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
               Tutaj podpiszesz dokumenty przed wizytą, sprawdzisz najbliższy termin i wyślesz pytanie do zespołu kliniki.
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -505,29 +508,29 @@ export default function PatientPortal() {
                 ['Wizyty', appointments.length],
                 ['PESEL', patient?.pesel ? 'OK' : 'brak'],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <div key={label} className={`rounded-2xl border p-4 ${isDarkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-slate-50'}`}>
                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-                  <p className="mt-1 text-xl font-black text-white">{value}</p>
+                  <p className={`mt-1 text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[34px] border border-cyan-200/20 bg-cyan-200/10 p-6 md:p-7">
+          <div className={`rounded-[34px] border p-6 md:p-7 ${isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10' : 'border-cyan-200 bg-cyan-50 shadow-md'}`}>
             <div className="flex items-center gap-3">
-              <Clock className="text-cyan-200" size={22} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-100">Najbliższa wizyta</p>
+              <Clock className={isDarkMode ? 'text-cyan-200' : 'text-cyan-600'} size={22} />
+              <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-100' : 'text-cyan-800'}`}>Najbliższa wizyta</p>
             </div>
             {nextAppointment ? (
               <div className="mt-5">
-                <h3 className="text-xl font-black">{nextAppointment.treatment_name || 'Wizyta w klinice'}</h3>
-                <p className="mt-2 text-sm font-bold text-cyan-100">{formatDateTime(nextAppointment.appointment_date)}</p>
-                <p className="mt-4 text-xs leading-6 text-slate-300">Przyjdź kilka minut wcześniej. Dokumenty do podpisu zobaczysz w zakładce Dokumenty.</p>
+                <h3 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{nextAppointment.treatment_name || 'Wizyta w klinice'}</h3>
+                <p className={`mt-2 text-sm font-bold ${isDarkMode ? 'text-cyan-100' : 'text-cyan-700'}`}>{formatDateTime(nextAppointment.appointment_date)}</p>
+                <p className={`mt-4 text-xs leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Przyjdź kilka minut wcześniej. Dokumenty do podpisu zobaczysz w zakładce Dokumenty.</p>
               </div>
             ) : (
               <div className="mt-5">
-                <h3 className="text-xl font-black">Brak nadchodzącej wizyty</h3>
-                <p className="mt-3 text-xs leading-6 text-slate-300">Możesz poprosić recepcję o konsultację lub nowy termin w zakładce kontaktu.</p>
+                <h3 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Brak nadchodzącej wizyty</h3>
+                <p className={`mt-3 text-xs leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Możesz poprosić recepcję o konsultację lub nowy termin w zakładce kontaktu.</p>
               </div>
             )}
           </div>
@@ -542,13 +545,15 @@ export default function PatientPortal() {
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={`relative flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-wider transition ${
-                  isActive ? 'border-cyan-200 bg-cyan-200 text-[#071016]' : 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-white'
+                  isActive 
+                    ? (isDarkMode ? 'border-cyan-200 bg-cyan-200 text-[#071016]' : 'border-cyan-600 bg-cyan-600 text-white shadow-md')
+                    : (isDarkMode ? 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-white' : 'border-slate-300 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 shadow-sm')
                 }`}
               >
                 <Icon size={15} />
                 {item.label}
                 {'count' in item && item.count > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                  <span className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] text-white ${isDarkMode ? 'bg-red-500' : 'bg-red-600 shadow-sm'}`}>
                     {item.count}
                   </span>
                 )}
@@ -560,27 +565,27 @@ export default function PatientPortal() {
         <AnimatePresence mode="wait">
           {activeTab === 'start' && (
             <motion.section key="start" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <InfoCard icon={FileSignature} title="Dokumenty przed wizytą" text={pendingConsents.length ? `Masz ${pendingConsents.length} dokumentów do podpisu.` : 'Nie masz zaległych dokumentów.'} accent="red" />
-              <InfoCard icon={Calendar} title="Wizyty i konsultacje" text={nextAppointment ? formatDateTime(nextAppointment.appointment_date) : 'Poproś o termin w panelu kontaktu.'} accent="cyan" />
-              <InfoCard icon={MessageSquare} title="Kontakt po zabiegu" text="Wyślij pytanie kontrolne do recepcji bez dzwonienia." accent="emerald" />
+              <InfoCard isDarkMode={isDarkMode} icon={FileSignature} title="Dokumenty przed wizytą" text={pendingConsents.length ? `Masz ${pendingConsents.length} dokumentów do podpisu.` : 'Nie masz zaległych dokumentów.'} accent="red" />
+              <InfoCard isDarkMode={isDarkMode} icon={Calendar} title="Wizyty i konsultacje" text={nextAppointment ? formatDateTime(nextAppointment.appointment_date) : 'Poproś o termin w panelu kontaktu.'} accent="cyan" />
+              <InfoCard isDarkMode={isDarkMode} icon={MessageSquare} title="Kontakt po zabiegu" text="Wyślij pytanie kontrolne do recepcji bez dzwonienia." accent="emerald" />
             </motion.section>
           )}
 
           {activeTab === 'dokumenty' && (
             <motion.section key="dokumenty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-6">
-              <Panel title="Do podpisu" subtitle="Dokumenty wymagające Twojej akceptacji przed wizytą." badge={`${pendingConsents.length} oczekuje`}>
+              <Panel isDarkMode={isDarkMode} title="Do podpisu" subtitle="Dokumenty wymagające Twojej akceptacji przed wizytą." badge={`${pendingConsents.length} oczekuje`}>
                 {pendingConsents.length === 0 ? (
-                  <EmptyState icon={CheckCircle2} title="Wszystko podpisane" text="Na ten moment nie masz dokumentów oczekujących na akceptację." />
+                  <EmptyState isDarkMode={isDarkMode} icon={CheckCircle2} title="Wszystko podpisane" text="Na ten moment nie masz dokumentów oczekujących na akceptację." />
                 ) : pendingConsents.map(consent => (
-                  <DocumentRow key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending onClick={() => openSignModal(consent)} />
+                  <DocumentRow isDarkMode={isDarkMode} key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending onClick={() => openSignModal(consent)} />
                 ))}
               </Panel>
 
-              <Panel title="Potwierdzone dokumenty" subtitle="Archiwum zaakceptowanych dokumentów i skanów.">
+              <Panel isDarkMode={isDarkMode} title="Potwierdzone dokumenty" subtitle="Archiwum zaakceptowanych dokumentów i skanów.">
                 {signedConsents.length === 0 ? (
-                  <EmptyState icon={FileText} title="Brak historii" text="Podpisane dokumenty pojawią się tutaj po akceptacji." />
+                  <EmptyState isDarkMode={isDarkMode} icon={FileText} title="Brak historii" text="Podpisane dokumenty pojawią się tutaj po akceptacji." />
                 ) : signedConsents.map(consent => (
-                  <DocumentRow key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending={false} date={formatDateTime(consent.signed_at || consent.created_at)} />
+                  <DocumentRow isDarkMode={isDarkMode} key={consent.id} consent={consent} typeLabel={getConsentTypeLabel(consent)} title={getConsentTitle(consent)} pending={false} date={formatDateTime(consent.signed_at || consent.created_at)} />
                 ))}
               </Panel>
             </motion.section>
@@ -588,18 +593,18 @@ export default function PatientPortal() {
 
           {activeTab === 'wizyty' && (
             <motion.section key="wizyty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-5">
-              <Panel title="Twoje wizyty" subtitle="Najbliższe terminy, status płatności i historia zaplanowanych zabiegów.">
+              <Panel isDarkMode={isDarkMode} title="Twoje wizyty" subtitle="Najbliższe terminy, status płatności i historia zaplanowanych zabiegów.">
                 {appointments.length === 0 ? (
-                  <EmptyState icon={Calendar} title="Brak wizyt" text="Wyślij prośbę o konsultację lub nowy termin w zakładce kontaktu." />
+                  <EmptyState isDarkMode={isDarkMode} icon={Calendar} title="Brak wizyt" text="Wyślij prośbę o konsultację lub nowy termin w zakładce kontaktu." />
                 ) : appointments.map(appointment => (
-                  <div key={appointment.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                  <div key={appointment.id} className={`rounded-3xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-white shadow-sm'}`}>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">{appointment.status || 'zaplanowana'}</p>
-                        <h3 className="mt-1 text-lg font-black">{appointment.treatment_name || 'Wizyta w klinice'}</h3>
-                        <p className="mt-2 text-sm font-bold text-slate-300">{formatDateTime(appointment.appointment_date)}</p>
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`}>{appointment.status || 'zaplanowana'}</p>
+                        <h3 className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{appointment.treatment_name || 'Wizyta w klinice'}</h3>
+                        <p className={`mt-2 text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>{formatDateTime(appointment.appointment_date)}</p>
                       </div>
-                      <div className="rounded-2xl border border-white/10 bg-[#071016]/50 px-4 py-3 text-sm font-black">
+                      <div className={`rounded-2xl border px-4 py-3 text-sm font-black ${isDarkMode ? 'border-white/10 bg-[#071016]/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
                         {appointment.price_amount ? `${Number(appointment.price_amount).toLocaleString('pl-PL')} ${appointment.currency || 'PLN'}` : 'Cena wg ustaleń'}
                       </div>
                     </div>
@@ -611,7 +616,7 @@ export default function PatientPortal() {
 
           {activeTab === 'kontakt' && (
             <motion.section key="kontakt" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-              <Panel title="Zapytaj klinikę" subtitle="Pytanie trafi do recepcji/opiekuna pacjenta w panelu kliniki.">
+              <Panel isDarkMode={isDarkMode} title="Zapytaj klinikę" subtitle="Pytanie trafi do recepcji/opiekuna pacjenta w panelu kliniki.">
                 <form onSubmit={handleSubmitRequest} className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
@@ -619,7 +624,7 @@ export default function PatientPortal() {
                       <select
                         value={requestForm.type}
                         onChange={event => setRequestForm({ ...requestForm, type: event.target.value })}
-                        className="w-full rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-bold outline-none focus:border-cyan-300"
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm font-bold outline-none transition-colors ${isDarkMode ? 'border-white/10 bg-[#071016] text-white focus:border-cyan-300' : 'border-slate-300 bg-white text-slate-900 focus:border-cyan-600'}`}
                       >
                         <option value="post_treatment_question">Pytanie po zabiegu</option>
                         <option value="appointment_request">Chcę umówić wizytę</option>
@@ -632,7 +637,7 @@ export default function PatientPortal() {
                         value={requestForm.subject}
                         onChange={event => setRequestForm({ ...requestForm, subject: event.target.value })}
                         placeholder="np. obrzęk po zabiegu, termin kontroli..."
-                        className="w-full rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-bold outline-none focus:border-cyan-300"
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm font-bold outline-none transition-colors ${isDarkMode ? 'border-white/10 bg-[#071016] text-white focus:border-cyan-300 placeholder-slate-600' : 'border-slate-300 bg-white text-slate-900 focus:border-cyan-600 placeholder-slate-400'}`}
                       />
                     </div>
                   </div>
@@ -643,41 +648,35 @@ export default function PatientPortal() {
                       value={requestForm.message}
                       onChange={event => setRequestForm({ ...requestForm, message: event.target.value })}
                       placeholder="Opisz, co się dzieje albo jaki termin wizyty Ci odpowiada..."
-                      className="w-full resize-none rounded-2xl border border-white/10 bg-[#071016] px-4 py-3 text-sm font-medium leading-6 outline-none focus:border-cyan-300"
+                      className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium leading-6 outline-none transition-colors ${isDarkMode ? 'border-white/10 bg-[#071016] text-white focus:border-cyan-300 placeholder-slate-600' : 'border-slate-300 bg-white text-slate-900 focus:border-cyan-600 placeholder-slate-400'}`}
                     />
                   </div>
-                  {requestSuccess && <p className="rounded-2xl border border-cyan-200/20 bg-cyan-200/10 p-4 text-sm font-bold text-cyan-100">{requestSuccess}</p>}
-                  <button type="submit" className="inline-flex items-center gap-2 rounded-2xl bg-cyan-200 px-5 py-3 text-xs font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02]">
+                  {requestSuccess && <p className={`rounded-2xl border p-4 text-sm font-bold ${isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10 text-cyan-100' : 'border-cyan-200 bg-cyan-50 text-cyan-700'}`}>{requestSuccess}</p>}
+                  <button type="submit" className={`inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition hover:scale-[1.02] ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-md'}`}>
                     <Send size={15} /> Wyślij do recepcji
                   </button>
                 </form>
 
-                <div className="mt-8 border-t border-white/10 pt-6">
+                <div className={`mt-8 border-t pt-6 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
                   <div className="mb-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">Masz wiadomości</p>
-                    <h3 className="mt-1 text-lg font-black">Historia rozmowy z recepcją</h3>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`}>Masz wiadomości</p>
+                    <h3 className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Historia rozmowy z recepcją</h3>
                   </div>
 
                   {portalRequests.length === 0 ? (
-                    <EmptyState icon={MessageSquare} title="Brak wiadomości" text="Kiedy wyślesz pytanie lub recepcja odpowie, rozmowa pojawi się tutaj." />
+                    <EmptyState isDarkMode={isDarkMode} icon={MessageSquare} title="Brak wiadomości" text="Kiedy wyślesz pytanie lub recepcja odpowie, rozmowa pojawi się tutaj." />
                   ) : (
                     <div className="space-y-4">
                       {portalRequests.map((request: any) => {
                         const requestMessages = portalMessages.filter((message: any) => message.request_id === request.id)
-                        const statusLabel = request.status === 'answered'
-                          ? 'Odpowiedziano'
-                          : request.status === 'closed'
-                            ? 'Zamknięte'
-                            : request.status === 'in_progress'
-                              ? 'W trakcie'
-                              : 'Nowe'
+                        const statusLabel = request.status === 'answered' ? 'Odpowiedziano' : request.status === 'closed' ? 'Zamknięte' : request.status === 'in_progress' ? 'W trakcie' : 'Nowe'
 
                         return (
-                          <div key={request.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+                          <div key={request.id} className={`rounded-3xl border p-4 ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-slate-50'}`}>
                             <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{statusLabel}</p>
-                                <h4 className="mt-1 font-black">{request.subject || 'Wiadomość do recepcji'}</h4>
+                                <h4 className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{request.subject || 'Wiadomość do recepcji'}</h4>
                               </div>
                               <p className="text-[10px] font-bold text-slate-500">{formatDateTime(request.created_at)}</p>
                             </div>
@@ -693,7 +692,7 @@ export default function PatientPortal() {
                                 const isStaff = message.sender_type === 'staff'
                                 return (
                                   <div key={message.id} className={`flex ${isStaff ? 'justify-start' : 'justify-end'}`}>
-                                    <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? 'border-cyan-200/20 bg-cyan-200/10 text-cyan-50' : 'border-white/10 bg-[#071016] text-slate-200'}`}>
+                                    <div className={`max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${isStaff ? (isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10 text-cyan-50' : 'border-cyan-200 bg-cyan-50 text-cyan-900') : (isDarkMode ? 'border-white/10 bg-[#071016] text-slate-200' : 'border-slate-200 bg-white text-slate-700 shadow-sm')}`}>
                                       <p className="mb-1 text-[9px] font-black uppercase tracking-widest opacity-60">
                                         {isStaff ? (message.sender_name || 'Recepcja') : 'Ty'} · {formatDateTime(message.created_at)}
                                       </p>
@@ -715,41 +714,42 @@ export default function PatientPortal() {
         </AnimatePresence>
       </main>
 
+      {/* MODAL DO PODPISU */}
       <AnimatePresence>
         {selectedConsentToSign && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedConsentToSign(null)} className="absolute inset-0 bg-[#071016]/90 backdrop-blur-xl" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedConsentToSign(null)} className={`absolute inset-0 backdrop-blur-xl ${isDarkMode ? 'bg-[#071016]/90' : 'bg-slate-900/60'}`} />
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 18 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[36px] border border-white/10 bg-[#101a22] shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
+              className={`relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[36px] border shadow-[0_40px_100px_rgba(0,0,0,0.6)] ${isDarkMode ? 'border-white/10 bg-[#101a22]' : 'border-slate-200 bg-white'}`}
             >
-              <div className="flex shrink-0 items-center justify-between border-b border-white/10 p-6 md:p-8">
+              <div className={`flex shrink-0 items-center justify-between border-b p-6 md:p-8 ${isDarkMode ? 'border-white/10' : 'border-slate-100 bg-slate-50'}`}>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">{getConsentTypeLabel(selectedConsentToSign)}</p>
-                  <h3 className="mt-1 text-xl font-black md:text-2xl">{getConsentTitle(selectedConsentToSign)}</h3>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`}>{getConsentTypeLabel(selectedConsentToSign)}</p>
+                  <h3 className={`mt-1 text-xl font-black md:text-2xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{getConsentTitle(selectedConsentToSign)}</h3>
                 </div>
-                <button onClick={() => setSelectedConsentToSign(null)} className="rounded-full bg-white/5 p-3 text-slate-400 hover:bg-white/10">
+                <button onClick={() => setSelectedConsentToSign(null)} className={`rounded-full p-3 transition-colors ${isDarkMode ? 'bg-white/5 text-slate-400 hover:bg-white/10' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="custom-scrollbar flex-1 overflow-y-auto p-6 text-sm leading-loose text-slate-300 md:p-8">
+              <div className={`custom-scrollbar flex-1 overflow-y-auto p-6 text-sm leading-loose md:p-8 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 <div className="whitespace-pre-wrap">{renderInteractiveContent(getConsentContent(selectedConsentToSign))}</div>
-                <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className={`mt-8 rounded-2xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Oświadczenie cyfrowe</p>
-                  <p className="mt-2 text-sm font-medium text-white">
+                  <p className={`mt-2 text-sm font-medium ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     Kliknięcie „Akceptuję i podpisuję” jest równoznaczne z potwierdzeniem dokumentu w Portalu Pacjenta.
                   </p>
                 </div>
               </div>
 
-              <div className="shrink-0 border-t border-white/10 bg-[#0c131a] p-6 md:p-8">
+              <div className={`shrink-0 border-t p-6 md:p-8 ${isDarkMode ? 'border-white/10 bg-[#0c131a]' : 'border-slate-200 bg-slate-50'}`}>
                 <button
                   onClick={handleSignConsent}
                   disabled={isSigning}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-200 py-4 text-sm font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02] disabled:opacity-60"
+                  className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black uppercase tracking-wider transition hover:scale-[1.02] disabled:opacity-60 ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-xl hover:bg-cyan-700'}`}
                 >
                   {isSigning ? 'Zapisywanie...' : <><FileSignature size={18} /> Akceptuję i podpisuję</>}
                 </button>
@@ -762,62 +762,62 @@ export default function PatientPortal() {
   )
 }
 
-function Panel({ title, subtitle, badge, children }: { title: string; subtitle?: string; badge?: string; children: React.ReactNode }) {
+function Panel({ isDarkMode, title, subtitle, badge, children }: any) {
   return (
-    <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#101a22]/75">
-      <div className="flex flex-col gap-3 border-b border-white/10 p-6 md:flex-row md:items-center md:justify-between">
+    <div className={`overflow-hidden rounded-[32px] border ${isDarkMode ? 'border-white/10 bg-[#101a22]/75' : 'border-slate-200 bg-white shadow-sm'}`}>
+      <div className={`flex flex-col gap-3 border-b p-6 md:flex-row md:items-center md:justify-between ${isDarkMode ? 'border-white/10' : 'border-slate-100 bg-slate-50/50'}`}>
         <div>
-          <h2 className="text-xl font-black">{title}</h2>
-          {subtitle && <p className="mt-1 text-xs font-medium text-slate-400">{subtitle}</p>}
+          <h2 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{title}</h2>
+          {subtitle && <p className={`mt-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{subtitle}</p>}
         </div>
-        {badge && <span className="w-fit rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[10px] font-black uppercase text-red-200">{badge}</span>}
+        {badge && <span className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase ${isDarkMode ? 'border-red-500/20 bg-red-500/10 text-red-200' : 'border-red-200 bg-red-50 text-red-700'}`}>{badge}</span>}
       </div>
       <div className="space-y-3 p-5">{children}</div>
     </div>
   )
 }
 
-function InfoCard({ icon: Icon, title, text, accent }: { icon: any; title: string; text: string; accent: 'red' | 'cyan' | 'emerald' }) {
+function InfoCard({ isDarkMode, icon: Icon, title, text, accent }: any) {
   const colors = {
-    red: 'border-red-500/20 bg-red-500/[0.07] text-red-200',
-    cyan: 'border-cyan-200/20 bg-cyan-200/[0.08] text-cyan-100',
-    emerald: 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-100',
+    red: isDarkMode ? 'border-red-500/20 bg-red-500/[0.07] text-red-200' : 'border-red-200 bg-red-50 text-red-700',
+    cyan: isDarkMode ? 'border-cyan-200/20 bg-cyan-200/[0.08] text-cyan-100' : 'border-cyan-200 bg-cyan-50 text-cyan-800',
+    emerald: isDarkMode ? 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-100' : 'border-emerald-200 bg-emerald-50 text-emerald-800',
   }
   return (
     <div className={`rounded-[28px] border p-5 ${colors[accent]}`}>
       <Icon size={22} />
       <h3 className="mt-4 font-black">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
+      <p className={`mt-2 text-sm leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{text}</p>
     </div>
   )
 }
 
-function EmptyState({ icon: Icon, title, text }: { icon: any; title: string; text: string }) {
+function EmptyState({ isDarkMode, icon: Icon, title, text }: any) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-      <Icon size={32} className="mx-auto mb-3 text-slate-400" />
-      <p className="font-black">{title}</p>
-      <p className="mt-2 text-sm text-slate-400">{text}</p>
+    <div className={`rounded-3xl border p-8 text-center ${isDarkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-slate-50'}`}>
+      <Icon size={32} className={`mx-auto mb-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`} />
+      <p className={`font-black ${isDarkMode ? 'text-white' : 'text-slate-700'}`}>{title}</p>
+      <p className={`mt-2 text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{text}</p>
     </div>
   )
 }
 
-function DocumentRow({ title, typeLabel, pending, date, onClick }: { consent: any; title: string; typeLabel: string; pending: boolean; date?: string; onClick?: () => void }) {
+function DocumentRow({ isDarkMode, title, typeLabel, pending, date, onClick }: any) {
   return (
-    <div className={`rounded-3xl border p-5 ${pending ? 'border-red-500/20 bg-red-500/[0.06]' : 'border-emerald-500/20 bg-emerald-500/[0.05]'}`}>
+    <div className={`rounded-3xl border p-5 ${pending ? (isDarkMode ? 'border-red-500/20 bg-red-500/[0.06]' : 'border-red-200 bg-red-50') : (isDarkMode ? 'border-emerald-500/20 bg-emerald-500/[0.05]' : 'border-emerald-200 bg-emerald-50')}`}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-start gap-4">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${pending ? 'bg-red-500/10 text-red-300' : 'bg-emerald-500/10 text-emerald-300'}`}>
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${pending ? (isDarkMode ? 'bg-red-500/10 text-red-300' : 'bg-red-100 text-red-600') : (isDarkMode ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-100 text-emerald-600')}`}>
             {pending ? <AlertTriangle size={20} /> : <ShieldCheck size={20} />}
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{typeLabel}</p>
-            <h3 className="mt-1 font-black">{title}</h3>
+            <h3 className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
             {date && <p className="mt-2 text-xs font-bold text-slate-500">{date}</p>}
           </div>
         </div>
         {pending && onClick && (
-          <button onClick={onClick} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-xs font-black uppercase tracking-wider text-[#071016] transition hover:scale-[1.02]">
+          <button onClick={onClick} className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition hover:scale-[1.02] shadow-sm ${isDarkMode ? 'bg-white text-[#071016]' : 'bg-slate-900 text-white hover:bg-black'}`}>
             <FileSignature size={15} /> Wypełnij
           </button>
         )}
