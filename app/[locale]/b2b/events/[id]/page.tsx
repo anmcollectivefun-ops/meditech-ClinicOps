@@ -160,25 +160,66 @@ const isPreparationPartner = (partner: any) => {
 
 const isDoctorPartner = (partner: any) => {
   const type = String(partner?.type || '').toLowerCase()
-  if (type === 'speaker' || type === 'doctor') return true
   if (type === 'preparation' || type === 'sponsor') return false
+  if (type === 'speaker' || type === 'doctor' || partner?.staff_role) return true
   return Boolean(partner?.first_name || partner?.last_name || partner?.title) && !isPreparationPartner(partner)
 }
 
+const getStaffRoleLabel = (role?: string | null) => ({
+  doctor: 'Lekarz',
+  nurse: 'Pielęgniarka',
+  reception: 'Recepcja',
+  assistant: 'Asystent medyczny',
+  coordinator: 'Opiekun pacjenta',
+  manager: 'Manager',
+  other: 'Inny personel',
+} as Record<string, string>)[String(role || 'doctor')] || 'Personel'
+
+const getWorkSchedule = (value: any) => {
+  if (!value) return { days: [], start: '', end: '', note: '' }
+  if (typeof value === 'string') {
+    try {
+      return { days: [], start: '', end: '', note: '', ...JSON.parse(value) }
+    } catch {
+      return { days: [], start: '', end: '', note: value }
+    }
+  }
+  return { days: [], start: '', end: '', note: '', ...value }
+}
+
+const workDayOptions = [
+  ['mon', 'Pon'],
+  ['tue', 'Wt'],
+  ['wed', 'Śr'],
+  ['thu', 'Czw'],
+  ['fri', 'Pt'],
+  ['sat', 'Sob'],
+  ['sun', 'Nd'],
+]
 
 const SortablePartnerItem = ({
   item,
   onEdit,
   onDelete,
+  onScheduleChange,
   isDarkMode
 }: {
   item: any;
   onEdit: (item: any) => void;
   onDelete: (id: string) => void;
+  onScheduleChange?: (id: string, patch: any) => void;
   isDarkMode?: boolean;
 }) => {
-  const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || item.sponsor_name || 'Lekarz bez nazwy';
+  const doctorName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || item.sponsor_name || 'Osoba bez nazwy';
   const specialization = item.title || item.specialization || item.sponsor_category || 'Specjalizacja nieuzupełniona';
+  const schedule = getWorkSchedule(item.work_schedule)
+  const absenceStatus = item.absence_status || 'available'
+  const absenceLabel = ({
+    available: 'Pracuje',
+    vacation: 'Urlop',
+    sick_leave: 'L4',
+    duty: 'Dyżur',
+  } as Record<string, string>)[absenceStatus] || 'Pracuje'
 
   return (
     <div className={`p-5 transition-colors ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
@@ -193,7 +234,16 @@ const SortablePartnerItem = ({
             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase border ${
               isDarkMode ? 'bg-cyan-900/30 text-cyan-300 border-cyan-800/50' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
             }`}>
-              Lekarz
+              {getStaffRoleLabel(item.staff_role)}
+            </span>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-black tracking-wider uppercase border ${
+              absenceStatus === 'available'
+                ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                : absenceStatus === 'duty'
+                  ? (isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-800/50' : 'bg-blue-50 text-blue-700 border-blue-200')
+                  : (isDarkMode ? 'bg-rose-900/30 text-rose-400 border-rose-800/50' : 'bg-rose-50 text-rose-700 border-rose-200')
+            }`}>
+              {absenceLabel}
             </span>
             {!item.is_visible && (
               <span className={`text-[9px] px-2 py-0.5 rounded-full font-black tracking-wider uppercase border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-200 text-slate-600 border-slate-300'}`}>
@@ -205,7 +255,7 @@ const SortablePartnerItem = ({
             {doctorName}
           </h5>
           <p className={`text-xs font-medium truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{specialization}</p>
-          <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID lekarza: {item.id}</p>
+          <p className={`mt-1 text-[10px] font-mono ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>ID personelu: {item.id}</p>
         </div>
         <div className="flex gap-2 shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
           <button
@@ -215,7 +265,7 @@ const SortablePartnerItem = ({
               onEdit(item)
             }}
             className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-blue-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-            title="Edytuj lekarza"
+            title="Edytuj personel"
           >
             <Edit3 size={14} />
           </button>
@@ -226,12 +276,80 @@ const SortablePartnerItem = ({
               onDelete(item.id)
             }}
             className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-red-900/20 hover:bg-red-900/40 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}
-            title="Usuń lekarza"
+            title="Usuń personel"
           >
             <Trash2 size={14} />
           </button>
         </div>
       </div>
+      <details className={`mt-4 rounded-2xl border ${isDarkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <summary className={`cursor-pointer select-none px-4 py-3 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+          Grafik, dyżury i nieobecności
+        </summary>
+        <div className="px-4 pb-4 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {workDayOptions.map(([day, label]) => {
+              const checked = Array.isArray(schedule.days) && schedule.days.includes(day)
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => {
+                    const nextDays = checked
+                      ? schedule.days.filter((item: string) => item !== day)
+                      : [...(schedule.days || []), day]
+                    onScheduleChange?.(item.id, { work_schedule: { ...schedule, days: nextDays } })
+                  }}
+                  className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors ${
+                    checked
+                      ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] border-[#e8ce7a]' : 'bg-slate-900 text-[#e8ce7a] border-slate-900')
+                      : (isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-600')
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input
+              type="time"
+              value={schedule.start || ''}
+              onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, start: event.target.value } })}
+              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+            />
+            <input
+              type="time"
+              value={schedule.end || ''}
+              onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, end: event.target.value } })}
+              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+            />
+            <select
+              value={absenceStatus}
+              onChange={event => onScheduleChange?.(item.id, { absence_status: event.target.value })}
+              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+            >
+              <option value="available">Pracuje</option>
+              <option value="duty">Dyżur</option>
+              <option value="vacation">Urlop</option>
+              <option value="sick_leave">L4</option>
+            </select>
+            <input
+              value={item.absence_note || ''}
+              onChange={event => onScheduleChange?.(item.id, { absence_note: event.target.value })}
+              placeholder="np. urlop 12-16.06"
+              className={`border rounded-xl px-3 py-2.5 text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`}
+            />
+          </div>
+          <textarea
+            rows={2}
+            value={schedule.note || ''}
+            onChange={event => onScheduleChange?.(item.id, { work_schedule: { ...schedule, note: event.target.value } })}
+            placeholder="Uwagi do grafiku, np. tylko konsultacje, brak zabiegów laserowych, dyżur telefoniczny."
+            className={`w-full border rounded-xl px-3 py-2.5 text-xs font-medium outline-none resize-none ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`}
+          />
+        </div>
+      </details>
     </div>
   );
 };
@@ -3573,6 +3691,11 @@ const handleSavePartner = async (e: React.FormEvent) => {
       title: partnerForm.title,
       company: partnerForm.company,
       bio: partnerForm.bio,
+      staff_role: partnerForm.staff_role || 'doctor',
+      employment_type: partnerForm.employment_type || null,
+      work_schedule: partnerForm.work_schedule || null,
+      absence_status: partnerForm.absence_status || 'available',
+      absence_note: partnerForm.absence_note || null,
       photo_url: photoUrl || partnerForm.photo_url,
       website_url: partnerForm.website_url,
       sponsor_name: doctorDisplayName || partnerForm.sponsor_name || null,
@@ -3591,9 +3714,32 @@ const handleSavePartner = async (e: React.FormEvent) => {
     setPartnerForm({});
     setNewFiles({ ...newFiles, partnerPhoto: null });
     setIsEditingPartner(false);
-    showNotification('Lekarz zapisany', 'success');
-  } catch (err: any) { showNotification('Błąd zapisu lekarza: ' + (err?.message || 'nieznany błąd'), 'error'); } finally { setUpdating(false); }
+    showNotification('Personel zapisany', 'success');
+  } catch (err: any) { showNotification('Błąd zapisu personelu: ' + (err?.message || 'nieznany błąd'), 'error'); } finally { setUpdating(false); }
 };
+
+const handleUpdateStaffSchedule = async (partnerId: string, patch: any) => {
+  const normalizedPatch = {
+    ...patch,
+    work_schedule: patch.work_schedule ? getWorkSchedule(patch.work_schedule) : patch.work_schedule
+  }
+  setPartners(prev => prev.map((partner: any) => partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner))
+  setDoctorsList(prev => prev.map((partner: any) => partner.id === partnerId ? { ...partner, ...normalizedPatch } : partner))
+
+  const { error } = await supabase
+    .from('event_partners')
+    .update(normalizedPatch)
+    .eq('id', partnerId)
+
+  if (error) {
+    showNotification('Nie udało się zapisać grafiku: ' + error.message, 'error')
+    await loadPartners()
+    await loadPartnersCatalog()
+    return
+  }
+
+  showNotification('Grafik personelu zapisany', 'success')
+}
 
 const handleSavePreparation = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -5234,7 +5380,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja pacjenta', count: tiers.length },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
-        { tabId: 'prelegenci' as TabModule, icon: Stethoscope, label: 'Lekarze', count: doctorProfiles.length },
         { tabId: 'eventpass' as TabModule, icon: QrCode, label: 'Identyfikacja QR', count: attendeeUnits.length },
         { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
       ]
@@ -5255,6 +5400,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       desc: 'KPI, finanse i zarządzanie placówką',
       items: [
         { tabId: 'eko' as TabModule, icon: Recycle, label: 'AI analityka' },
+        { tabId: 'prelegenci' as TabModule, icon: UsersRound, label: 'Personel', count: doctorProfiles.length },
         { tabId: 'finanse' as TabModule, icon: Wallet, label: 'Płatności i koszty' },
         { tabId: 'dostawcy' as TabModule, icon: Briefcase, label: 'Partnerzy medyczni' }
       ]
@@ -7870,7 +8016,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 )}
 
 {/* ============================================================================ */}
-{/* lekarze */}
+{/* personel */}
 {/* ============================================================================ */}
 {activeTab === 'prelegenci' && (
   <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -7884,10 +8030,10 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
           <div className="min-w-0">
             <h3 className={`font-black text-lg md:text-xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Lekarze
+              Personel
             </h3>
             <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Zarządzaj zespołem medycznym. ID lekarza wykorzystamy przy umawianiu wizyt i przypisywaniu zabiegów.
+              Zarządzaj lekarzami, pielęgniarkami, recepcją i grafikiem pracy zespołu.
             </p>
           </div>
         </div>
@@ -7897,13 +8043,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 
           <button
             onClick={() => {
-              setPartnerForm({ type: 'doctor', is_visible: true })
+              setPartnerForm({ type: 'speaker', staff_role: 'doctor', absence_status: 'available', work_schedule: { days: [], start: '', end: '', note: '' }, is_visible: true })
               setIsEditingPartner(false)
               setIsPartnerModalOpen(true)
             }}
             className={`px-4 py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all hover:scale-105 ${isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a]' : 'bg-slate-900 text-[#e8ce7a]'}`}
           >
-            <Plus size={14} /> Lekarz
+            <Plus size={14} /> Personel
           </button>
 
           <button
@@ -7924,18 +8070,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div className={`rounded-[24px] md:rounded-[32px] border shadow-sm overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
       <div className={`p-5 md:p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
         <h4 className={`font-black text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          Lekarze ({doctorProfiles.length})
+          Personel ({doctorProfiles.length})
         </h4>
             <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-          Edycja i usuwanie profili
+          Grafik, urlopy, L4 i dyżury
         </span>
       </div>
 
       {doctorProfiles.length === 0 ? (
         <div className={`p-16 text-center font-bold text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           <Stethoscope size={40} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className="text-base mb-1">Brak lekarzy</p>
-          <p className="text-xs font-medium">Dodaj lekarza, zdjęcie i specjalizację, aby można było przypisywać wizyty oraz zabiegi.</p>
+          <p className="text-base mb-1">Brak personelu</p>
+          <p className="text-xs font-medium">Dodaj lekarza, pielęgniarkę, recepcję lub inną osobę z zespołu.</p>
         </div>
       ) : (
         <div className={`divide-y group ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
@@ -7951,12 +8097,18 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                   first_name: partner.first_name || fallbackName[0] || '',
                   last_name: partner.last_name || fallbackName.slice(1).join(' '),
                   title: partner.title || partner.sponsor_category || '',
+                  staff_role: partner.staff_role || 'doctor',
+                  employment_type: partner.employment_type || '',
+                  work_schedule: getWorkSchedule(partner.work_schedule),
+                  absence_status: partner.absence_status || 'available',
+                  absence_note: partner.absence_note || '',
                   photo_url: partner.photo_url || partner.logo_url || ''
                 })
                 setIsEditingPartner(true)
                 setIsPartnerModalOpen(true)
               }}
               onDelete={handleDeletePartner}
+              onScheduleChange={handleUpdateStaffSchedule}
             />
           ))}
         </div>
@@ -8007,7 +8159,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {isEditingPartner ? <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} /> : <Plus size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />}
               {isEditingPartner ? 'Edytuj' : 'Dodaj'}{' '}
-              lekarza
+              personel
             </h3>
 
             <button
@@ -8024,7 +8176,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className={`p-4 md:p-3.5 rounded-2xl border transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                  ID lekarza
+                  ID personelu
                 </p>
                 <p className={`mt-1 truncate font-mono text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                   {partnerForm.id || 'Zostanie nadane po zapisie'}
@@ -8034,7 +8186,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               <div className={`p-4 md:p-3.5 rounded-2xl border flex items-center justify-between transition-colors ${isDarkMode ? 'bg-slate-950/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div>
                   <p className={`font-black text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Aktywny profil</p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż lekarza w systemie</p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Pokaż osobę w systemie</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
@@ -8081,7 +8233,40 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Specjalizacja
+                      Rola w klinice
+                    </label>
+                    <select
+                      className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                      value={partnerForm.staff_role || 'doctor'}
+                      onChange={e => setPartnerForm({ ...partnerForm, staff_role: e.target.value })}
+                    >
+                      <option value="doctor">Lekarz</option>
+                      <option value="nurse">Pielęgniarka</option>
+                      <option value="reception">Recepcja</option>
+                      <option value="assistant">Asystent medyczny</option>
+                      <option value="coordinator">Opiekun pacjenta</option>
+                      <option value="manager">Manager</option>
+                      <option value="other">Inny personel</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Forma współpracy
+                    </label>
+                    <input
+                      className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                      value={partnerForm.employment_type || ''}
+                      onChange={e => setPartnerForm({ ...partnerForm, employment_type: e.target.value })}
+                      placeholder="np. etat, kontrakt, dyżury"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Specjalizacja / stanowisko
                     </label>
                     <input
                       className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
@@ -8113,7 +8298,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     className={`w-full border rounded-2xl px-4 py-3.5 text-sm font-medium outline-none resize-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
                     value={partnerForm.bio || ''}
                     onChange={e => setPartnerForm({ ...partnerForm, bio: e.target.value })}
-                    placeholder="Opisz krótko doświadczenie lekarza, obszary zabiegowe i rolę w opiece nad pacjentem..."
+                    placeholder="Opisz krótko doświadczenie, zakres obowiązków i rolę w opiece nad pacjentem..."
                   />
                   {/* Nowy Przycisk AI do szybkiego pisania Bio */}
                   <AiTextAssistButton
@@ -8125,12 +8310,12 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
                     relatedEntityTitle={`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim()}
                     additionalInstruction={[
                       `Imię i nazwisko: ${`${partnerForm.first_name || ''} ${partnerForm.last_name || ''}`.trim() || 'nie podano'}`,
-                      `Specjalizacja / rola: ${partnerForm.title || 'nie podano'}`,
+                      `Stanowisko / rola: ${partnerForm.title || partnerForm.staff_role || 'nie podano'}`,
                       `Gabinet / zespół: ${partnerForm.company || 'nie podano'}`,
                       'Napisz opis wyłącznie na podstawie tych danych i aktualnego pola bio.',
                       'Nie wymyślaj certyfikatów, tytułów, lat doświadczenia, uczelni, nazw procedur ani efektów leczenia.'
                     ].join('\n')}
-                    placeholder="Profesjonalny opis lekarza oparty o podane dane..."
+                    placeholder="Profesjonalny opis personelu oparty o podane dane..."
                     onApply={(text) => setPartnerForm({ ...partnerForm, bio: text })}
                   />
                 </div>
@@ -8139,7 +8324,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             {/* SEKCJA ZDJĘCIA */}
             <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
               <label className={`text-[10px] font-black uppercase tracking-widest mb-3 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Zdjęcie lekarza
+                Zdjęcie personelu
               </label>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -8222,7 +8407,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
               disabled={updating}
               className={`w-full mt-4 py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
             >
-              {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz lekarza' : 'Dodaj lekarza')}
+                {updating ? 'Zapisywanie...' : (isEditingPartner ? 'Zapisz personel' : 'Dodaj personel')}
             </button>
           </form>
         </div>
