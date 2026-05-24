@@ -2,52 +2,136 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --clinic-bg: #f4fbfc;
+  --clinic-bg-soft: #eaf7f9;
+  --clinic-panel: #ffffff;
+  --clinic-panel-strong: #f8fdfe;
+  --clinic-border: rgba(7, 16, 22, 0.10);
+  --clinic-text: #071016;
+  --clinic-muted: #5f7280;
+  --clinic-primary: #071016;
+  --clinic-accent: #67e8f9;
+  --clinic-accent-strong: #0891b2;
+  --clinic-success: #10b981;
+  --clinic-danger: #ef4444;
+  --clinic-warning: #f59e0b;
+  --clinic-shadow: 0 24px 70px rgba(7, 16, 22, 0.10);
+  --background: var(--clinic-bg);
+  --foreground: var(--clinic-text);
+}
+
+[data-clinic-theme="dark"] {
+  color-scheme: dark;
+  --clinic-bg: #071016;
+  --clinic-bg-soft: #0b151c;
+  --clinic-panel: #101a22;
+  --clinic-panel-strong: #0b1218;
+  --clinic-border: rgba(255, 255, 255, 0.10);
+  --clinic-text: #ffffff;
+  --clinic-muted: #94a3b8;
+  --clinic-primary: #071016;
+  --clinic-accent: #67e8f9;
+  --clinic-accent-strong: #22d3ee;
+  --clinic-success: #34d399;
+  --clinic-danger: #fb7185;
+  --clinic-warning: #fbbf24;
+  --clinic-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+  --background: var(--clinic-bg);
+  --foreground: var(--clinic-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-clinic-theme="light"]) {
+    color-scheme: dark;
+    --clinic-bg: #071016;
+    --clinic-bg-soft: #0b151c;
+    --clinic-panel: #101a22;
+    --clinic-panel-strong: #0b1218;
+    --clinic-border: rgba(255, 255, 255, 0.10);
+    --clinic-text: #ffffff;
+    --clinic-muted: #94a3b8;
+    --clinic-primary: #071016;
+    --clinic-accent: #67e8f9;
+    --clinic-accent-strong: #22d3ee;
+    --clinic-success: #34d399;
+    --clinic-danger: #fb7185;
+    --clinic-warning: #fbbf24;
+    --clinic-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+    --background: var(--clinic-bg);
+    --foreground: var(--clinic-text);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
-  /* Definicje fontów dla Tailwinda v4 */
   --font-sans: 'Montserrat', sans-serif;
   --font-serif: 'Cormorant Garamond', serif;
   --font-script: 'Great Vibes', cursive;
   --font-sans-alt: 'Montserrat Alternates', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans); 
+  font-family: var(--font-sans);
 }
 
-/* --- Narzędzia ANM Collective --- */
-
 @layer utilities {
-  /* Ukrywa paski przewijania */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
-  /* Animacja błysku dla paska postępu */
   @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
+
   .animate-shimmer {
     animation: shimmer 2s infinite;
+  }
+
+  .clinic-shell {
+    background:
+      radial-gradient(circle at 16% 10%, color-mix(in srgb, var(--clinic-accent) 20%, transparent), transparent 34rem),
+      radial-gradient(circle at 84% 16%, color-mix(in srgb, var(--clinic-success) 12%, transparent), transparent 30rem),
+      var(--clinic-bg);
+    color: var(--clinic-text);
+  }
+
+  .clinic-surface {
+    background: color-mix(in srgb, var(--clinic-panel) 92%, transparent);
+    border: 1px solid var(--clinic-border);
+    box-shadow: var(--clinic-shadow);
+  }
+
+  .clinic-surface-soft {
+    background: var(--clinic-panel-strong);
+    border: 1px solid var(--clinic-border);
+  }
+
+  .clinic-muted {
+    color: var(--clinic-muted);
+  }
+
+  .clinic-accent {
+    color: var(--clinic-accent);
+  }
+
+  .clinic-primary-button {
+    background: var(--clinic-accent);
+    color: #071016;
+  }
+
+  .clinic-secondary-button {
+    background: color-mix(in srgb, var(--clinic-panel) 70%, transparent);
+    border: 1px solid var(--clinic-border);
+    color: var(--clinic-text);
   }
 }

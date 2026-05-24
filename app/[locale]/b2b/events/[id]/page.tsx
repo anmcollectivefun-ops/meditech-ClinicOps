@@ -506,78 +506,6 @@ const [expandedContractorId, setExpandedContractorId] = useState<string | null>(
   const [templateSearch, setTemplateSearch] = useState('')
   const [isEditingConsentTemplate, setIsEditingConsentTemplate] = useState(false)
 
-  // --- STANY DLA NOWYCH FORMULARZY OGŁOSZEŃ ---
-  const [personalForm, setPersonalForm] = useState<any>({ category: 'zalecenia', font_family: 'Inter, sans-serif', patient_id: '' })
-  const [globalForm, setGlobalForm] = useState<any>({ category: 'standard', font_family: 'Inter, sans-serif' })
-  const [personalImgFile, setPersonalImgFile] = useState<File | null>(null)
-  const [globalImgFile, setGlobalImgFile] = useState<File | null>(null)
-
-  // FUNKCJA ZAPISU DLA FORMULARZA PERSONALNEGO (DLA KONKRETNEGO PACJENTA)
-  const handleSavePersonalAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!personalForm.patient_id || !personalForm.title) {
-      return showNotification('Wybierz pacjenta i podaj tytuł', 'error');
-    }
-    setUpdating(true);
-    try {
-      let imageUrl = null;
-      if (personalImgFile) {
-        imageUrl = await uploadFile(personalImgFile, id, 'personal-ann');
-      }
-
-      const { error } = await supabase.from('personal_announcements').insert([{
-        event_id: id,
-        patient_id: personalForm.patient_id,
-        title: personalForm.title,
-        description: personalForm.description || '',
-        font_family: personalForm.font_family,
-        category: personalForm.category,
-        image_url: imageUrl
-      }]);
-
-      if (error) throw error;
-      showNotification('Ogłoszenie personalne zostało przesłane na konto pacjenta!', 'success');
-      setPersonalForm({ category: 'zalecenia', font_family: 'Inter, sans-serif', patient_id: '' });
-      setPersonalImgFile(null);
-    } catch (err: any) {
-      showNotification('Błąd zapisu: ' + err.message, 'error');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // FUNKCJA ZAPISU DLA FORMULARZA GLOBALNEGO (DLA WSZYSTKICH)
-  const handleSaveGlobalAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!globalForm.title) {
-      return showNotification('Podaj tytuł ogłoszenia', 'error');
-    }
-    setUpdating(true);
-    try {
-      let imageUrl = null;
-      if (globalImgFile) {
-        imageUrl = await uploadFile(globalImgFile, id, 'global-ann');
-      }
-
-      const { error } = await supabase.from('global_announcements').insert([{
-        event_id: id,
-        title: globalForm.title,
-        description: globalForm.description || '',
-        font_family: globalForm.font_family,
-        category: globalForm.category,
-        image_url: imageUrl
-      }]);
-
-      if (error) throw error;
-      showNotification('Ogłoszenie globalne opublikowane na wszystkich profilach!', 'success');
-      setGlobalForm({ category: 'standard', font_family: 'Inter, sans-serif' });
-      setGlobalImgFile(null);
-    } catch (err: any) {
-      showNotification('Błąd zapisu: ' + err.message, 'error');
-    } finally {
-      setUpdating(false);
-    }
-  };
 // ==========================================
   // STANY prelegenci
   // ==========================================
@@ -1581,8 +1509,13 @@ const AiTextAssistButton = ({
   }, [event?.id, loadEcoAiReport, supabase])
 
   useEffect(() => {
-    const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('anm-planner-theme') : null
+    const storedTheme = typeof window !== 'undefined'
+      ? (localStorage.getItem('clinicops-theme') || localStorage.getItem('anm-planner-theme'))
+      : null
     setIsDarkMode(storedTheme === 'dark')
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.clinicTheme = storedTheme === 'dark' ? 'dark' : 'light'
+    }
   }, [])
 
   useEffect(() => {
@@ -1593,7 +1526,11 @@ const AiTextAssistButton = ({
     setIsDarkMode(prev => {
       const next = !prev
       if (typeof window !== 'undefined') {
+        localStorage.setItem('clinicops-theme', next ? 'dark' : 'light')
         localStorage.setItem('anm-planner-theme', next ? 'dark' : 'light')
+      }
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.clinicTheme = next ? 'dark' : 'light'
       }
       return next
     })
@@ -4881,7 +4818,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       onClick={() => setActiveTab(tabId)}
       className={`w-full min-w-0 ${isNavCollapsed ? 'px-2 py-2 justify-center' : 'px-3 py-3'} rounded-2xl text-left text-[11px] font-black transition-all flex items-center gap-3 border ${
         isActive
-          ? (isDarkMode ? 'bg-[#e8ce7a] text-[#0f172a] border-[#e8ce7a] shadow-md scale-[1.02]' : 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]')
+          ? (isDarkMode ? 'bg-cyan-200 text-[#071016] border-cyan-200 shadow-md scale-[1.02]' : 'bg-[#071016] text-white border-[#071016] shadow-md scale-[1.02]')
           : urgent && count && count > 0
             ? (isDarkMode ? 'bg-red-900/20 text-red-400 border-red-900/50 hover:bg-red-900/40' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100')
             : (isDarkMode ? 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-white' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900')
@@ -4889,7 +4826,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     >
       <span className={`${isNavCollapsed ? 'w-10 h-10' : 'w-9 h-9'} rounded-xl flex items-center justify-center shrink-0 transition-colors ${
         isActive
-          ? (isDarkMode ? 'bg-[#0f172a]/10 text-[#0f172a]' : 'bg-white/20 text-[#e8ce7a]')
+          ? (isDarkMode ? 'bg-[#071016]/10 text-[#071016]' : 'bg-white/20 text-cyan-200')
           : urgent && count && count > 0
             ? (isDarkMode ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600')
             : (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500')
@@ -4900,7 +4837,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       {!isNavCollapsed && count !== undefined && count > 0 && (
         <span className={`ml-auto shrink-0 px-2 py-1 rounded-full text-[10px] font-black tabular-nums text-center transition-colors ${
           isActive
-            ? (isDarkMode ? 'bg-[#0f172a] text-[#e8ce7a]' : 'bg-white text-slate-900')
+            ? (isDarkMode ? 'bg-[#071016] text-cyan-200' : 'bg-white text-slate-900')
             : urgent
               ? (isDarkMode ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-red-600 text-white animate-pulse')
               : (isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700')
@@ -4960,38 +4897,42 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     <div
       data-theme={isDarkMode ? 'dark' : 'light'}
       data-active-tab={activeTab}
-      className={`planner-shell ${isDarkMode ? 'planner-dark' : ''} min-h-screen bg-slate-50 font-sans pb-20`}
+      className={`planner-shell ${isDarkMode ? 'planner-dark' : ''} min-h-screen font-sans pb-20`}
     >
       <style jsx global>{`
         .planner-shell {
-          --app-bg: #f8fafc;
-          --app-surface: #ffffff;
-          --app-surface-muted: #f8fafc;
-          --app-border: #e2e8f0;
-          --app-text: #0f172a;
-          --app-text-muted: #64748b;
-          --app-primary: #253a2a;
-          --app-accent: #e8ce7a;
+          --app-bg: var(--clinic-bg);
+          --app-surface: var(--clinic-panel);
+          --app-surface-muted: var(--clinic-panel-strong);
+          --app-border: var(--clinic-border);
+          --app-text: var(--clinic-text);
+          --app-text-muted: var(--clinic-muted);
+          --app-primary: var(--clinic-primary);
+          --app-accent: var(--clinic-accent);
           --app-danger: #dc2626;
           --app-success: #047857;
-          background: var(--app-bg);
+          background:
+            radial-gradient(circle at 16% 10%, rgba(103, 232, 249, 0.12), transparent 34rem),
+            radial-gradient(circle at 84% 16%, rgba(16, 185, 129, 0.08), transparent 30rem),
+            var(--app-bg);
           color: var(--app-text);
         }
         .planner-shell.planner-dark {
-          --app-bg: #020617;
-          --app-surface: #111827;
-          --app-surface-muted: #0f172a;
-          --app-surface-soft: #1f2937;
+          --app-bg: #071016;
+          --app-surface: #101a22;
+          --app-surface-muted: #0b1218;
+          --app-surface-soft: #132330;
           --app-border: rgba(255, 255, 255, 0.10);
           --app-text: #ffffff;
-          --app-text-muted: rgba(255, 255, 255, 0.58);
-          --app-primary: #334155;
-          --app-accent: #e8ce7a;
+          --app-text-muted: #94a3b8;
+          --app-primary: #071016;
+          --app-accent: #67e8f9;
           --app-danger: #f87171;
           --app-success: #60a5fa;
           background:
-            radial-gradient(circle at top right, rgba(30, 41, 59, 0.72), transparent 34rem),
-            linear-gradient(180deg, #020617 0%, #030712 100%);
+            radial-gradient(circle at top right, rgba(103, 232, 249, 0.14), transparent 34rem),
+            radial-gradient(circle at top left, rgba(16, 185, 129, 0.10), transparent 30rem),
+            linear-gradient(180deg, #071016 0%, #0b151c 100%);
         }
         .planner-metric-grid {
           display: grid;
@@ -5131,24 +5072,38 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         .planner-shell.planner-dark input[type="checkbox"],
         .planner-shell.planner-dark input[type="radio"] {
           background-color: #020617 !important;
-          border-color: rgba(232, 206, 122, 0.42) !important;
+          border-color: rgba(103, 232, 249, 0.42) !important;
         }
         .planner-shell.planner-dark .planner-metric-card {
           background: var(--app-surface) !important;
           border-color: var(--app-border) !important;
           color: var(--app-text) !important;
         }
+        .planner-shell button[class*="bg-[#253a2a]"],
+        .planner-shell a[class*="bg-[#253a2a]"],
+        .planner-shell button[class*="bg-[#e8ce7a]"],
+        .planner-shell a[class*="bg-[#e8ce7a]"] {
+          background-color: var(--app-accent) !important;
+          color: #071016 !important;
+          border-color: rgba(103, 232, 249, 0.24) !important;
+        }
         .planner-shell.planner-dark:not([data-active-tab="eko"]) button[class*="bg-[#253a2a]"],
-        .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="bg-[#253a2a]"] {
-          background-color: #334155 !important;
-          color: #e8ce7a !important;
+        .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="bg-[#253a2a]"],
+        .planner-shell.planner-dark:not([data-active-tab="eko"]) button[class*="bg-[#e8ce7a]"],
+        .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="bg-[#e8ce7a]"] {
+          background-color: #67e8f9 !important;
+          color: #071016 !important;
           border-color: rgba(255, 255, 255, 0.10) !important;
         }
         .planner-shell.planner-dark:not([data-active-tab="eko"]) button[class*="hover:bg-[#1a291e]"]:hover,
         .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="hover:bg-[#1a291e]"]:hover,
         .planner-shell.planner-dark:not([data-active-tab="eko"]) button[class*="hover:bg-black"]:hover,
         .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="hover:bg-black"]:hover {
-          background-color: #475569 !important;
+          background-color: #22d3ee !important;
+        }
+        .planner-shell .text-\\[\\#e8ce7a\\],
+        .planner-shell [class~="text-[#e8ce7a]"] {
+          color: var(--app-accent) !important;
         }
         .planner-shell.planner-dark:not([data-active-tab="eko"]) button[class*="bg-emerald-"],
         .planner-shell.planner-dark:not([data-active-tab="eko"]) a[class*="bg-emerald-"] {

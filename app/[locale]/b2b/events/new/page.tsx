@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '../../../../lib/supabase'
 import { GOOGLE_FONT_OPTIONS, buildGoogleFontStack, getFontFamilyName } from '../../../../lib/googleFonts'
 import { useRouter } from 'next/navigation'
+import ClinicThemeToggle from '../../../../components/ClinicThemeToggle'
 import { ArrowRight, Briefcase, Globe, Palette, Type, UploadCloud } from 'lucide-react'
 
 export default function NewB2BEventPage() {
@@ -19,11 +20,11 @@ export default function NewB2BEventPage() {
     slug: '',
     selection_rule: 'manual',
     limit_attendees: 100,
-    primary_color: '#0e7490',
+    primary_color: '#071016',
     secondary_color: '#67e8f9',
-    bg_color: '#f8fafc',
-    text_color: '#475569',
-    heading_color: '#0f172a',
+    bg_color: '#f4fbfc',
+    text_color: '#5f7280',
+    heading_color: '#071016',
     heading_font: 'Inter, sans-serif',
     body_font: 'Inter, sans-serif',
     cover_image: null as File | null,
@@ -101,7 +102,6 @@ export default function NewB2BEventPage() {
       }]).select().single()
 
       if (error) throw error
-
       router.push(`/b2b/events/${data.id}`)
     } catch (err: any) {
       console.error(err)
@@ -111,56 +111,44 @@ export default function NewB2BEventPage() {
     }
   }
 
+  const inputClass = 'w-full rounded-2xl border border-[var(--clinic-border)] bg-[var(--clinic-panel-strong)] px-5 py-4 font-bold text-[var(--clinic-text)] outline-none focus:border-cyan-300'
+  const labelClass = 'clinic-muted ml-2 block text-[10px] font-black uppercase tracking-widest'
+
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans pb-32">
-      <div className="max-w-5xl mx-auto">
+    <div className="clinic-shell min-h-screen px-4 py-12 pb-32 font-sans">
+      <div className="fixed right-6 top-6 z-50">
+        <ClinicThemeToggle />
+      </div>
+
+      <div className="mx-auto max-w-5xl">
         <div className="mb-10">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kreator ClinicOps</h1>
-          <p className="text-slate-500 font-medium mt-2">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Nowa przestrzeń</p>
+          <h1 className="text-3xl font-black tracking-tight">Kreator ClinicOps</h1>
+          <p className="clinic-muted mt-2 font-medium">
             Skonfiguruj profil placówki, publiczny formularz pacjenta i podstawową ścieżkę pierwszego kontaktu.
           </p>
         </div>
 
         <form onSubmit={handleCreate} className="space-y-8">
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <Briefcase size={20} className="text-cyan-600" /> Podstawy placówki
+          <section className="clinic-surface rounded-[32px] p-8">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
+              <Briefcase size={20} className="text-cyan-300" /> Podstawy placówki
             </h2>
             <div className="space-y-6">
-              <input
-                required
-                placeholder="Nazwa placówki lub projektu medycznego"
-                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-5 font-black text-2xl outline-none focus:ring-2 focus:ring-cyan-500/20"
-                onChange={e => setFormData({...formData, title: e.target.value})}
-              />
-              <textarea
-                placeholder="Krótki opis specjalizacji, zespołu i zakresu obsługi pacjenta..."
-                rows={2}
-                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold text-slate-600 outline-none resize-none"
-                onChange={e => setFormData({...formData, description: e.target.value})}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  required
-                  type="date"
-                  className="bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold outline-none text-slate-600"
-                  onChange={e => setFormData({...formData, event_date: e.target.value})}
-                />
-                <input
-                  required
-                  placeholder="Lokalizacja placówki"
-                  className="bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold outline-none"
-                  onChange={e => setFormData({...formData, location: e.target.value})}
-                />
+              <input required placeholder="Nazwa placówki lub projektu medycznego" className={`${inputClass} py-5 text-2xl font-black`} onChange={e => setFormData({...formData, title: e.target.value})} />
+              <textarea placeholder="Krótki opis specjalizacji, zespołu i zakresu obsługi pacjenta..." rows={2} className={`${inputClass} resize-none clinic-muted`} onChange={e => setFormData({...formData, description: e.target.value})} />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input required type="date" className={inputClass} onChange={e => setFormData({...formData, event_date: e.target.value})} />
+                <input required placeholder="Lokalizacja placówki" className={inputClass} onChange={e => setFormData({...formData, location: e.target.value})} />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <Palette size={20} className="text-cyan-600" /> Brand placówki
+          <section className="clinic-surface rounded-[32px] p-8">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
+              <Palette size={20} className="text-cyan-300" /> Brand placówki
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
               {[
                 { label: 'Tło strony', key: 'bg_color', val: formData.bg_color },
                 { label: 'Nagłówki', key: 'heading_color', val: formData.heading_color },
@@ -168,19 +156,19 @@ export default function NewB2BEventPage() {
                 { label: 'Akcent główny', key: 'primary_color', val: formData.primary_color },
                 { label: 'Akcent dodatkowy', key: 'secondary_color', val: formData.secondary_color }
               ].map((item) => (
-                <div key={item.key} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center flex flex-col items-center justify-center gap-3">
-                  <input type="color" value={item.val} onChange={e => setFormData({...formData, [item.key]: e.target.value})} className="w-12 h-12 rounded-full cursor-pointer border-none bg-transparent" />
-                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">{item.label}</span>
+                <div key={item.key} className="clinic-surface-soft flex flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center">
+                  <input type="color" value={item.val} onChange={e => setFormData({...formData, [item.key]: e.target.value})} className="h-12 w-12 cursor-pointer rounded-full border-none bg-transparent" />
+                  <span className="clinic-muted text-[9px] font-black uppercase tracking-wider">{item.label}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <Type size={20} className="text-cyan-600" /> Typografia
+          <section className="clinic-surface rounded-[32px] p-8">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
+              <Type size={20} className="text-cyan-300" /> Typografia
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {[
                 { label: 'Czcionka nagłówków', key: 'heading_font' },
                 { label: 'Czcionka tekstów', key: 'body_font' }
@@ -188,9 +176,9 @@ export default function NewB2BEventPage() {
                 const current = formData[key as 'heading_font' | 'body_font']
                 return (
                   <div key={key} className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">{label}</label>
+                    <label className={labelClass}>{label}</label>
                     <select
-                      className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 font-bold outline-none"
+                      className={inputClass}
                       value={GOOGLE_FONT_OPTIONS.some(font => font.family === getFontFamilyName(current)) ? getFontFamilyName(current) : ''}
                       onChange={e => e.target.value && setFormData({...formData, [key]: buildGoogleFontStack(e.target.value)})}
                     >
@@ -199,90 +187,82 @@ export default function NewB2BEventPage() {
                         <option key={font.family} value={font.family}>{font.family} ({font.category})</option>
                       ))}
                     </select>
-                    <input
-                      className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 font-bold outline-none"
-                      value={getFontFamilyName(current)}
-                      onChange={e => setFormData({...formData, [key]: buildGoogleFontStack(e.target.value)})}
-                      placeholder="Albo wpisz własną nazwę, np. Lato"
-                    />
+                    <input className={inputClass} value={getFontFamilyName(current)} onChange={e => setFormData({...formData, [key]: buildGoogleFontStack(e.target.value)})} placeholder="Albo wpisz własną nazwę, np. Lato" />
                   </div>
                 )
               })}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <UploadCloud size={20} className="text-cyan-600" /> Pliki i multimedia placówki
+          <section className="clinic-surface rounded-[32px] p-8">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-black">
+              <UploadCloud size={20} className="text-cyan-300" /> Pliki i multimedia placówki
             </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-cyan-50/50 p-6 rounded-2xl border border-cyan-100 border-dashed">
-                <label className="text-[10px] font-black uppercase tracking-widest text-cyan-800 block mb-3">Zdjęcie placówki lub zespołu</label>
-                <input type="file" accept="image/*" className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-cyan-700 file:text-white" onChange={e => e.target.files && setFormData({...formData, cover_image: e.target.files[0]})} />
+            <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-6">
+                <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-cyan-300">Zdjęcie placówki lub zespołu</label>
+                <input type="file" accept="image/*" className="text-xs file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-4 file:py-2 file:font-black file:text-[#071016]" onChange={e => e.target.files && setFormData({...formData, cover_image: e.target.files[0]})} />
               </div>
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 border-dashed">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 block mb-3">Logo placówki</label>
-                <input type="file" accept="image/*" className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-black file:bg-slate-200 file:text-slate-700" onChange={e => e.target.files && setFormData({...formData, logo: e.target.files[0]})} />
+              <div className="clinic-surface-soft rounded-2xl border-dashed p-6">
+                <label className="clinic-muted mb-3 block text-[10px] font-black uppercase tracking-widest">Logo placówki</label>
+                <input type="file" accept="image/*" className="text-xs file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-300/20 file:px-4 file:py-2 file:font-black file:text-cyan-300" onChange={e => e.target.files && setFormData({...formData, logo: e.target.files[0]})} />
               </div>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">Galeria placówki i specjalizacji</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <label className={labelClass}>Galeria placówki i specjalizacji</label>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {[1, 2, 3].map(num => (
-                  <div key={num} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="text-[9px] font-black text-slate-400 block mb-2">Zdjęcie {num}</span>
-                    <input type="file" accept="image/*" className="text-[10px] w-full" onChange={e => {
-                      if (e.target.files) {
-                        setFormData(prev => ({ ...prev, [`image_${num}`]: e.target.files![0] }))
-                      }
+                  <div key={num} className="clinic-surface-soft rounded-2xl p-4">
+                    <span className="clinic-muted mb-2 block text-[9px] font-black">Zdjęcie {num}</span>
+                    <input type="file" accept="image/*" className="w-full text-[10px]" onChange={e => {
+                      if (e.target.files) setFormData(prev => ({ ...prev, [`image_${num}`]: e.target.files![0] }))
                     }} />
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="bg-slate-950 p-8 rounded-[32px] shadow-xl text-white relative overflow-hidden">
-            <h2 className="text-xl font-black mb-6 flex items-center gap-2 relative z-10">
+          <section className="rounded-[32px] border border-cyan-300/20 bg-[#071016] p-8 text-white shadow-xl">
+            <h2 className="relative z-10 mb-6 flex items-center gap-2 text-xl font-black">
               <Globe size={20} className="text-cyan-300" /> Ścieżka pierwszego kontaktu
             </h2>
-            <div className="space-y-6 relative z-10">
+            <div className="relative z-10 space-y-6">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Unikalny link formularza pacjenta</label>
-                <div className="flex items-center bg-white/10 rounded-2xl px-4 py-1 border border-white/10">
-                  <span className="text-slate-400 text-sm font-mono">{currentDomain}/join/</span>
-                  <input required placeholder="nazwa-kliniki" className="bg-transparent border-none focus:ring-0 font-bold text-cyan-300 flex-1 py-3 outline-none" onChange={e => setFormData({...formData, slug: e.target.value})} />
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Unikalny link formularza pacjenta</label>
+                <div className="flex items-center rounded-2xl border border-white/10 bg-white/10 px-4 py-1">
+                  <span className="font-mono text-sm text-slate-400">{currentDomain}/join/</span>
+                  <input required placeholder="nazwa-kliniki" className="flex-1 border-none bg-transparent py-3 font-bold text-cyan-300 outline-none" onChange={e => setFormData({...formData, slug: e.target.value})} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Obsługa zgłoszeń pacjentów</label>
-                  <select className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 font-bold outline-none text-slate-900" onChange={e => setFormData({...formData, selection_rule: e.target.value})}>
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Obsługa zgłoszeń pacjentów</label>
+                  <select className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-4 font-bold text-white outline-none" onChange={e => setFormData({...formData, selection_rule: e.target.value})}>
                     <option value="manual">Recepcja zatwierdza ręcznie</option>
                     <option value="first_x">Automatyczna akceptacja</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Limit aktywnych pacjentów</label>
-                  <input type="number" value={formData.limit_attendees} className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 font-bold outline-none" onChange={e => setFormData({...formData, limit_attendees: parseInt(e.target.value)})} />
+                  <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Limit aktywnych pacjentów</label>
+                  <input type="number" value={formData.limit_attendees} className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-4 font-bold outline-none" onChange={e => setFormData({...formData, limit_attendees: parseInt(e.target.value)})} />
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="sticky bottom-8 z-50">
+          <div className="sticky bottom-8 z-40">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-6 bg-cyan-700 hover:bg-cyan-600 text-white rounded-[24px] font-black text-xl shadow-2xl shadow-cyan-900/30 transition-all flex flex-col items-center justify-center gap-1 active:scale-[0.98] border-2 border-cyan-400/20"
+              className="clinic-primary-button flex w-full flex-col items-center justify-center gap-1 rounded-[24px] border border-cyan-300/20 py-6 text-xl font-black shadow-2xl shadow-cyan-900/20 transition-all active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
                 {loading ? 'PRZETWARZANIE DANYCH...' : <>UTWÓRZ ŚRODOWISKO CLINICOPS <ArrowRight /></>}
               </div>
-              {loading && <span className="text-[10px] font-bold text-cyan-100 uppercase tracking-widest">{uploadStatus}</span>}
+              {loading && <span className="text-[10px] font-bold uppercase tracking-widest text-[#071016]/70">{uploadStatus}</span>}
             </button>
           </div>
         </form>

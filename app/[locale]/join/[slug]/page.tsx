@@ -15,7 +15,9 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
+  Info,
+  Megaphone,
+  User,
   X,
 } from 'lucide-react'
 import { createClient } from '../../../lib/supabase'
@@ -29,6 +31,16 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+// Pomocnicza funkcja do kolorowania etykiet ogłoszeń
+const getCategoryBadge = (category: string) => {
+  const cat = String(category).toLowerCase();
+  if (cat.includes('promocja')) return { label: 'Promocja', color: 'bg-rose-500/10 text-rose-300 border-rose-500/20' };
+  if (cat.includes('zalecenia')) return { label: 'Ważne zalecenia', color: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' };
+  if (cat.includes('faq') || cat.includes('ważne') || cat.includes('alert')) return { label: 'Ważna informacja', color: 'bg-amber-500/10 text-amber-300 border-amber-500/20' };
+  if (cat.includes('lekarze')) return { label: 'Nasz Zespół', color: 'bg-purple-500/10 text-purple-300 border-purple-500/20' };
+  return { label: 'Aktualność', color: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20' };
+}
+
 export default function PatientPortal() {
   const supabase = useMemo(() => createClient(), [])
 
@@ -38,10 +50,15 @@ export default function PatientPortal() {
   const [patient, setPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'start' | 'dokumenty' | 'wizyty' | 'kontakt'>('start')
+  
+  // Stany Danych
   const [consents, setConsents] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [portalRequests, setPortalRequests] = useState<any[]>([])
   const [portalMessages, setPortalMessages] = useState<any[]>([])
+  const [personalAnnouncements, setPersonalAnnouncements] = useState<any[]>([])
+  const [globalAnnouncements, setGlobalAnnouncements] = useState<any[]>([])
+  
   const [selectedConsentToSign, setSelectedConsentToSign] = useState<any>(null)
   const [isSigning, setIsSigning] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, any>>({})
@@ -75,7 +92,6 @@ export default function PatientPortal() {
       .select('*, medical_consent_templates(*)')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false })
-
     if (!joined.error) return joined.data || []
 
     const plain = await supabase
@@ -83,54 +99,23 @@ export default function PatientPortal() {
       .select('*')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false })
-
     if (plain.error) throw plain.error
     return plain.data || []
   }
 
   const loadAppointmentsForPatient = async (patientId: string) => {
-    const result = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('appointment_date', { ascending: true })
-
-    if (result.error) {
-      console.warn('Patient appointments unavailable:', result.error.message)
-      return []
-    }
-
-    return result.data || []
+    const result = await supabase.from('appointments').select('*').eq('patient_id', patientId).order('appointment_date', { ascending: true })
+    return result.error ? [] : (result.data || [])
   }
 
   const loadRequestsForPatient = async (patientId: string) => {
-    const result = await supabase
-      .from('patient_portal_requests')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false })
-
-    if (result.error) {
-      console.warn('Patient portal requests unavailable:', result.error.message)
-      return []
-    }
-
-    return result.data || []
+    const result = await supabase.from('patient_portal_requests').select('*').eq('patient_id', patientId).order('created_at', { ascending: false })
+    return result.error ? [] : (result.data || [])
   }
 
   const loadMessagesForPatient = async (patientId: string) => {
-    const result = await supabase
-      .from('patient_portal_messages')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: true })
-
-    if (result.error) {
-      console.warn('Patient portal messages unavailable:', result.error.message)
-      return []
-    }
-
-    return result.data || []
+    const result = await supabase.from('patient_portal_messages').select('*').eq('patient_id', patientId).order('created_at', { ascending: true })
+    return result.error ? [] : (result.data || [])
   }
 
   const loadPatientDirectly = async (normalizedPesel: string) => {
@@ -147,14 +132,25 @@ export default function PatientPortal() {
 
     if (!foundPatient) return null
 
-    const [patientConsents, patientAppointments, patientRequests, patientMessages] = await Promise.all([
+    // Pobieramy wszystko równolegle, w tym NOWE OGŁOSZENIA
+    const [patientConsents, patientAppointments, patientRequests, patientMessages, personalAnns, globalAnns] = await Promise.all([
       loadConsentsForPatient(foundPatient.id),
       loadAppointmentsForPatient(foundPatient.id),
       loadRequestsForPatient(foundPatient.id),
       loadMessagesForPatient(foundPatient.id),
+      supabase.from('personal_announcements').select('*').eq('patient_id', foundPatient.id).order('created_at', { ascending: false }),
+      supabase.from('global_announcements').select('*').order('created_at', { ascending: false })
     ])
 
-    return { patient: foundPatient, consents: patientConsents, appointments: patientAppointments, requests: patientRequests, messages: patientMessages }
+    return { 
+      patient: foundPatient, 
+      consents: patientConsents, 
+      appointments: patientAppointments, 
+      requests: patientRequests, 
+      messages: patientMessages,
+      personalAnnouncements: personalAnns.data || [],
+      globalAnnouncements: globalAnns.data || []
+    }
   }
 
   const refreshPortal = async () => {
@@ -167,6 +163,8 @@ export default function PatientPortal() {
     setAppointments(refreshed.appointments)
     setPortalRequests(refreshed.requests)
     setPortalMessages(refreshed.messages)
+    setPersonalAnnouncements(refreshed.personalAnnouncements)
+    setGlobalAnnouncements(refreshed.globalAnnouncements)
   }
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -192,6 +190,8 @@ export default function PatientPortal() {
       setAppointments(portalData.appointments)
       setPortalRequests(portalData.requests)
       setPortalMessages(portalData.messages)
+      setPersonalAnnouncements(portalData.personalAnnouncements)
+      setGlobalAnnouncements(portalData.globalAnnouncements)
       setIsLoggedIn(true)
     } catch (err: any) {
       setLoginError('Nie udało się połączyć z portalem: ' + (err?.message || 'błąd'))
@@ -208,6 +208,8 @@ export default function PatientPortal() {
     setAppointments([])
     setPortalRequests([])
     setPortalMessages([])
+    setPersonalAnnouncements([])
+    setGlobalAnnouncements([])
     setRequestSuccess('')
   }
 
@@ -402,6 +404,93 @@ export default function PatientPortal() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10">
+
+        {/* ============================================================================ */}
+        {/* NOWOŚĆ: SEKCJA OGŁOSZEŃ (PERSONALNE I GLOBALNE) */}
+        {/* ============================================================================ */}
+        {(personalAnnouncements.length > 0 || globalAnnouncements.length > 0) && activeTab === 'start' && (
+          <section className="mb-8 space-y-6">
+            
+            {/* OGŁOSZENIA PERSONALNE (Tylko dla tego pacjenta) */}
+            {personalAnnouncements.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-cyan-200 flex items-center gap-2">
+                  <User size={16} /> Ważne informacje dla Ciebie
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {personalAnnouncements.map((ann: any) => {
+                    const badge = getCategoryBadge(ann.category);
+                    return (
+                      <div key={ann.id} className="relative overflow-hidden rounded-[24px] border border-cyan-500/30 bg-[#101a22]/90 shadow-[0_8px_30px_rgba(34,211,238,0.1)] flex flex-col">
+                        {ann.image_url && (
+                          <div className="h-32 w-full shrink-0 border-b border-white/10">
+                            <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="mb-3">
+                            <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded border ${badge.color}`}>
+                              {badge.label}
+                            </span>
+                          </div>
+                          <h4 className="text-base font-black text-white mb-2" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                            {ann.title}
+                          </h4>
+                          {ann.description && (
+                            <p className="text-xs text-slate-300 font-medium leading-relaxed flex-1 whitespace-pre-wrap" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                              {ann.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* OGŁOSZENIA GLOBALNE (Dla wszystkich) */}
+            {globalAnnouncements.length > 0 && (
+              <div className="space-y-4 pt-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <Megaphone size={16} /> Aktualności z naszej kliniki
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {globalAnnouncements.map((ann: any) => {
+                    const badge = getCategoryBadge(ann.category);
+                    return (
+                      <div key={ann.id} className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[#101a22]/60 flex flex-col">
+                        {ann.image_url && (
+                          <div className="h-32 w-full shrink-0 border-b border-white/10">
+                            <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="mb-2">
+                            <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded border ${badge.color}`}>
+                              {badge.label}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-black text-white mb-1.5" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                            {ann.title}
+                          </h4>
+                          {ann.description && (
+                            <p className="text-[11px] text-slate-400 font-medium leading-relaxed flex-1 line-clamp-3" style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+                              {ann.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+          </section>
+        )}
+        {/* ============================================================================ */}
+
         <section className="mb-7 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 rounded-[34px] border border-white/10 bg-[#101a22]/75 p-6 md:p-8 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Twoja ścieżka opieki</p>

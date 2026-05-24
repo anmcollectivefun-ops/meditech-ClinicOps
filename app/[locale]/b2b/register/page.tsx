@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import ClinicThemeToggle from '../../../components/ClinicThemeToggle'
 import { ArrowRight, Building2, FileText, Lock, Mail, MapPin } from 'lucide-react'
 
 export default function B2BRegister() {
@@ -37,72 +38,77 @@ export default function B2BRegister() {
         is_pro: true
       })
 
-      if (!profileError) {
-        router.push('/b2b/dashboard')
-      }
+      if (!profileError) router.push('/b2b/dashboard')
     }
     setLoading(false)
   }
 
+  const fieldClass = 'w-full rounded-2xl border border-[var(--clinic-border)] bg-[var(--clinic-panel-strong)] py-3 pl-10 pr-4 text-sm font-bold text-[var(--clinic-text)] outline-none focus:border-cyan-300'
+  const labelClass = 'clinic-muted text-xs font-bold uppercase'
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white max-w-xl w-full rounded-3xl shadow-xl p-8 border border-slate-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-slate-950 rounded-xl flex items-center justify-center text-cyan-300">
+    <div className="clinic-shell flex min-h-screen items-center justify-center p-4">
+      <div className="absolute right-6 top-6">
+        <ClinicThemeToggle />
+      </div>
+
+      <div className="clinic-surface w-full max-w-xl rounded-[32px] p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300">
             <Building2 size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-800">Rejestracja ClinicOps</h1>
-            <p className="text-sm text-slate-500">Załóż konto dla placówki medycznej.</p>
+            <h1 className="text-2xl font-black">Rejestracja ClinicOps</h1>
+            <p className="clinic-muted text-sm">Załóż konto dla placówki medycznej.</p>
           </div>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase">E-mail służbowy</label>
+              <label className={labelClass}>E-mail służbowy</label>
               <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-cyan-600" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={16} />
+                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className={fieldClass} />
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase">Hasło</label>
+              <label className={labelClass}>Hasło</label>
               <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-cyan-600" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={16} />
+                <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={fieldClass} />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100">
-            <h3 className="text-sm font-black text-slate-800 mb-4">Dane placówki i systemu</h3>
+          <div className="border-t border-[var(--clinic-border)] pt-4">
+            <h3 className="mb-4 text-sm font-black">Dane placówki i systemu</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase">Nazwa placówki</label>
+                <label className={labelClass}>Nazwa placówki</label>
                 <div className="relative mt-1">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input required type="text" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-cyan-600" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={16} />
+                  <input required type="text" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} className={fieldClass} />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase">NIP</label>
+                <label className={labelClass}>NIP</label>
                 <div className="relative mt-1">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input required type="text" value={formData.nip} onChange={e => setFormData({...formData, nip: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-cyan-600" />
+                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={16} />
+                  <input required type="text" value={formData.nip} onChange={e => setFormData({...formData, nip: e.target.value})} className={fieldClass} />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase">Adres placówki</label>
+                <label className={labelClass}>Adres placówki</label>
                 <div className="relative mt-1">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input required type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:border-cyan-600" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300" size={16} />
+                  <input required type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className={fieldClass} />
                 </div>
               </div>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full mt-6 flex items-center justify-center gap-2 py-4 bg-slate-950 text-white rounded-xl font-black text-sm shadow-xl hover:bg-black transition-all">
+          <button type="submit" disabled={loading} className="clinic-primary-button mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black shadow-xl transition-all">
             {loading ? 'Tworzenie konta...' : <>Utwórz konto kliniki <ArrowRight size={16} /></>}
           </button>
         </form>

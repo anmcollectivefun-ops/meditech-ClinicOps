@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import ClinicThemeToggle from '../../../components/ClinicThemeToggle'
 import { Activity, ChevronRight, Plus, Stethoscope } from 'lucide-react'
 
 export default function B2BDashboardPage() {
@@ -47,64 +48,70 @@ export default function B2BDashboardPage() {
   }, [router, supabase])
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      <header className="bg-slate-950 text-white p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="clinic-shell min-h-screen font-sans">
+      <header className="border-b border-[var(--clinic-border)] bg-[color-mix(in_srgb,var(--clinic-panel)_82%,transparent)] p-4 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-300 rounded flex items-center justify-center text-slate-950">
-              <Stethoscope size={16} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300">
+              <Stethoscope size={18} />
             </div>
-            <span className="font-black tracking-widest uppercase text-xs">ANM ClinicOps</span>
+            <span className="text-xs font-black uppercase tracking-widest">ANM ClinicOps</span>
           </div>
-          <button className="text-xs font-bold text-slate-300 hover:text-white">Ustawienia</button>
+          <div className="flex items-center gap-2">
+            <ClinicThemeToggle />
+            <button className="clinic-secondary-button rounded-2xl px-4 py-2 text-xs font-bold transition hover:border-cyan-300/50">
+              Ustawienia
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex justify-between items-end mb-8 gap-6">
+      <main className="mx-auto max-w-7xl px-4 py-12">
+        <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 mb-2">Centrum kliniki</h1>
-            <p className="text-sm text-slate-500 font-medium">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Centrum dowodzenia</p>
+            <h1 className="mb-2 text-3xl font-black tracking-tight">Centrum kliniki</h1>
+            <p className="clinic-muted max-w-2xl text-sm font-medium">
               Zarządzaj pacjentem, pierwszym kontaktem, zgodami, follow-upem i analityką placówki.
             </p>
           </div>
-          <button onClick={() => router.push('/b2b/events/new')} className="bg-cyan-700 hover:bg-cyan-600 text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 transition-all shadow-lg shadow-cyan-700/20">
+          <button onClick={() => router.push('/b2b/events/new')} className="clinic-primary-button flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black shadow-lg shadow-cyan-300/10 transition hover:-translate-y-0.5">
             <Plus size={18} /> Nowa klinika
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 font-black text-slate-400 animate-pulse">Ładowanie przestrzeni ClinicOps...</div>
+          <div className="py-20 text-center font-black clinic-muted animate-pulse">Ładowanie przestrzeni ClinicOps...</div>
         ) : clinics.length === 0 ? (
-          <div className="bg-white border border-slate-200 border-dashed rounded-[40px] p-20 text-center">
-            <Activity size={48} className="text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-slate-800 mb-2">Przestrzeń kliniczna jest pusta</h3>
-            <p className="text-slate-500 text-sm mb-6 max-w-md mx-auto">
+          <div className="clinic-surface rounded-[40px] border-dashed p-12 text-center md:p-20">
+            <Activity size={48} className="mx-auto mb-4 text-cyan-300" />
+            <h3 className="mb-2 text-xl font-black">Przestrzeń kliniczna jest pusta</h3>
+            <p className="clinic-muted mx-auto mb-6 max-w-md text-sm">
               Utwórz pierwszy projekt kliniki, aby rozpocząć konfigurację pacjenta 360, obsługi zapytań, zgód i analityki.
             </p>
-            <button onClick={() => router.push('/b2b/events/new')} className="bg-slate-900 hover:bg-black text-white px-6 py-3 rounded-xl font-black text-sm transition-all shadow-lg inline-flex items-center gap-2">
+            <button onClick={() => router.push('/b2b/events/new')} className="clinic-primary-button inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black shadow-lg transition">
               <Plus size={18} /> Utwórz projekt kliniki
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {clinics.map(clinic => (
-              <div key={clinic.id} onClick={() => router.push(`/b2b/events/${clinic.id}`)} className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm hover:shadow-xl hover:border-cyan-200 transition-all cursor-pointer group flex flex-col">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner" style={{ backgroundColor: (clinic.primary_color || '#0e7490') + '20', color: clinic.primary_color || '#0e7490' }}>
+              <div key={clinic.id} onClick={() => router.push(`/b2b/events/${clinic.id}`)} className="clinic-surface flex cursor-pointer flex-col rounded-[32px] p-6 transition hover:-translate-y-1 hover:border-cyan-300/50">
+                <div className="mb-6 flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300 shadow-inner">
                     <Stethoscope size={24} />
                   </div>
-                  <span className="bg-slate-100 text-slate-600 text-[10px] font-black uppercase px-2 py-1 rounded-md">
+                  <span className="clinic-surface-soft rounded-xl px-2 py-1 text-[10px] font-black uppercase clinic-muted">
                     {clinic.status || 'Aktywna'}
                   </span>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 mb-1 line-clamp-1">{clinic.title}</h3>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-6 flex-1">{clinic.location}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                  <span className="text-xs text-slate-400 font-medium">
+                <h3 className="mb-1 line-clamp-1 text-xl font-black">{clinic.title}</h3>
+                <p className="clinic-muted mb-6 flex-1 text-xs font-bold uppercase tracking-wider">{clinic.location}</p>
+                <div className="flex items-center justify-between border-t border-[var(--clinic-border)] pt-4">
+                  <span className="clinic-muted text-xs font-medium">
                     {clinic.event_date ? new Date(clinic.event_date).toLocaleDateString('pl-PL') : 'Plan bez daty startu'}
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-colors">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-300/10 text-cyan-300 transition-colors group-hover:bg-cyan-300">
                     <ChevronRight size={16} />
                   </div>
                 </div>
