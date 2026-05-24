@@ -8213,7 +8213,387 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
             <Sparkles size={16} /> Kreator zgód AI
           </button>
         </div>
-      </div>    </div>
+      </div>
+
+      {isScanUploadModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+          <div className={`rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+              <div>
+                <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <Download size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+                  Otaguj dokument
+                </h3>
+                <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Przypisz wgrany skan do konkretnego pacjenta i typu dokumentu.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsScanUploadModalOpen(false)
+                  setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
+                }}
+                className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`rounded-2xl border flex items-center justify-center overflow-hidden ${isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-300 bg-slate-100'}`} style={{ minHeight: '250px' }}>
+                {scanUploadForm.preview ? (
+                  <img src={scanUploadForm.preview} alt="Podgląd skanu" className="max-w-full max-h-[300px] object-contain" />
+                ) : (
+                  <div className="text-center p-4 text-slate-400">
+                    <FileIcon size={40} className="mx-auto mb-2 opacity-50" />
+                    <p className="text-xs font-bold uppercase tracking-wider">Dokument PDF</p>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                if (!scanUploadForm.patient_id || !scanUploadForm.template_id || !scanUploadForm.file) {
+                  return showNotification('Wybierz pacjenta, szablon dokumentu i plik.', 'error')
+                }
+
+                setUpdating(true)
+                try {
+                  const uploadedFileUrl = await uploadFile(
+                    scanUploadForm.file,
+                    scanUploadForm.patient_id,
+                    `patient-consent-${scanUploadForm.template_id}`
+                  )
+
+                  const { error } = await supabase.from('patient_consents').insert([{
+                    event_id: id,
+                    patient_id: scanUploadForm.patient_id,
+                    template_id: scanUploadForm.template_id,
+                    status: 'scanned_document',
+                    file_url: uploadedFileUrl,
+                    signed_at: new Date().toISOString()
+                  }])
+
+                  if (error) throw error
+
+                  showNotification('Dokument został połączony z kartą pacjenta.', 'success')
+                  await loadPatientConsents()
+                  setScanUploadForm({ patient_id: '', template_id: '', file: null, preview: null })
+                  setIsScanUploadModalOpen(false)
+                } catch (err: any) {
+                  showNotification('Błąd zapisu skanu: ' + err.message, 'error')
+                } finally {
+                  setUpdating(false)
+                }
+              }} className="space-y-5">
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    1. Wybierz pacjenta *
+                  </label>
+                  <select
+                    required
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                    value={scanUploadForm.patient_id}
+                    onChange={e => setScanUploadForm({ ...scanUploadForm, patient_id: e.target.value })}
+                  >
+                    <option value="">-- Wyszukaj pacjenta --</option>
+                    {patients.map((patient: any) => (
+                      <option key={patient.id} value={patient.id}>
+                        {patient.first_name} {patient.last_name} ({patient.pesel || patient.phone || 'brak identyfikatora'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    2. Czego dotyczy dokument? *
+                  </label>
+                  <select
+                    required
+                    className={`w-full border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                    value={scanUploadForm.template_id}
+                    onChange={e => setScanUploadForm({ ...scanUploadForm, template_id: e.target.value })}
+                  >
+                    <option value="">-- Wybierz szablon z bazy --</option>
+                    {consentTemplates.map((template: any) => (
+                      <option key={template.id} value={template.id}>{template.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    3. Plik / zdjęcie dokumentu
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    className={`w-full border rounded-xl px-4 py-3 text-xs font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                    onChange={e => {
+                      const file = e.target.files?.[0] || null
+                      setScanUploadForm({
+                        ...scanUploadForm,
+                        file,
+                        preview: file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+                      })
+                    }}
+                  />
+                </div>
+
+                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-emerald-900/10 border-emerald-900/30' : 'bg-emerald-50 border-emerald-200/50'}`}>
+                  <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                    <ShieldCheck size={12}/> Audyt systemowy
+                  </p>
+                  <p className={`text-xs font-medium mt-1 ${isDarkMode ? 'text-emerald-500/80' : 'text-emerald-800'}`}>
+                    Ten plik zostanie zapisany jako zweryfikowany dokument pacjenta.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+                >
+                  {updating ? 'Zapisywanie...' : 'Zapisz w karcie pacjenta'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isConsentTemplateModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+          <div className={`rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={`flex justify-between items-center mb-6 pb-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+              <div>
+                <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <Edit3 size={20} className={isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-800'} />
+                  Kreator szablonu dokumentu
+                </h3>
+                <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Dodaj lub popraw wzór dokumentu, który pacjent zobaczy w swoim portalu.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConsentTemplateModalOpen(false)}
+                className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              setUpdating(true)
+
+              try {
+                const payload: any = {
+                  event_id: id,
+                  title: consentTemplateForm.title,
+                  description: consentTemplateForm.description || null,
+                  document_type: consentTemplateForm.document_type || 'consent',
+                  required_for_treatment: consentTemplateForm.required_for_treatment || null,
+                  validity_months: consentTemplateForm.validity_months ? Number(consentTemplateForm.validity_months) : null,
+                  version: Number(consentTemplateForm.version || 1),
+                  is_global_required: !!consentTemplateForm.is_global_required,
+                  is_active: consentTemplateForm.is_active !== false,
+                  content_template: consentTemplateForm.content_template || ''
+                }
+
+                if (payload.document_type === 'questionnaire') {
+                  payload.content_template = JSON.stringify(consentTemplateForm.questions || [])
+                }
+
+                if (isEditingConsentTemplate && consentTemplateForm.id) {
+                  const { error } = await supabase
+                    .from('medical_consent_templates')
+                    .update(payload)
+                    .eq('id', consentTemplateForm.id)
+
+                  if (error) throw error
+                  showNotification('Szablon dokumentu został zaktualizowany.', 'success')
+                } else {
+                  const { error } = await supabase
+                    .from('medical_consent_templates')
+                    .insert([payload])
+
+                  if (error) throw error
+                  showNotification('Nowy szablon dokumentu został zapisany.', 'success')
+                }
+
+                await loadConsentTemplates()
+                setConsentTemplateForm({})
+                setIsEditingConsentTemplate(false)
+                setIsConsentTemplateModalOpen(false)
+              } catch (err: any) {
+                console.error('Błąd zapisu dokumentu:', err)
+                showNotification('Błąd zapisu szablonu: ' + (err?.message || 'Nieznany błąd'), 'error')
+              } finally {
+                setUpdating(false)
+              }
+            }} className="space-y-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Tytuł dokumentu *
+                  </label>
+                  <input
+                    required
+                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                    value={consentTemplateForm.title || ''}
+                    onChange={e => setConsentTemplateForm({ ...consentTemplateForm, title: e.target.value })}
+                    placeholder="np. Zgoda na modelowanie ust"
+                  />
+                </div>
+
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Typ dokumentu
+                  </label>
+                  <select
+                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a]' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900'}`}
+                    value={consentTemplateForm.document_type || 'consent'}
+                    onChange={e => setConsentTemplateForm({ ...consentTemplateForm, document_type: e.target.value })}
+                  >
+                    <option value="consent">Zgoda na zabieg</option>
+                    <option value="questionnaire">Wywiad medyczny</option>
+                    <option value="rodo">RODO / regulamin</option>
+                    <option value="info">Informacja / zalecenia</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Przypisz do zabiegu
+                  </label>
+                  <input
+                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                    value={consentTemplateForm.required_for_treatment || ''}
+                    onChange={e => setConsentTemplateForm({ ...consentTemplateForm, required_for_treatment: e.target.value })}
+                    placeholder="np. Laseroterapia"
+                  />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Ważność dokumentu (miesiące)
+                  </label>
+                  <input
+                    type="number"
+                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                    value={consentTemplateForm.validity_months || ''}
+                    onChange={e => setConsentTemplateForm({ ...consentTemplateForm, validity_months: Number(e.target.value) })}
+                    placeholder="np. 6"
+                  />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Numer wersji
+                  </label>
+                  <input
+                    type="number"
+                    readOnly
+                    className={`w-full border rounded-xl px-4 py-3.5 text-sm font-bold outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+                    value={consentTemplateForm.version || 1}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-5 border-slate-200 dark:border-slate-800">
+                {[
+                  { key: 'is_global_required', title: 'Wymagane globalnie', desc: 'Każdy pacjent musi to podpisać, np. RODO' },
+                  { key: 'is_active', title: 'Szablon aktywny', desc: 'Dostępny do wyboru przez recepcję' }
+                ].map(item => {
+                  const isChecked = consentTemplateForm[item.key] === true
+                  return (
+                    <label
+                      key={item.key}
+                      className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        isChecked
+                          ? (isDarkMode ? 'border-[#e8ce7a] bg-slate-900' : 'border-slate-900 bg-slate-50')
+                          : (isDarkMode ? 'border-slate-700 bg-slate-950/50' : 'border-slate-200 bg-white')
+                      }`}
+                    >
+                      <div>
+                        <p className={`font-black text-sm ${isChecked ? (isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-900') : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>
+                          {item.title}
+                        </p>
+                        <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                          {item.desc}
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e => setConsentTemplateForm({ ...consentTemplateForm, [item.key]: e.target.checked })}
+                        className="sr-only"
+                      />
+                      <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                        isChecked
+                          ? (isDarkMode ? 'bg-[#e8ce7a] text-slate-900' : 'bg-slate-900 text-white')
+                          : (isDarkMode ? 'bg-slate-800' : 'bg-slate-200')
+                      }`}>
+                        {isChecked && <CheckCircle2 size={14} />}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+
+              <div>
+                <div className="flex flex-col gap-3 mb-3">
+                  <label className={`text-[10px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Treść szablonu / pytania
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => openAiTextAssist({
+                      eventId: id,
+                      sectionKey: 'medical_documents',
+                      fieldKey: 'content_template',
+                      currentValue: consentTemplateForm.content_template || '',
+                      relatedEntityTitle: consentTemplateForm.required_for_treatment || consentTemplateForm.title || '',
+                      documentType: consentTemplateForm.document_type || 'consent',
+                      mode: 'medical_document',
+                      placeholder: 'Tu pojawi się roboczy szkic zgody, wywiadu lub zaleceń do zatwierdzenia.',
+                      onApply: (text: string) => setConsentTemplateForm((prev: any) => ({ ...prev, content_template: text }))
+                    })}
+                    className={`w-full rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] ${isDarkMode ? 'bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/30' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
+                  >
+                    <Sparkles size={16} /> Utwórz z pomocą AI
+                  </button>
+                  <p className={`text-[10px] font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                    AI przygotuje szkic dokumentu. Przed użyciem z pacjentem zatwierdź treść medycznie i prawnie.
+                  </p>
+                </div>
+                <textarea
+                  rows={10}
+                  className={`w-full border rounded-xl px-4 py-4 text-sm font-medium outline-none resize-y transition-all ${isDarkMode ? 'bg-slate-950 border-slate-700 text-white focus:border-[#e8ce7a] placeholder-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-slate-900 placeholder-slate-400'}`}
+                  value={consentTemplateForm.content_template || ''}
+                  onChange={e => setConsentTemplateForm({ ...consentTemplateForm, content_template: e.target.value })}
+                  placeholder="Tutaj wpisz treść zgody, wywiadu lub zaleceń."
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={updating}
+                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 ${isDarkMode ? 'bg-[#e8ce7a] hover:bg-[#d8bd65] text-[#0f172a]' : 'bg-slate-900 hover:bg-black text-[#e8ce7a]'}`}
+              >
+                {updating ? 'Zapisywanie...' : 'Zapisz szablon w bazie'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   )
 })()}
 
