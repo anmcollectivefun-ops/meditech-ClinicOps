@@ -5915,16 +5915,16 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         { tabId: 'bilety' as TabModule, icon: Ticket, label: 'Rejestracja pacjenta', count: tiers.length },
         { tabId: 'materialy' as TabModule, icon: FileIcon, label: 'Zgody i dokumenty', count: patientConsents.length },
         { tabId: 'harmonogram' as TabModule, icon: Clock, label: 'Wizyty i zabiegi', count: sessions.length },
-        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Ścieżka pacjenta', count: approvedApps.length }
+        { tabId: 'logistyka' as TabModule, icon: ClipboardList, label: 'Cyfrowa ścieżka pacjenta', count: approvedApps.length }
       ]
     },
     {
       title: 'Pierwszy kontakt',
-      desc: 'Leady, rejestracja i follow-up',
+      desc: 'Analiza rozmów, portal i follow-up',
       items: [
-        { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta' },
-        { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Zadania opieki' },
-        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'Komunikacja z pacjentem' },
+        { tabId: 'strona_uczestnika' as TabModule, icon: Globe, label: 'Portal pacjenta i dokumenty' },
+        { tabId: 'checklista' as TabModule, icon: ClipboardList, label: 'Patient Experience Manager' },
+        { tabId: 'komunikacja' as TabModule, icon: Mail, label: 'Analiza rozmów i follow-up' },
         { tabId: 'minutowka' as TabModule, icon: ClipboardList, label: 'Plan dnia kliniki' }
       ]
     },
@@ -7044,13 +7044,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="relative z-10 max-w-4xl">
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
             <Globe size={14} />
-            Portal Pacjenta
+            Portal pacjenta i dokumenty
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-            Komunikaty, banery i zalecenia dla pacjentów
+            Cyfrowy portal pacjenta, dokumenty i zalecenia
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            Twórz personalne komunikaty po zabiegach oraz globalne banery promocyjne. Nie usuwamy obecnego połączenia ze stroną pacjenta — rozbudowujemy je o AI, CTA, daty i podgląd.
+            Sekcja publikuje zalecenia, przypomnienia, komunikaty i dokumenty widoczne dla pacjenta. Wspiera bezpieczne prowadzenie pacjenta po wizycie oraz budowanie długofalowej relacji z kliniką.
           </p>
         </div>
       </section>
@@ -12398,15 +12398,15 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           <div className="max-w-4xl">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
               <Sparkles size={14} />
-              AI Patient Journey Manager
+              Patient Experience Manager
             </span>
 
             <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-              Centrum utrzymania pacjenta w klinice
+              System zarządzania doświadczeniem i powrotami pacjentów
             </h2>
 
             <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-              System pamięta historię pacjenta, pilnuje dokumentów, prowadzi przez konsultację, zabieg, zalecenia i kontrolę oraz podpowiada kolejne bezpieczne kroki dla recepcji i lekarza.
+              Centrum wspiera długofalową relację z pacjentem: pilnuje dokumentów, prowadzi przez konsultację, zabieg, zalecenia i kontrolę, a także podpowiada działania zwiększające powroty do kliniki.
             </p>
           </div>
 
@@ -12436,6 +12436,57 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           ))}
         </select>
       </div>
+
+      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[
+          {
+            title: 'Analiza jakości obsługi',
+            desc: 'Monitorowanie pierwszego kontaktu, statusów rozmów oraz punktów, w których pacjent wymaga reakcji recepcji.',
+            icon: MessageSquare,
+            value: patientPortalRequests.filter((request: any) => request.status === 'new').length,
+            label: 'nowe zgłoszenia'
+          },
+          {
+            title: 'Komunikacja wielokanałowa',
+            desc: 'Portal pacjenta, notatki kontaktu, SMS, e-mail i historia rozmów widoczne w jednym centrum pracy zespołu.',
+            icon: Mail,
+            value: communicationLogs.length,
+            label: 'kontaktów w historii'
+          },
+          {
+            title: 'Automatyczny follow-up',
+            desc: 'Przypomnienia, zalecenia pozabiegowe i zadania kontrolne po wizycie, aby pacjent nie znikał po zabiegu.',
+            icon: RefreshCw,
+            value: checklistItems.filter((item: any) => item.journey_action === 'followup' && !item.is_done).length,
+            label: 'aktywnych follow-upów'
+          },
+          {
+            title: 'Patient Experience',
+            desc: 'Budowanie ciągłości opieki: dokumenty, wizyty, zalecenia, rekomendacje kolejnego kroku i historia relacji.',
+            icon: Sparkles,
+            value: patients.length,
+            label: 'pacjentów w bazie'
+          }
+        ].map((item: any) => (
+          <div key={item.title} className={`rounded-[24px] border p-5 shadow-sm min-h-[190px] flex flex-col justify-between ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div>
+              <div className={`h-11 w-11 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-cyan-400/10 text-cyan-300' : 'bg-cyan-50 text-cyan-700'}`}>
+                <item.icon size={18} />
+              </div>
+              <h3 className={`font-black text-base leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                {item.title}
+              </h3>
+              <p className={`mt-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                {item.desc}
+              </p>
+            </div>
+            <div className={`mt-5 rounded-2xl border px-3 py-2 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <p className={`text-xl font-black tabular-nums ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>{item.value}</p>
+              <p className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </section>
 
       {selectedJourneyPatient ? (
         <>
@@ -12832,13 +12883,29 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </div>
         </>
       ) : (
-        <div className={`rounded-[32px] border shadow-sm p-16 text-center ${
-          isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'
-        }`}>
-          <ClipboardList size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-slate-700' : 'text-slate-300'}`} />
-          <p className={`font-black text-base ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Wybierz pacjenta, aby zobaczyć jego cyfrową ścieżkę.
-          </p>
+        <div className={`rounded-[32px] border shadow-sm p-6 md:p-8 ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-300'}`}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+            <div className="lg:col-span-2">
+              <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                Centrum gotowe do pracy
+              </p>
+              <h3 className={`mt-2 text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Wybierz pacjenta, aby przejść z widoku zarządczego do indywidualnej ścieżki.
+              </h3>
+              <p className={`mt-3 text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Ten widok pokazuje założenia systemu: analiza jakości obsługi, komunikacja wielokanałowa, automatyczny follow-up i zarządzanie doświadczeniem pacjenta. Po wyborze pacjenta system pokaże jego wizyty, dokumenty, zalecenia, komunikaty i zadania opieki.
+              </p>
+            </div>
+            <div className={`rounded-3xl border p-5 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <ClipboardList size={32} className={isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} />
+              <p className={`mt-4 text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Widok pacjenta po wyborze
+              </p>
+              <p className={`mt-2 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Postęp ścieżki, ryzyka utraty pacjenta, brakujące dokumenty, aktywne follow-upy i rekomendacje AI.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -15010,13 +15077,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
         <div>
           <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
-            Centrum dowodzenia lekarza
+            Cyfrowa ścieżka pacjenta
           </p>
           <h2 className={`mt-1 text-2xl md:text-3xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-            Karta pacjenta i historia kliniczna
+            Karta pacjenta, historia kliniczna i praca lekarza
           </h2>
           <p className={`mt-2 max-w-4xl text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Lekarz wybiera pacjenta, widzi jego wizyty, podpisane zgody, dokumenty do uzupełnienia i pełną historię wpisów. Każda notatka, zalecenie, wykonany zabieg, lek lub preparat zapisuje się do historii pacjenta.
+            Sekcja wspiera prowadzenie pacjenta przez procedury medyczne: lekarz widzi wizyty, zgody, dokumenty, historię zabiegową, zalecenia, leki, preparaty i notatki. Każdy wpis staje się częścią spójnej historii pacjenta.
           </p>
         </div>
         <div className="w-full xl:max-w-md">
@@ -15566,13 +15633,13 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         <div className="relative z-10 max-w-4xl">
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-black/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-md">
             <Mail size={14} />
-            Patient Communication Intelligence
+            Systemy analizy rozmów i jakości obsługi pacjenta
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-            Centrum komunikacji i doświadczenia pacjenta
+            Centrum komunikacji, follow-up i jakości obsługi
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed font-medium">
-            Historia kontaktu, follow-up, portal pacjenta, e-mail, SMS oraz AI jako pomocnik do analizy skuteczności komunikacji - bez zastępowania decyzji użytkownika.
+            Sekcja integruje portal pacjenta, SMS, e-mail, historię rozmów i follow-up po wizytach. Pomaga monitorować jakość pierwszego kontaktu, analizować konwersję zapytań na wizyty i wspierać Patient Experience.
           </p>
         </div>
       </section>
