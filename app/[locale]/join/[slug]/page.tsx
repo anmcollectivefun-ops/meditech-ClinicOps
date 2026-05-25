@@ -28,6 +28,7 @@ import {
 import { createClient } from '../../../lib/supabase'
 
 const normalizePesel = (value: string) => value.replace(/\D/g, '')
+const DEMO_PATIENT_PESEL = '81095645651'
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return 'Termin do ustalenia'
@@ -68,6 +69,7 @@ export default function PatientPortal() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginPesel, setLoginPesel] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [patient, setPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'start' | 'dokumenty' | 'wizyty' | 'kontakt'>('start')
@@ -121,6 +123,14 @@ export default function PatientPortal() {
   useEffect(() => {
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('anm-patient-theme') : null
     if (storedTheme === 'light') setIsDarkMode(false)
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const demoPesel = normalizePesel(params.get('pesel') || '')
+      const isDemo = params.get('demo') === '1'
+      setIsDemoMode(isDemo)
+      if (isDemo && !loginPesel) setLoginPesel(demoPesel || DEMO_PATIENT_PESEL)
+    }
   }, [])
 
   const toggleTheme = () => {
@@ -589,6 +599,26 @@ export default function PatientPortal() {
             onChange={event => setLoginPesel(event.target.value)}
             className={`w-full rounded-2xl border px-5 py-4 font-bold outline-none transition ${isDarkMode ? 'border-white/10 bg-white/[0.04] text-white focus:border-cyan-300/60 focus:bg-white/[0.07]' : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-cyan-500 focus:bg-white'}`}
           />
+
+          {isDemoMode && (
+            <div className={`mt-4 rounded-2xl border p-4 text-left ${isDarkMode ? 'border-cyan-200/20 bg-cyan-200/10' : 'border-cyan-200 bg-cyan-50'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
+                Dane demo dla komisji
+              </p>
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  PESEL testowy: {loginPesel || DEMO_PATIENT_PESEL}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setLoginPesel(DEMO_PATIENT_PESEL)}
+                  className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white'}`}
+                >
+                  Wstaw PESEL
+                </button>
+              </div>
+            </div>
+          )}
 
           {loginError && <p className="mt-4 text-center text-sm font-bold text-red-500">{loginError}</p>}
 

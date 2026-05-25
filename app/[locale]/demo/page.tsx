@@ -20,6 +20,7 @@ import {
 
 const demoEventId = process.env.NEXT_PUBLIC_DEMO_EVENT_ID || ''
 const demoPortalSlug = process.env.NEXT_PUBLIC_DEMO_PORTAL_SLUG || 'integracja'
+const demoPatientPesel = process.env.NEXT_PUBLIC_DEMO_PATIENT_PESEL || '81095645651'
 const demoReceptionToken = process.env.NEXT_PUBLIC_DEMO_RECEPTION_TOKEN || ''
 const demoDoctorToken = process.env.NEXT_PUBLIC_DEMO_DOCTOR_TOKEN || ''
 
@@ -27,7 +28,7 @@ export default function ClinicOpsDemoPage() {
   const params = useParams<{ locale: string }>()
   const locale = params?.locale || 'pl'
   const managerHref = demoEventId ? `/${locale}/b2b/events/${demoEventId}?demo=1` : `/${locale}/b2b/login`
-  const portalHref = `/${locale}/join/${demoPortalSlug}?demo=1`
+  const portalHref = `/${locale}/join/${demoPortalSlug}?demo=1&pesel=${demoPatientPesel}`
   const receptionHref = demoReceptionToken ? `/${locale}/staff-pass/${demoReceptionToken}?demo=1` : ''
   const doctorHref = demoDoctorToken ? `/${locale}/staff-pass/${demoDoctorToken}?demo=1` : ''
 
