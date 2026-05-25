@@ -103,22 +103,22 @@ export default function B2BDashboardPage() {
   }
 
   return (
-    <div className="clinic-shell planner-dark min-h-screen font-sans relative">
+    <div className="planner-shell min-h-screen font-sans relative">
       <style jsx global>{`
         .planner-shell {
-          --app-bg: #071016;
-          --app-surface: #101a22;
-          --app-surface-muted: #0b1218;
-          --app-surface-soft: #132330;
-          --app-border: rgba(255, 255, 255, 0.10);
-          --app-text: #ffffff;
-          --app-text-muted: #94a3b8;
-          --app-primary: #071016; 
-          --app-accent: #67e8f9;
+          --app-bg: #eef8f9;
+          --app-surface: #ffffff;
+          --app-surface-muted: #f3f8fa;
+          --app-surface-soft: #eef6f8;
+          --app-border: rgba(15, 23, 42, 0.12);
+          --app-text: #0f172a;
+          --app-text-muted: #526174;
+          --app-primary: #0f172a; 
+          --app-accent: #22d3ee;
           background:
-            radial-gradient(circle at top right, rgba(103, 232, 249, 0.14), transparent 34rem),
+            radial-gradient(circle at top right, rgba(34, 211, 238, 0.18), transparent 34rem),
             radial-gradient(circle at top left, rgba(16, 185, 129, 0.10), transparent 30rem),
-            linear-gradient(180deg, #071016 0%, #0b151c 100%);
+            linear-gradient(180deg, #f5fbfc 0%, #eef8f9 100%);
           color: var(--app-text);
         }
 
@@ -139,7 +139,7 @@ export default function B2BDashboardPage() {
         .clinic-primary-button {
           background-color: var(--app-accent);
           color: var(--app-primary);
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(15, 23, 42, 0.08);
         }
         
         .clinic-primary-button:hover {
@@ -147,9 +147,9 @@ export default function B2BDashboardPage() {
         }
 
         .clinic-secondary-button {
-          background-color: transparent;
-          color: var(--app-text);
-          border: 1px solid var(--app-border);
+          background-color: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.14);
         }
 
         .clinic-secondary-button:hover {
@@ -159,7 +159,7 @@ export default function B2BDashboardPage() {
         }
       `}</style>
 
-      <header className="border-b border-[var(--app-border)] bg-[#071016]/80 p-4 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-slate-800 bg-[#071016]/95 p-4 backdrop-blur-xl sticky top-0 z-30 shadow-lg">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300">
@@ -178,14 +178,14 @@ export default function B2BDashboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-12">
         <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Centrum dowodzenia</p>
-            <h1 className="mb-2 text-3xl font-black tracking-tight text-white">Zarządzanie Oddziałami</h1>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-600">Centrum dowodzenia</p>
+            <h1 className="mb-2 text-3xl font-black tracking-tight text-slate-950">Zarządzanie oddziałami</h1>
             <p className="clinic-muted max-w-2xl text-sm font-medium">
               Zarządzaj wieloma oddziałami kliniki. Każdy oddział posiada własną bazę pacjentów, kalendarz, dokumentację i system komunikacji.
             </p>
           </div>
-          <button onClick={() => router.push('/b2b/events/new')} className="clinic-primary-button flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-black shadow-lg shadow-cyan-300/10 transition hover:-translate-y-0.5 w-full md:w-auto">
-            <Plus size={18} /> Dodaj Oddział
+          <button onClick={() => router.push('/b2b/events/new')} className="clinic-primary-button flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-black shadow-lg shadow-cyan-300/20 transition hover:-translate-y-0.5 w-full md:w-auto">
+            <Plus size={18} /> Dodaj oddział
           </button>
         </div>
 
@@ -193,8 +193,8 @@ export default function B2BDashboardPage() {
           <div className="py-20 text-center font-black clinic-muted animate-pulse">Ładowanie oddziałów...</div>
         ) : clinics.length === 0 ? (
           <div className="clinic-surface rounded-[40px] border-dashed p-12 text-center md:p-20">
-            <Activity size={48} className="mx-auto mb-4 text-cyan-300" />
-            <h3 className="mb-2 text-xl font-black text-white">Nie masz jeszcze żadnego oddziału</h3>
+            <Activity size={48} className="mx-auto mb-4 text-cyan-600" />
+            <h3 className="mb-2 text-xl font-black text-slate-950">Nie masz jeszcze żadnego oddziału</h3>
             <p className="clinic-muted mx-auto mb-6 max-w-md text-sm">
               Utwórz pierwszy oddział kliniki, aby rozpocząć konfigurację kalendarza, recepcji, zgód i analityki dla wybranej lokalizacji.
             </p>
@@ -208,11 +208,11 @@ export default function B2BDashboardPage() {
               <div 
                 key={clinic.id} 
                 onClick={() => router.push(`/b2b/events/${clinic.id}`)} 
-                className={`clinic-surface group flex cursor-pointer flex-col rounded-[32px] p-6 transition-all hover:-translate-y-1 hover:border-cyan-300/50 hover:shadow-[0_0_30px_rgba(103,232,249,0.1)] relative overflow-hidden ${isDeleting === clinic.id ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`clinic-surface group flex cursor-pointer flex-col rounded-[32px] p-6 transition-all hover:-translate-y-1 hover:border-cyan-300/70 hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)] relative overflow-hidden ${isDeleting === clinic.id ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 {/* Wzorzec kafelka */}
                 <div className="mb-6 flex items-start justify-between relative z-10">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-300 shadow-inner group-hover:scale-105 transition-transform">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700 shadow-inner group-hover:scale-105 transition-transform">
                     <Building2 size={24} />
                   </div>
                   
@@ -239,8 +239,8 @@ export default function B2BDashboardPage() {
                 </div>
 
                 <div className="relative z-10 flex-1">
-                  <h3 className="mb-2 line-clamp-1 text-xl font-black text-white">{clinic.title}</h3>
-                  <p className="text-cyan-300 text-[10px] font-black uppercase tracking-wider mb-2 line-clamp-2 leading-relaxed h-8">
+                  <h3 className="mb-2 line-clamp-1 text-xl font-black text-slate-950">{clinic.title}</h3>
+                  <p className="text-cyan-700 text-[10px] font-black uppercase tracking-wider mb-2 line-clamp-2 leading-relaxed h-8">
                     {clinic.location || 'Brak zdefiniowanego adresu'}
                   </p>
                 </div>
@@ -249,7 +249,7 @@ export default function B2BDashboardPage() {
                   <span className="clinic-muted text-[10px] font-black uppercase tracking-widest">
                     {clinic.event_date ? new Date(clinic.event_date).toLocaleDateString('pl-PL') : 'Brak daty otwarcia'}
                   </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-300 transition-all group-hover:bg-cyan-300 group-hover:text-[#071016]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all group-hover:bg-cyan-500 group-hover:text-white">
                     <ChevronRight size={16} />
                   </div>
                 </div>
@@ -263,13 +263,13 @@ export default function B2BDashboardPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071016]/80 backdrop-blur-sm animate-in fade-in cursor-default" onClick={() => setEditingClinic(null)}>
             <div 
               className="clinic-surface w-full max-w-md rounded-[32px] p-6 shadow-2xl relative"
-              onClick={e => e.stopPropagation()} // żeby nie zamykało modala klikając w środek
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--app-border)]">
-                <h3 className="text-xl font-black text-white flex items-center gap-2">
-                  <Edit3 size={20} className="text-cyan-300"/> Edytuj Oddział
+                <h3 className="text-xl font-black text-slate-950 flex items-center gap-2">
+                  <Edit3 size={20} className="text-cyan-600"/> Edytuj oddział
                 </h3>
-                <button onClick={() => setEditingClinic(null)} className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+                <button onClick={() => setEditingClinic(null)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors">
                   <X size={20}/>
                 </button>
               </div>
@@ -283,7 +283,7 @@ export default function B2BDashboardPage() {
                     required 
                     value={editingClinic.title || ''} 
                     onChange={e => setEditingClinic({...editingClinic, title: e.target.value})}
-                    className="w-full rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface-soft)] px-5 py-4 text-sm font-bold text-white outline-none focus:border-cyan-300 transition-colors"
+                    className="w-full rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface-soft)] px-5 py-4 text-sm font-bold text-slate-950 outline-none focus:border-cyan-500 transition-colors"
                   />
                 </div>
                 <div>
@@ -294,7 +294,7 @@ export default function B2BDashboardPage() {
                     required 
                     value={editingClinic.location || ''} 
                     onChange={e => setEditingClinic({...editingClinic, location: e.target.value})}
-                    className="w-full rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface-soft)] px-5 py-4 text-sm font-bold text-white outline-none focus:border-cyan-300 transition-colors"
+                    className="w-full rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface-soft)] px-5 py-4 text-sm font-bold text-slate-950 outline-none focus:border-cyan-500 transition-colors"
                   />
                 </div>
 
