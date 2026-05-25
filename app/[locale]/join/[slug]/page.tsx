@@ -85,6 +85,7 @@ export default function PatientPortal() {
   const [isSigning, setIsSigning] = useState(false)
   const [formAnswers, setFormAnswers] = useState<Record<string, any>>({})
   const [requestForm, setRequestForm] = useState({ type: 'post_treatment_question', subject: '', message: '' })
+  const [threadReplyDrafts, setThreadReplyDrafts] = useState<Record<string, string>>({})
   const [requestSuccess, setRequestSuccess] = useState('')
 
   const pendingConsents = consents.filter((consent: any) => !isSignedStatus(consent.status))
@@ -95,6 +96,12 @@ export default function PatientPortal() {
     .filter((appointment: any) => appointment.appointment_date && new Date(appointment.appointment_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
   const nextAppointment = upcomingAppointments[0] || null
+  const requestsWithStaffLastMessage = portalRequests.filter((request: any) => {
+    const messages = portalMessages.filter((message: any) => message.request_id === request.id)
+    const lastMessage = messages[messages.length - 1]
+    return lastMessage?.sender_type === 'staff'
+  })
+  const latestStaffMessageRequest = requestsWithStaffLastMessage[0] || null
 
   const getConsentTitle = (consent: any) =>
     consent?.medical_consent_templates?.title || consent?.title || `Dokument #${String(consent?.id || '').slice(0, 5)}`
@@ -334,6 +341,34 @@ export default function PatientPortal() {
     await refreshPortal()
   }
 
+  const handleSubmitThreadReply = async (request: any) => {
+    const body = (threadReplyDrafts[request.id] || '').trim()
+    if (!patient?.id || !body) return
+
+    const insert = await supabase.from('patient_portal_messages').insert([{
+      request_id: request.id,
+      patient_id: patient.id,
+      sender_type: 'patient',
+      sender_name: `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Pacjent',
+      body,
+    }])
+
+    if (insert.error) {
+      setRequestSuccess('Nie udało się wysłać odpowiedzi: ' + insert.error.message)
+      return
+    }
+
+    await supabase
+      .from('patient_portal_requests')
+      .update({ status: 'new', updated_at: new Date().toISOString() })
+      .eq('id', request.id)
+      .eq('patient_id', patient.id)
+
+    setThreadReplyDrafts(prev => ({ ...prev, [request.id]: '' }))
+    setRequestSuccess('Odpowiedź została dopisana do rozmowy.')
+    await refreshPortal()
+  }
+
   const handleAnnouncementCta = (announcement: any) => {
     const ctaUrl = String(announcement?.cta_url || '').trim()
     if (ctaUrl) {
@@ -359,6 +394,125 @@ export default function PatientPortal() {
 
   const getAppointmentNotes = (appointmentId: string) =>
     clinicalNotes.filter((note: any) => note.appointment_id === appointmentId)
+
+  const isPromotionAnnouncement = (announcement: any) => {
+    const category = String(announcement?.category || '').toLowerCase()
+    return category.includes('promocja') || announcement?.priority === 'promo'
+  }
+
+  const isRecommendationAnnouncement = (announcement: any) => {
+    const category = String(announcement?.category || '').toLowerCase()
+    return ['zalecenia', 'aftercare', 'followup', 'seria'].some(key => category.includes(key))
+  }
+
+  const patientAnnouncementCards = visiblePersonalAnnouncements.filter((announcement: any) => !isPromotionAnnouncement(announcement))
+  const recommendationAnnouncementCards = visiblePersonalAnnouncements.filter(isRecommendationAnnouncement)
+  const promotionAnnouncementCards = [
+    ...visibleGlobalAnnouncements,
+    ...visiblePersonalAnnouncements.filter(isPromotionAnnouncement)
+  ]
+
+  const renderAnnouncementCard = (ann: any, mode: 'personal' | 'recommendation' | 'promotion') => {
+    const badge = getCategoryBadge(ann.category)
+    const isPromo = mode === 'promotion'
+    const isRecommendation = mode === 'recommendation'
+
+    return (
+      <article
+        key={`${mode}-${ann.id}`}
+        className={`flex h-full min-h-[360px] w-[84vw] shrink-0 snap-start flex-col overflow-hidden rounded-[28px] border shadow-lg sm:w-[420px] ${
+          isPromo
+            ? isDarkMode ? 'border-rose-400/25 bg-[#101a22]/80' : 'border-rose-100 bg-white'
+            : isRecommendation
+              ? isDarkMode ? 'border-emerald-300/25 bg-emerald-300/10' : 'border-emerald-100 bg-emerald-50'
+              : isDarkMode ? 'border-cyan-500/30 bg-[#101a22]/90' : 'border-cyan-200 bg-white'
+        }`}
+      >
+        {ann.image_url ? (
+          <div className={`h-40 w-full shrink-0 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
+            <img src={ann.image_url} alt={ann.title || 'Komunikat'} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className={`flex h-28 w-full shrink-0 items-center justify-center border-b ${
+            isPromo
+              ? isDarkMode ? 'border-rose-400/10 bg-rose-400/10 text-rose-200' : 'border-rose-100 bg-rose-50 text-rose-600'
+              : isRecommendation
+                ? isDarkMode ? 'border-emerald-300/10 bg-emerald-300/10 text-emerald-200' : 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                : isDarkMode ? 'border-cyan-300/10 bg-cyan-300/10 text-cyan-200' : 'border-cyan-100 bg-cyan-50 text-cyan-700'
+          }`}>
+            {isPromo ? <Megaphone size={34} /> : isRecommendation ? <ShieldCheck size={34} /> : <User size={34} />}
+          </div>
+        )}
+
+        <div className="flex flex-1 flex-col p-5">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className={`rounded-lg border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${badge.color}`}>
+              {isPromo ? 'Promocja' : isRecommendation ? 'Zalecenia' : badge.label}
+            </span>
+            {mode === 'personal' && (
+              <span className={`rounded-lg border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${isDarkMode ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200' : 'border-cyan-100 bg-cyan-50 text-cyan-700'}`}>
+                Tylko dla Ciebie
+              </span>
+            )}
+          </div>
+
+          <h4 className={`text-base font-black leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+            {ann.title}
+          </h4>
+          {ann.description && (
+            <p className={`mt-3 flex-1 text-xs font-medium leading-6 ${isPromo ? 'line-clamp-5' : 'whitespace-pre-wrap'} ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
+              {ann.description}
+            </p>
+          )}
+          {ann.cta_label && (
+            <button
+              type="button"
+              onClick={() => handleAnnouncementCta(ann)}
+              className={`mt-5 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-wider transition hover:scale-[1.02] ${
+                isPromo
+                  ? isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-slate-900 text-cyan-200 shadow-md hover:bg-black'
+                  : isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-md hover:bg-cyan-700'
+              }`}
+            >
+              {ann.cta_label} <ExternalLink size={14} />
+            </button>
+          )}
+        </div>
+      </article>
+    )
+  }
+
+  const renderAnnouncementCarousel = (
+    title: string,
+    subtitle: string,
+    icon: any,
+    items: any[],
+    mode: 'personal' | 'recommendation' | 'promotion'
+  ) => {
+    if (items.length === 0) return null
+    const Icon = icon
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
+              <Icon size={16} /> {title}
+            </h3>
+            <p className={`mt-1 text-[11px] font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+              {subtitle}
+            </p>
+          </div>
+          <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black ${isDarkMode ? 'bg-white/5 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+            {items.length}
+          </span>
+        </div>
+        <div className="custom-scrollbar -mx-5 flex snap-x gap-4 overflow-x-auto px-5 pb-3 md:-mx-8 md:px-8">
+          {items.map((ann: any) => renderAnnouncementCard(ann, mode))}
+        </div>
+      </div>
+    )
+  }
 
   const renderInteractiveContent = (text: string) => {
     if (!text) return <p>Ten dokument nie ma jeszcze treści. Możesz go potwierdzić po rozmowie z recepcją.</p>
@@ -488,104 +642,58 @@ export default function PatientPortal() {
 
         {/* TABLICA OGŁOSZEŃ (WIDOCZNA TYLKO W ZAKŁADCE START) */}
         {(visiblePersonalAnnouncements.length > 0 || visibleGlobalAnnouncements.length > 0) && activeTab === 'start' && (
-          <section className="mb-8 space-y-6">
-            
-            {visiblePersonalAnnouncements.length > 0 && (
-              <div className="space-y-4">
-                <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
-                  <User size={16} /> Ważne informacje dla Ciebie
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {visiblePersonalAnnouncements.map((ann: any) => {
-                    const badge = getCategoryBadge(ann.category);
-                    return (
-                      <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-cyan-500/30 bg-[#101a22]/90 shadow-[0_8px_30px_rgba(34,211,238,0.1)]' : 'border-cyan-200 bg-white shadow-lg'}`}>
-                        {ann.image_url && (
-                          <div className={`h-32 w-full shrink-0 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
-                            <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <div className="p-5 flex-1 flex flex-col">
-                          <div className="mb-3">
-                            <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded border ${badge.color}`}>
-                              {badge.label}
-                            </span>
-                          </div>
-                          <h4 className={`text-base font-black mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
-                            {ann.title}
-                          </h4>
-                          {ann.description && (
-                            <p className={`text-xs font-medium leading-relaxed flex-1 whitespace-pre-wrap ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
-                              {ann.description}
-                            </p>
-                          )}
-                          {ann.cta_label && (
-                            <button
-                              type="button"
-                              onClick={() => handleAnnouncementCta(ann)}
-                              className={`mt-4 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-wider transition hover:scale-[1.02] ${
-                                isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-md hover:bg-cyan-700'
-                              }`}
-                            >
-                              {ann.cta_label} <ExternalLink size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+          <section className="mb-8 space-y-8">
+            {renderAnnouncementCarousel(
+              'Tylko dla Ciebie',
+              'Wszystkie aktywne komunikaty przypisane do Twojej karty pacjenta.',
+              User,
+              patientAnnouncementCards,
+              'personal'
             )}
-
-            {visibleGlobalAnnouncements.length > 0 && (
-              <div className="space-y-4 pt-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                  <Megaphone size={16} /> Aktualności z naszej kliniki
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {visibleGlobalAnnouncements.map((ann: any) => {
-                    const badge = getCategoryBadge(ann.category);
-                    return (
-                      <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-white/10 bg-[#101a22]/60' : 'border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow'}`}>
-                        {ann.image_url && (
-                          <div className={`h-32 w-full shrink-0 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
-                            <img src={ann.image_url} alt="Ogłoszenie" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <div className="p-5 flex-1 flex flex-col">
-                          <div className="mb-2">
-                            <span className={`px-2 py-1 text-[8px] font-black uppercase tracking-wider rounded border ${badge.color}`}>
-                              {badge.label}
-                            </span>
-                          </div>
-                          <h4 className={`text-sm font-black mb-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
-                            {ann.title}
-                          </h4>
-                          {ann.description && (
-                            <p className={`text-[11px] font-medium leading-relaxed flex-1 line-clamp-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
-                              {ann.description}
-                            </p>
-                          )}
-                          {ann.cta_label && (
-                            <button
-                              type="button"
-                              onClick={() => handleAnnouncementCta(ann)}
-                              className={`mt-4 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-wider transition hover:scale-[1.02] ${
-                                isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-slate-900 text-cyan-200 shadow-md hover:bg-black'
-                              }`}
-                            >
-                              {ann.cta_label} <ExternalLink size={13} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+            {renderAnnouncementCarousel(
+              'Promocje i aktualności',
+              'Oferty, banery i informacje publikowane przez recepcję dla pacjentów.',
+              Megaphone,
+              promotionAnnouncementCards,
+              'promotion'
+            )}
+            {renderAnnouncementCarousel(
+              'Zalecenia i opieka po wizycie',
+              'Instrukcje, follow-up i informacje opiekuńcze związane z Twoją ścieżką leczenia.',
+              ShieldCheck,
+              recommendationAnnouncementCards,
+              'recommendation'
             )}
           </section>
+        )}
+
+        {latestStaffMessageRequest && activeTab !== 'kontakt' && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('kontakt')}
+            className={`mb-7 flex w-full items-center justify-between gap-4 rounded-[28px] border p-5 text-left shadow-lg transition hover:scale-[1.01] ${
+              isDarkMode
+                ? 'border-cyan-300/30 bg-cyan-300/12 text-cyan-50 shadow-cyan-950/20'
+                : 'border-cyan-200 bg-cyan-50 text-cyan-950 shadow-cyan-100'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white'}`}>
+                <MessageSquare size={22} />
+              </div>
+              <div>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
+                  Masz nową wiadomość
+                </p>
+                <p className="mt-1 text-sm font-black">
+                  Recepcja odpowiedziała w rozmowie: {latestStaffMessageRequest.subject || 'Wiadomość z kliniki'}
+                </p>
+              </div>
+            </div>
+            <span className={`hidden rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest md:inline-flex ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white'}`}>
+              Otwórz rozmowę
+            </span>
+          </button>
         )}
 
         <section className="mb-7 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -789,13 +897,17 @@ export default function PatientPortal() {
                     <div className="space-y-4">
                       {portalRequests.map((request: any) => {
                         const requestMessages = portalMessages.filter((message: any) => message.request_id === request.id)
+                        const lastMessage = requestMessages[requestMessages.length - 1]
+                        const hasNewStaffReply = lastMessage?.sender_type === 'staff'
                         const statusLabel = request.status === 'answered' ? 'Odpowiedziano' : request.status === 'closed' ? 'Zamknięte' : request.status === 'in_progress' ? 'W trakcie' : 'Nowe'
 
                         return (
-                          <div key={request.id} className={`rounded-3xl border p-4 ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-slate-50'}`}>
+                          <div key={request.id} className={`rounded-3xl border p-4 ${hasNewStaffReply ? (isDarkMode ? 'border-cyan-300/40 bg-cyan-300/10' : 'border-cyan-200 bg-cyan-50') : (isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-slate-50')}`}>
                             <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{statusLabel}</p>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${hasNewStaffReply ? (isDarkMode ? 'text-cyan-200' : 'text-cyan-700') : 'text-slate-500'}`}>
+                                  {hasNewStaffReply ? 'Nowa odpowiedź z kliniki' : statusLabel}
+                                </p>
                                 <h4 className={`mt-1 font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{request.subject || 'Wiadomość do recepcji'}</h4>
                               </div>
                               <p className="text-[10px] font-bold text-slate-500">{formatDateTime(request.created_at)}</p>
@@ -822,6 +934,29 @@ export default function PatientPortal() {
                                 )
                               })}
                             </div>
+
+                            {request.status !== 'closed' && (
+                              <div className={`mt-4 rounded-2xl border p-4 ${isDarkMode ? 'border-white/10 bg-[#071016]/70' : 'border-slate-200 bg-white'}`}>
+                                <label className={`mb-2 block text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
+                                  Odpowiedz w tej rozmowie
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={threadReplyDrafts[request.id] || ''}
+                                  onChange={event => setThreadReplyDrafts(prev => ({ ...prev, [request.id]: event.target.value }))}
+                                  placeholder="Dopisz wiadomość do recepcji..."
+                                  className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm font-medium leading-6 outline-none transition-colors ${isDarkMode ? 'border-white/10 bg-[#071016] text-white focus:border-cyan-300 placeholder-slate-600' : 'border-slate-300 bg-white text-slate-900 focus:border-cyan-600 placeholder-slate-400'}`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleSubmitThreadReply(request)}
+                                  disabled={!(threadReplyDrafts[request.id] || '').trim()}
+                                  className={`mt-3 inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-wider transition disabled:opacity-50 ${isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-md'}`}
+                                >
+                                  <Send size={14} /> Wyślij odpowiedź
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )
                       })}

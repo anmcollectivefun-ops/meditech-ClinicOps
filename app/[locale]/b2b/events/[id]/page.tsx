@@ -8,7 +8,7 @@ import React, { useState, useEffect, use, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase'
 import { GOOGLE_FONT_OPTIONS, buildGoogleFontStack, getFontFamilyName } from '../../../../lib/googleFonts'
 import {
-  Users, User, CheckCircle2, XCircle, Leaf, ArrowLeft,
+  Users, User, CheckCircle2, XCircle, Leaf, ArrowLeft, ArrowRight,
   Settings, Save, RefreshCw, Trash2, AlertTriangle,
   Plus, Edit3, Eye, EyeOff, X, Search, Filter, MoreHorizontal,
   ClipboardList, MapPin, Globe, BarChart3, LayoutGrid, Layers, ListChecks,
@@ -15655,6 +15655,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
   const visiblePortalRequests = communicationPatientId
     ? patientPortalRequests.filter((request: any) => request.patient_id === communicationPatientId)
     : patientPortalRequests
+  const newPortalRequests = patientPortalRequests.filter((request: any) => String(request.status || '').toLowerCase() === 'new')
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-300 pb-20">
@@ -15674,6 +15675,45 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
           </p>
         </div>
       </section>
+
+      {newPortalRequests.length > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            setCommunicationPatientId('')
+            const target = document.getElementById('portal-requests-inbox')
+            target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+          className={`group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-xl transition-all hover:scale-[1.01] ${
+            isDarkMode
+              ? 'border-red-500/40 bg-gradient-to-r from-red-950/60 via-slate-900 to-[#0f172a] text-white shadow-red-950/20'
+              : 'border-red-200 bg-gradient-to-r from-red-50 via-white to-cyan-50 text-slate-900 shadow-red-100'
+          }`}
+        >
+          <div className="absolute right-6 top-1/2 hidden h-24 w-24 -translate-y-1/2 rounded-full bg-red-500/20 blur-2xl md:block" />
+          <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${isDarkMode ? 'bg-red-500 text-white' : 'bg-red-600 text-white'}`}>
+                <MessageSquare size={24} />
+              </span>
+              <div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-red-200' : 'text-red-700'}`}>
+                  Nowa wiadomość z Portalu Pacjenta
+                </p>
+                <h3 className="mt-1 text-xl font-black">
+                  Masz {newPortalRequests.length} spraw{newPortalRequests.length === 1 ? 'ę' : ''} do obsługi.
+                </h3>
+                <p className={`mt-1 text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  Odpowiedz w tym samym wątku rozmowy, aby pacjent zobaczył wiadomość u siebie w portalu.
+                </p>
+              </div>
+            </div>
+            <span className={`inline-flex w-fit items-center gap-2 rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'bg-red-500 text-white' : 'bg-slate-900 text-red-200'}`}>
+              Przejdź do rozmów <ArrowRight size={14} />
+            </span>
+          </div>
+        </button>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
@@ -15854,7 +15894,7 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
         </div>
       </div>
 
-      <section className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
+      <section id="portal-requests-inbox" className={`rounded-[28px] border p-6 shadow-sm ${isDarkMode ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'}`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-[#e8ce7a]' : 'text-slate-500'}`}>
