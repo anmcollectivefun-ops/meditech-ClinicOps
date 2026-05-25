@@ -41,8 +41,14 @@ export async function middleware(request: NextRequest) {
   const isB2BPath = cleanPathname.startsWith('/b2b')
   const isB2BAuthPath = cleanPathname === '/b2b/login' || cleanPathname === '/b2b/register'
   const isB2BProtectedPath = isB2BPath && !isB2BAuthPath
+  const demoEventId = process.env.NEXT_PUBLIC_DEMO_EVENT_ID
+  const isPublicDemoEventPath = Boolean(
+    demoEventId &&
+    cleanPathname === `/b2b/events/${demoEventId}` &&
+    request.nextUrl.searchParams.get('demo') === '1'
+  )
 
-  if (!user && isB2BProtectedPath) {
+  if (!user && isB2BProtectedPath && !isPublicDemoEventPath) {
     return NextResponse.redirect(new URL(`/${locale}/b2b/login`, request.url))
   }
 

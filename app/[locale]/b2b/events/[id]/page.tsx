@@ -7406,10 +7406,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
 })()}
 {/* ZGODY */}
 
-
-
-
-
 {activeTab === 'materialy' && (() => {
   const patientsWithDocsProblems = patients.filter((patient: any) => {
     const consents = patientConsentsByPatientId[patient.id] || []
@@ -8691,12 +8687,6 @@ const TabButton = ({ tabId, icon: Icon, label, count, urgent }: {
     </div>
   )
 })()}
-
-
-
-
-
-
 
 {/* ZABIEGI */}
 {activeTab === 'harmonogram' && (() => {
