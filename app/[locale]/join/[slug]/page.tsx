@@ -39,10 +39,23 @@ const formatDateTime = (value?: string | null) => {
 const getCategoryBadge = (category: string) => {
   const cat = String(category).toLowerCase();
   if (cat.includes('promocja')) return { label: 'Promocja', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20 dark:text-rose-300' };
-  if (cat.includes('zalecenia')) return { label: 'Ważne zalecenia', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-300' };
+  if (cat.includes('zalecenia') || cat.includes('aftercare')) return { label: 'Ważne zalecenia', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-300' };
   if (cat.includes('faq') || cat.includes('ważne') || cat.includes('alert')) return { label: 'Ważna informacja', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-300' };
-  if (cat.includes('lekarze')) return { label: 'Nasz Zespół', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-300' };
+  if (cat.includes('lekarze')) return { label: 'Nasz zespół', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-300' };
   return { label: 'Aktualność', color: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 dark:text-cyan-300' };
+}
+
+const isSignedStatus = (status?: string | null) =>
+  ['signed', 'accepted', 'completed', 'scanned_document'].includes(String(status || '').toLowerCase())
+
+const isAnnouncementVisible = (item: any) => {
+  if (item?.is_active === false) return false
+  const now = Date.now()
+  const startsAt = item?.starts_at ? new Date(item.starts_at).getTime() : null
+  const endsAt = item?.ends_at ? new Date(item.ends_at).getTime() : null
+  if (startsAt && startsAt > now) return false
+  if (endsAt && endsAt < now) return false
+  return true
 }
 
 export default function PatientPortal() {
@@ -65,6 +78,8 @@ export default function PatientPortal() {
   const [portalMessages, setPortalMessages] = useState<any[]>([])
   const [personalAnnouncements, setPersonalAnnouncements] = useState<any[]>([])
   const [globalAnnouncements, setGlobalAnnouncements] = useState<any[]>([])
+  const [treatments, setTreatments] = useState<any[]>([])
+  const [clinicalNotes, setClinicalNotes] = useState<any[]>([])
   
   const [selectedConsentToSign, setSelectedConsentToSign] = useState<any>(null)
   const [isSigning, setIsSigning] = useState(false)
@@ -72,8 +87,10 @@ export default function PatientPortal() {
   const [requestForm, setRequestForm] = useState({ type: 'post_treatment_question', subject: '', message: '' })
   const [requestSuccess, setRequestSuccess] = useState('')
 
-  const pendingConsents = consents.filter((consent: any) => String(consent.status || '').toLowerCase() !== 'signed')
-  const signedConsents = consents.filter((consent: any) => String(consent.status || '').toLowerCase() === 'signed')
+  const pendingConsents = consents.filter((consent: any) => !isSignedStatus(consent.status))
+  const signedConsents = consents.filter((consent: any) => isSignedStatus(consent.status))
+  const visiblePersonalAnnouncements = personalAnnouncements.filter(isAnnouncementVisible)
+  const visibleGlobalAnnouncements = globalAnnouncements.filter(isAnnouncementVisible)
   const upcomingAppointments = appointments
     .filter((appointment: any) => appointment.appointment_date && new Date(appointment.appointment_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
@@ -120,6 +137,24 @@ export default function PatientPortal() {
     return result.error ? [] : (result.data || [])
   }
 
+  const loadTreatmentsForAppointments = async (patientAppointments: any[]) => {
+    const treatmentIds = Array.from(new Set(patientAppointments.map((item: any) => item.treatment_id).filter(Boolean)))
+    if (treatmentIds.length === 0) return []
+
+    const result = await supabase.from('treatments').select('*').in('id', treatmentIds)
+    return result.error ? [] : (result.data || [])
+  }
+
+  const loadClinicalNotesForPatient = async (patientId: string) => {
+    const result = await supabase
+      .from('patient_clinical_notes')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false })
+
+    return result.error ? [] : (result.data || [])
+  }
+
   const loadRequestsForPatient = async (patientId: string) => {
     const result = await supabase.from('patient_portal_requests').select('*').eq('patient_id', patientId).order('created_at', { ascending: false })
     return result.error ? [] : (result.data || [])
@@ -144,9 +179,12 @@ export default function PatientPortal() {
 
     if (!foundPatient) return null
 
-    const [patientConsents, patientAppointments, patientRequests, patientMessages, personalAnns, globalAnns] = await Promise.all([
+    const patientAppointments = await loadAppointmentsForPatient(foundPatient.id)
+
+    const [patientConsents, patientTreatments, patientClinicalNotes, patientRequests, patientMessages, personalAnns, globalAnns] = await Promise.all([
       loadConsentsForPatient(foundPatient.id),
-      loadAppointmentsForPatient(foundPatient.id),
+      loadTreatmentsForAppointments(patientAppointments),
+      loadClinicalNotesForPatient(foundPatient.id),
       loadRequestsForPatient(foundPatient.id),
       loadMessagesForPatient(foundPatient.id),
       supabase.from('personal_announcements').select('*').eq('patient_id', foundPatient.id).order('created_at', { ascending: false }),
@@ -157,6 +195,8 @@ export default function PatientPortal() {
       patient: foundPatient, 
       consents: patientConsents, 
       appointments: patientAppointments, 
+      treatments: patientTreatments,
+      clinicalNotes: patientClinicalNotes,
       requests: patientRequests, 
       messages: patientMessages,
       personalAnnouncements: personalAnns.data || [],
@@ -172,6 +212,8 @@ export default function PatientPortal() {
     setPatient(refreshed.patient)
     setConsents(refreshed.consents)
     setAppointments(refreshed.appointments)
+    setTreatments(refreshed.treatments)
+    setClinicalNotes(refreshed.clinicalNotes)
     setPortalRequests(refreshed.requests)
     setPortalMessages(refreshed.messages)
     setPersonalAnnouncements(refreshed.personalAnnouncements)
@@ -199,6 +241,8 @@ export default function PatientPortal() {
       setPatient(portalData.patient)
       setConsents(portalData.consents)
       setAppointments(portalData.appointments)
+      setTreatments(portalData.treatments)
+      setClinicalNotes(portalData.clinicalNotes)
       setPortalRequests(portalData.requests)
       setPortalMessages(portalData.messages)
       setPersonalAnnouncements(portalData.personalAnnouncements)
@@ -217,6 +261,8 @@ export default function PatientPortal() {
     setLoginPesel('')
     setConsents([])
     setAppointments([])
+    setTreatments([])
+    setClinicalNotes([])
     setPortalRequests([])
     setPortalMessages([])
     setPersonalAnnouncements([])
@@ -287,6 +333,32 @@ export default function PatientPortal() {
     setRequestSuccess('Wiadomość trafiła do recepcji. Odpowiemy możliwie szybko.')
     await refreshPortal()
   }
+
+  const handleAnnouncementCta = (announcement: any) => {
+    const ctaUrl = String(announcement?.cta_url || '').trim()
+    if (ctaUrl) {
+      window.open(ctaUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    setActiveTab('kontakt')
+    setRequestForm({
+      type: 'appointment_request',
+      subject: announcement?.treatment_id
+        ? `Prośba o termin: ${getTreatmentName(announcement.treatment_id) || announcement.title || 'zabieg'}`
+        : announcement?.title || 'Prośba o kontakt',
+      message: `Dzień dobry, proszę o kontakt w sprawie: ${announcement?.title || 'wizyty w klinice'}.`
+    })
+  }
+
+  const getTreatmentName = (treatmentId?: string | null) =>
+    treatments.find((treatment: any) => treatment.id === treatmentId)?.name || ''
+
+  const getAppointmentTreatment = (appointment: any) =>
+    treatments.find((treatment: any) => treatment.id === appointment?.treatment_id) || null
+
+  const getAppointmentNotes = (appointmentId: string) =>
+    clinicalNotes.filter((note: any) => note.appointment_id === appointmentId)
 
   const renderInteractiveContent = (text: string) => {
     if (!text) return <p>Ten dokument nie ma jeszcze treści. Możesz go potwierdzić po rozmowie z recepcją.</p>
@@ -415,16 +487,16 @@ export default function PatientPortal() {
       <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10">
 
         {/* TABLICA OGŁOSZEŃ (WIDOCZNA TYLKO W ZAKŁADCE START) */}
-        {(personalAnnouncements.length > 0 || globalAnnouncements.length > 0) && activeTab === 'start' && (
+        {(visiblePersonalAnnouncements.length > 0 || visibleGlobalAnnouncements.length > 0) && activeTab === 'start' && (
           <section className="mb-8 space-y-6">
             
-            {personalAnnouncements.length > 0 && (
+            {visiblePersonalAnnouncements.length > 0 && (
               <div className="space-y-4">
                 <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'text-cyan-200' : 'text-cyan-700'}`}>
                   <User size={16} /> Ważne informacje dla Ciebie
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {personalAnnouncements.map((ann: any) => {
+                  {visiblePersonalAnnouncements.map((ann: any) => {
                     const badge = getCategoryBadge(ann.category);
                     return (
                       <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-cyan-500/30 bg-[#101a22]/90 shadow-[0_8px_30px_rgba(34,211,238,0.1)]' : 'border-cyan-200 bg-white shadow-lg'}`}>
@@ -447,6 +519,17 @@ export default function PatientPortal() {
                               {ann.description}
                             </p>
                           )}
+                          {ann.cta_label && (
+                            <button
+                              type="button"
+                              onClick={() => handleAnnouncementCta(ann)}
+                              className={`mt-4 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-wider transition hover:scale-[1.02] ${
+                                isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-cyan-600 text-white shadow-md hover:bg-cyan-700'
+                              }`}
+                            >
+                              {ann.cta_label} <ExternalLink size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     )
@@ -455,13 +538,13 @@ export default function PatientPortal() {
               </div>
             )}
 
-            {globalAnnouncements.length > 0 && (
+            {visibleGlobalAnnouncements.length > 0 && (
               <div className="space-y-4 pt-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                   <Megaphone size={16} /> Aktualności z naszej kliniki
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {globalAnnouncements.map((ann: any) => {
+                  {visibleGlobalAnnouncements.map((ann: any) => {
                     const badge = getCategoryBadge(ann.category);
                     return (
                       <div key={ann.id} className={`relative overflow-hidden rounded-[24px] border flex flex-col ${isDarkMode ? 'border-white/10 bg-[#101a22]/60' : 'border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow'}`}>
@@ -483,6 +566,17 @@ export default function PatientPortal() {
                             <p className={`text-[11px] font-medium leading-relaxed flex-1 line-clamp-3 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} style={{ fontFamily: ann.font_family || 'Inter, sans-serif' }}>
                               {ann.description}
                             </p>
+                          )}
+                          {ann.cta_label && (
+                            <button
+                              type="button"
+                              onClick={() => handleAnnouncementCta(ann)}
+                              className={`mt-4 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-wider transition hover:scale-[1.02] ${
+                                isDarkMode ? 'bg-cyan-200 text-[#071016]' : 'bg-slate-900 text-cyan-200 shadow-md hover:bg-black'
+                              }`}
+                            >
+                              {ann.cta_label} <ExternalLink size={13} />
+                            </button>
                           )}
                         </div>
                       </div>
@@ -596,20 +690,46 @@ export default function PatientPortal() {
               <Panel isDarkMode={isDarkMode} title="Twoje wizyty" subtitle="Najbliższe terminy, status płatności i historia zaplanowanych zabiegów.">
                 {appointments.length === 0 ? (
                   <EmptyState isDarkMode={isDarkMode} icon={Calendar} title="Brak wizyt" text="Wyślij prośbę o konsultację lub nowy termin w zakładce kontaktu." />
-                ) : appointments.map(appointment => (
-                  <div key={appointment.id} className={`rounded-3xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-white shadow-sm'}`}>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`}>{appointment.status || 'zaplanowana'}</p>
-                        <h3 className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{appointment.treatment_name || 'Wizyta w klinice'}</h3>
-                        <p className={`mt-2 text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>{formatDateTime(appointment.appointment_date)}</p>
+                ) : appointments.map(appointment => {
+                  const treatment = getAppointmentTreatment(appointment)
+                  const notes = getAppointmentNotes(appointment.id)
+                  const recommendations = [
+                    treatment?.pre_recommendations && { label: 'Przed wizytą', text: treatment.pre_recommendations },
+                    treatment?.post_recommendations && { label: 'Po zabiegu', text: treatment.post_recommendations },
+                    ...notes
+                      .filter((note: any) => note.recommendations)
+                      .map((note: any) => ({
+                        label: note.record_type === 'followup' ? 'Follow-up' : 'Zalecenia lekarza',
+                        text: note.recommendations
+                      }))
+                  ].filter(Boolean)
+
+                  return (
+                    <div key={appointment.id} className={`rounded-3xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-white shadow-sm'}`}>
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-cyan-200' : 'text-cyan-600'}`}>{appointment.status || 'zaplanowana'}</p>
+                          <h3 className={`mt-1 text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{appointment.treatment_name || treatment?.name || 'Wizyta w klinice'}</h3>
+                          <p className={`mt-2 text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>{formatDateTime(appointment.appointment_date)}</p>
+                        </div>
+                        <div className={`rounded-2xl border px-4 py-3 text-sm font-black ${isDarkMode ? 'border-white/10 bg-[#071016]/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
+                          {appointment.price_amount ? `${Number(appointment.price_amount).toLocaleString('pl-PL')} ${appointment.currency || 'PLN'}` : 'Cena wg ustaleń'}
+                        </div>
                       </div>
-                      <div className={`rounded-2xl border px-4 py-3 text-sm font-black ${isDarkMode ? 'border-white/10 bg-[#071016]/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
-                        {appointment.price_amount ? `${Number(appointment.price_amount).toLocaleString('pl-PL')} ${appointment.currency || 'PLN'}` : 'Cena wg ustaleń'}
-                      </div>
+
+                      {recommendations.length > 0 && (
+                        <div className="mt-5 space-y-3">
+                          {recommendations.map((item: any, index: number) => (
+                            <div key={`${appointment.id}-rec-${index}`} className={`rounded-2xl border p-4 ${isDarkMode ? 'border-emerald-300/15 bg-emerald-300/10' : 'border-emerald-200 bg-emerald-50'}`}>
+                              <p className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-emerald-200' : 'text-emerald-700'}`}>{item.label}</p>
+                              <p className={`mt-2 whitespace-pre-wrap text-xs font-medium leading-6 ${isDarkMode ? 'text-emerald-50' : 'text-emerald-900'}`}>{item.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </Panel>
             </motion.section>
           )}

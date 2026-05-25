@@ -969,6 +969,12 @@ const isAppointmentDateAllowed = (dateTimeValue?: string) => {
         treatment_category: treatmentForm.treatment_category || 'standard',
         pre_recommendations: treatmentForm.pre_recommendations || null,
         post_recommendations: treatmentForm.post_recommendations || null,
+        portal_announcement_enabled: !!treatmentForm.portal_announcement_enabled,
+        portal_announcement_title: treatmentForm.portal_announcement_title || null,
+        portal_announcement_description: treatmentForm.portal_announcement_description || null,
+        portal_announcement_category: treatmentForm.portal_announcement_category || 'aftercare',
+        portal_announcement_days_after: treatmentForm.portal_announcement_days_after ?? 0,
+        portal_announcement_valid_days: treatmentForm.portal_announcement_valid_days ?? 14,
         is_active: treatmentForm.is_active !== false
       };
 
@@ -1215,6 +1221,7 @@ const handleDeleteClinicDayTask = async (taskId: string) => {
       const { data: newAppointment, error: appError } = await supabase
         .from('appointments')
         .insert([{
+          event_id: id,
           patient_id: appointmentForm.patient_id,
           treatment_id: appointmentForm.treatment_id,
           treatment_name: selectedTreatment?.name || 'Zabieg medyczny',
@@ -1252,11 +1259,45 @@ const handleDeleteClinicDayTask = async (taskId: string) => {
         if (consentsError) throw consentsError;
       }
 
+      const shouldPublishAftercare =
+        selectedTreatment?.portal_announcement_enabled ||
+        selectedTreatment?.post_recommendations ||
+        selectedTreatment?.portal_announcement_description
+
+      if (shouldPublishAftercare) {
+        const startsAt = new Date(appointmentForm.appointment_date)
+        const daysAfter = Number(selectedTreatment?.portal_announcement_days_after ?? 0)
+        const validDays = Number(selectedTreatment?.portal_announcement_valid_days ?? 14)
+        if (!Number.isNaN(startsAt.getTime())) startsAt.setDate(startsAt.getDate() + daysAfter)
+
+        const endsAt = new Date(startsAt)
+        if (!Number.isNaN(endsAt.getTime())) endsAt.setDate(endsAt.getDate() + validDays)
+
+        const { error: portalError } = await supabase.from('personal_announcements').insert([{
+          event_id: id,
+          patient_id: appointmentForm.patient_id,
+          appointment_id: newAppointment.id,
+          treatment_id: appointmentForm.treatment_id,
+          title: selectedTreatment?.portal_announcement_title || `Zalecenia: ${selectedTreatment?.name || 'wizyta'}`,
+          description: selectedTreatment?.portal_announcement_description || selectedTreatment?.post_recommendations || 'Zalecenia po wizycie zostały udostępnione w Portalu Pacjenta.',
+          category: selectedTreatment?.portal_announcement_category || 'zalecenia',
+          priority: 'normal',
+          cta_label: 'Zapytaj recepcję',
+          cta_url: null,
+          starts_at: Number.isNaN(startsAt.getTime()) ? new Date().toISOString() : startsAt.toISOString(),
+          ends_at: Number.isNaN(endsAt.getTime()) ? null : endsAt.toISOString(),
+          is_active: true
+        }])
+
+        if (portalError) throw portalError
+      }
+
       showNotification(`Wizyta utworzona! Wygenerowano ${requiredTemplates.length} wymaganych zgód.`, 'success');
       setIsBookingModalOpen(false);
       setAppointmentForm({ patient_id: '', treatment_id: '', appointment_date: '', price_amount: '', currency: 'PLN' });
       await loadAppointments();
       await loadPatientConsents();
+      await loadAnnouncements();
       
     } catch (err: any) {
       showNotification('Błąd zapisu: ' + err.message, 'error');
